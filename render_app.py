@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-📊 MT4 TRADING DASHBOARD - Light & Fast
-Same as forex_dashboard with all 31 symbols
+📊 MT4 TRADING DASHBOARD - INSTANT LOADING
+No loading delays - data shows immediately
 """
 
 import os
@@ -26,15 +26,12 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 # FILE PATHS
 # ============================================================
 
-# Read from the same file as forex_dashboard
 COMMON_FILES = "C:/Users/sifer/AppData/Roaming/MetaQuotes/Terminal/Common/Files/"
 DASHBOARD_FILE = os.path.join(COMMON_FILES, "dashboard_data.json")
-
-# Also check local directory (for Render)
 LOCAL_FILE = "dashboard_data.json"
 
 # ============================================================
-# ALL 31 SYMBOLS - SAME AS forex_dashboard
+# ALL 31 SYMBOLS
 # ============================================================
 
 FOREX_MAJORS = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD']
@@ -59,7 +56,6 @@ last_file_mod_time = 0
 # ============================================================
 
 def find_mt4_file():
-    """Find the MT4 data file"""
     if os.path.exists(DASHBOARD_FILE):
         return DASHBOARD_FILE
     if os.path.exists(LOCAL_FILE):
@@ -67,7 +63,7 @@ def find_mt4_file():
     return None
 
 def get_all_data_dict():
-    """Get all data - SAME as forex_dashboard"""
+    """Get all data - INSTANT"""
     try:
         file_path = find_mt4_file()
         data = None
@@ -93,7 +89,6 @@ def get_all_data_dict():
             'mt4_connected': mt4_connected
         }
 
-        # Fallback prices
         fallback = {
             'EURUSD': 1.14317, 'GBPUSD': 1.34154, 'USDJPY': 162.441,
             'USDCHF': 0.89510, 'AUDUSD': 0.67260, 'USDCAD': 1.36530,
@@ -109,7 +104,6 @@ def get_all_data_dict():
             '#DOLLAR_IND': 104.55
         }
 
-        # Build prices
         if data and 'prices' in data:
             for symbol in ALL_SYMBOLS:
                 if symbol in data['prices']:
@@ -127,7 +121,6 @@ def get_all_data_dict():
                             'bid': p, 'ask': p, 'price': p, 'change': 0
                         }
                 else:
-                    # Try alternative names
                     alt_map = {
                         'GOLD': ['XAUUSD'], 'SILVER': ['XAGUSD'],
                         '#NASDAQ100': ['NAS100', 'US100'], '#DJ30': ['DJ30', 'US30'],
@@ -169,7 +162,6 @@ def get_all_data_dict():
             if 'timestamp' in data:
                 response['timestamp'] = data['timestamp']
         else:
-            # Use fallback
             for symbol in ALL_SYMBOLS:
                 p = fallback.get(symbol, 0)
                 response['prices'][symbol] = {
@@ -181,7 +173,7 @@ def get_all_data_dict():
         return {'success': False, 'error': str(e)}
 
 # ============================================================
-# WEBSOCKET
+# WEBSOCKET - INSTANT
 # ============================================================
 
 @socketio.on('connect')
@@ -189,8 +181,9 @@ def handle_connect():
     connected_clients.add(request.sid)
     data = get_all_data_dict()
     emit('full_update', data)
+    emit('price_update', {'prices': data.get('prices', {}), 'timestamp': data.get('timestamp', '')})
 
-@socketio.on('disconnect')
+@socketio.on('disconnect'):
 def handle_disconnect():
     connected_clients.discard(request.sid)
 
@@ -199,7 +192,7 @@ def handle_request_update():
     emit('full_update', get_all_data_dict())
 
 # ============================================================
-# FILE WATCHER - SAME as forex_dashboard
+# FILE WATCHER - FAST
 # ============================================================
 
 def file_watcher():
@@ -220,10 +213,10 @@ def file_watcher():
                         })
         except:
             pass
-        time.sleep(0.5)  # Check every 500ms - FAST!
+        time.sleep(0.3)  # 300ms - SUPER FAST
 
 # ============================================================
-# HTML - SAME STYLE AS forex_dashboard
+# HTML - INSTANT LOADING
 # ============================================================
 
 HTML = """
@@ -303,9 +296,8 @@ HTML = """
         }
         .tab:hover { background: #1f3460; color: #fff; }
         .tab.active { background: #ffd700; color: #0a0e27; }
-        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content { display: none; animation: fadeIn 0.1s; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .section-title {
             color: #ffd700;
@@ -332,7 +324,7 @@ HTML = """
             transition: transform 0.2s, background 0.3s;
         }
         .card:hover { transform: translateY(-3px); }
-        .card.pulse { animation: cardPulse 0.3s ease; }
+        .card.pulse { animation: cardPulse 0.2s ease; }
         @keyframes cardPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); background: #1f3460; } 100% { transform: scale(1); } }
         
         .card-symbol { font-size: 16px; font-weight: bold; color: #ffd700; }
@@ -431,7 +423,7 @@ HTML = """
         <div class="tab" onclick="switchTab('leaderboard')">🏆 Leaderboard</div>
     </div>
     
-    <button class="refresh-btn" onclick="manualRefresh()">🔄 Refresh All Data</button>
+    <button class="refresh-btn" onclick="manualRefresh()">🔄 Refresh</button>
     <span id="refreshStatus" style="color:#888;font-size:12px;margin-left:10px;"></span>
     
     <div id="tab-markets" class="tab-content active">
@@ -475,8 +467,7 @@ HTML = """
     </div>
     
     <div class="ip-info">
-        🌐 Server: Render | Auto-refresh: <span id="countdown">5</span>s | 
-        Data source: <span id="dataSourceLabel">File</span>
+        🌐 Server: Render | Auto-refresh: <span id="countdown">5</span>s
     </div>
 </div>
 
@@ -496,6 +487,7 @@ const socket = io();
 socket.on('connect', function() {
     document.getElementById('wsStatus').className = 'status status-ws';
     document.getElementById('wsStatus').textContent = '🔌 Connected';
+    socket.emit('request_update');
 });
 
 socket.on('disconnect', function() {
@@ -591,11 +583,6 @@ function renderCards(containerId, items, type, data) {
                 <div class="card-time">Updated: ${data.timestamp || '--:--:--'}</div>
             `;
             grid.appendChild(card);
-            setTimeout(() => {
-                const el = document.getElementById('card-' + symbol);
-                if (el) el.classList.add('pulse');
-                setTimeout(() => { if (el) el.classList.remove('pulse'); }, 300);
-            }, 50);
         }
     });
     const countEl = document.getElementById(containerId.replace('Grid', 'Count'));
@@ -613,57 +600,24 @@ function updateAllMarketCards(data) {
     renderCards('dollarGrid', DOLLAR, 'dollar', data);
 }
 
-function renderStatistics(stats) {
-    const tbody = document.getElementById('statsBody');
-    if (!stats) {
-        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;padding:30px;color:#888;">No statistics</td></tr>';
-        return;
-    }
-    const rows = [
-        ['Total Trades', stats.total_trades || 0, ''],
-        ['Win Rate', (stats.win_rate || 0) + '%', stats.win_rate > 50 ? 'green' : stats.win_rate > 30 ? 'gold' : 'red'],
-        ['Total P&L', '$' + (stats.total_pnl || 0).toFixed(2), (stats.total_pnl || 0) >= 0 ? 'green' : 'red'],
-        ['Profit Factor', (stats.profit_factor || 0).toFixed(2), (stats.profit_factor || 0) > 1 ? 'green' : 'red'],
-        ['Active Agents', stats.active_agents || 0, '']
-    ];
-    tbody.innerHTML = rows.map(row => `<tr><td class="label">${row[0]}</td><td class="value ${row[2]}">${row[1]}</td></tr>`).join('');
-}
-
-function renderLeaderboard(leaderboard) {
-    const tbody = document.getElementById('leaderboardBody');
-    if (!leaderboard || leaderboard.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">No leaderboard</td></tr>';
-        return;
-    }
-    tbody.innerHTML = leaderboard.map((agent, index) => {
-        const rank = index + 1;
-        let rankClass = 'rank' + (rank === 1 ? ' rank-1' : rank === 2 ? ' rank-2' : rank === 3 ? ' rank-3' : '');
-        let winRateClass = 'win-rate ' + (agent.win_rate > 60 ? 'high' : agent.win_rate > 40 ? 'medium' : 'low');
-        return `<tr><td class="${rankClass}">#${rank}</td><td class="agent-name">${agent.agent_name || 'Agent ' + rank}</td><td class="votes">${agent.total_votes || 0}</td><td class="${winRateClass}">${agent.win_rate || 0}%</td><td class="xp">${agent.total_xp || 0}</td><td class="tokens">${agent.total_tokens || 0}</td><td class="confidence">${agent.avg_confidence || 0}%</td></tr>`;
-    }).join('');
-}
-
 function updateFullDashboard(data) {
     if (!data || !data.success) return;
     document.getElementById('balance').textContent = '$' + (data.balance || 0).toFixed(2);
     document.getElementById('equity').textContent = '$' + (data.equity || 0).toFixed(2);
     document.getElementById('updated').textContent = data.timestamp || '--:--:--';
     document.getElementById('dataSource').textContent = data.source || 'File';
-    document.getElementById('dataSourceLabel').textContent = data.source || 'File';
     updateAllMarketCards(data);
-    renderStatistics(data.stats);
-    renderLeaderboard(data.leaderboard);
 }
 
 async function manualRefresh() {
-    document.getElementById('refreshStatus').textContent = '⏳ Loading...';
+    document.getElementById('refreshStatus').textContent = '⏳ Updating...';
     try {
         const response = await fetch('/api/all_data?_=' + Date.now());
         const data = await response.json();
         if (data.success) {
             currentData = data;
             updateFullDashboard(data);
-            document.getElementById('refreshStatus').textContent = '✅ Updated ' + data.timestamp;
+            document.getElementById('refreshStatus').textContent = '✅ ' + data.timestamp;
             socket.emit('request_update');
         } else {
             document.getElementById('refreshStatus').textContent = '❌ Error';
@@ -686,9 +640,9 @@ function startCountdown() {
     }, 1000);
 }
 
+// INSTANT LOAD - No waiting!
 manualRefresh();
 startCountdown();
-socket.on('connect', function() { socket.emit('request_update'); });
 </script>
 </body>
 </html>
@@ -709,19 +663,11 @@ def api_all_data():
 @app.route('/api/prices')
 def api_prices():
     data = get_all_data_dict()
-    return jsonify({
-        'success': True,
-        'prices': data['prices'],
-        'timestamp': datetime.now().isoformat()
-    })
+    return jsonify({'success': True, 'prices': data['prices'], 'timestamp': datetime.now().isoformat()})
 
 @app.route('/api/status')
 def api_status():
-    return jsonify({
-        'status': 'running',
-        'timestamp': datetime.now().isoformat(),
-        'file_exists': find_mt4_file() is not None
-    })
+    return jsonify({'status': 'running', 'timestamp': datetime.now().isoformat()})
 
 @app.route('/api/update_mt4_data', methods=['POST'])
 def update_mt4_data():
@@ -744,13 +690,12 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     
     print("=" * 60)
-    print("📊 MT4 DASHBOARD - Light & Fast")
+    print("📊 MT4 DASHBOARD - INSTANT LOADING")
     print("=" * 60)
     print(f"📂 Symbols: {len(ALL_SYMBOLS)}")
     print(f"🌐 Server: http://0.0.0.0:{port}")
     print("=" * 60)
     
-    # Start file watcher
     threading.Thread(target=file_watcher, daemon=True).start()
     
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
