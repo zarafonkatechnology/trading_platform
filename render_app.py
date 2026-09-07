@@ -650,7 +650,20 @@ def update_mt4_data():
     except Exception as e:
         logger.error(f"❌ Error updating MT4 data: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+@app.before_request
+def before_request():
+    """Log requests and ensure quick response"""
+    # This just helps with logging
+    pass
 
+# Also add a simple GET endpoint for health check
+@app.route('/api/ping')
+def ping():
+    """Simple ping endpoint for wake-up"""
+    return jsonify({
+        'status': 'pong',
+        'timestamp': datetime.now().isoformat()
+    })
 @app.route('/api/mt4_status')
 def mt4_status():
     """Check if MT4 data is available"""
