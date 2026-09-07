@@ -37,24 +37,40 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 # CONFIGURATION
 # ============================================================
 
-# On Render, the file will be saved in the app directory
 DASHBOARD_FILE = "dashboard_data.json"
 SIGNALS_FILE = "signals.json"
 
 logger.info(f"📂 MT4 data file: {DASHBOARD_FILE}")
 
 # ============================================================
-# SYMBOL CONFIGURATION
+# SYMBOL CONFIGURATION - UPDATED WITH ALL 31 SYMBOLS
 # ============================================================
 
 FOREX_MAJORS = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD']
 FOREX_CROSSES = ['EURGBP', 'EURJPY', 'EURCAD', 'EURNZD', 'EURCHF']
-INDICES = ['#NASDAQ100', '#DJ30', '#S&P500', '#RUSS2000', '#CAC40', '#DAX40', '#FTSE100', '#NIKKEI225']
+
+# ===== UPDATED INDICES WITH ALL STOCKS =====
+INDICES = [
+    '#NASDAQ100', '#DJ30', '#S&P500', '#RUSS2000', 
+    '#CAC40', '#DAX40', '#FTSE100', '#NIKKEI225',
+    "#AMAZON", '#APPLE', '#MICROSOFT', '#SPACEX', 
+    '#VISA', '#MASTERCARD'
+]
+
 METALS = ['GOLD', 'SILVER']
 ENERGY = ['BRENT_OIL', 'CrudeOIL']
 DOLLAR = ['#DOLLAR_IND']
 
+# ===== ALL SYMBOLS = 31 =====
 ALL_SYMBOLS = FOREX_MAJORS + FOREX_CROSSES + INDICES + METALS + ENERGY + DOLLAR
+
+print(f"✅ Loaded {len(ALL_SYMBOLS)} symbols:")
+print(f"   Forex Majors: {len(FOREX_MAJORS)}")
+print(f"   Forex Crosses: {len(FOREX_CROSSES)}")
+print(f"   Indices: {len(INDICES)}")
+print(f"   Metals: {len(METALS)}")
+print(f"   Energy: {len(ENERGY)}")
+print(f"   Dollar: {len(DOLLAR)}")
 
 # ============================================================
 # GLOBAL STATE
@@ -87,7 +103,7 @@ def get_all_data_dict():
             except Exception as e:
                 logger.warning(f"⚠️ Error reading MT4 file: {e}")
         
-        # Fallback prices (used only if no MT4 data)
+        # Fallback prices
         fallback = {
             'EURUSD': 1.14317, 'GBPUSD': 1.34154, 'USDJPY': 162.441,
             'USDCHF': 0.89510, 'AUDUSD': 0.67260, 'USDCAD': 1.36530,
@@ -97,6 +113,8 @@ def get_all_data_dict():
             '#NASDAQ100': 21500.25, '#DJ30': 41500.25, '#S&P500': 5600.13,
             '#RUSS2000': 2200.13, '#CAC40': 7650.25, '#DAX40': 18800.25,
             '#FTSE100': 8350.25, '#NIKKEI225': 41200.25,
+            "#AMAZON": 258.47, "#APPLE": 319.85, "#MICROSOFT": 499.68,
+            "#SPACEX": 147.96, "#VISA": 374.36, "#MASTERCARD": 579.58,
             'BRENT_OIL': 85.55, 'CrudeOIL': 80.80,
             '#DOLLAR_IND': 104.55
         }
@@ -116,7 +134,6 @@ def get_all_data_dict():
         
         # Build prices from MT4 data or fallback
         if data and data.get('prices'):
-            # Use MT4 data
             for symbol in ALL_SYMBOLS:
                 if symbol in data['prices']:
                     price_data = data['prices'][symbol]
@@ -150,7 +167,13 @@ def get_all_data_dict():
                         '#NIKKEI225': ['NIKKEI225', 'N225', 'JP225'],
                         '#DOLLAR_IND': ['#DOLLAR_IND', 'DXY', 'USDX'],
                         'BRENT_OIL': ['BRENT', 'UKOIL'],
-                        'CrudeOIL': ['CRUDE', 'USOIL']
+                        'CrudeOIL': ['CRUDE', 'USOIL'],
+                        '#AMAZON': ['AMAZON', 'AMZN'],
+                        '#APPLE': ['APPLE', 'AAPL'],
+                        '#MICROSOFT': ['MICROSOFT', 'MSFT'],
+                        '#SPACEX': ['SPACEX'],
+                        '#VISA': ['VISA', 'V'],
+                        '#MASTERCARD': ['MASTERCARD', 'MA']
                     }
                     found = False
                     if symbol in alt_map:
@@ -240,7 +263,7 @@ def handle_request_update():
     emit('full_update', data)
 
 # ============================================================
-# HTML TEMPLATE
+# HTML TEMPLATE - COMPLETE
 # ============================================================
 
 HTML_TEMPLATE = """
@@ -400,6 +423,10 @@ HTML_TEMPLATE = """
             <div class="account-label">📡 Data Source</div>
             <div class="account-value" style="font-size:16px;color:#ffd700;" id="dataSource">--</div>
         </div>
+        <div class="account-item">
+            <div class="account-label">📊 Symbols</div>
+            <div class="account-value" style="font-size:18px;color:#00bcd4;" id="symbolCount">0</div>
+        </div>
     </div>
     
     <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
@@ -475,7 +502,8 @@ async function refreshData() {
 function getCardType(symbol) {
     const forex = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD', 
                    'EURGBP', 'EURJPY', 'EURCAD', 'EURNZD', 'EURCHF'];
-    const indices = ['#NASDAQ100', '#DJ30', '#S&P500', '#RUSS2000', '#CAC40', '#DAX40', '#FTSE100', '#NIKKEI225'];
+    const indices = ['#NASDAQ100', '#DJ30', '#S&P500', '#RUSS2000', '#CAC40', '#DAX40', '#FTSE100', '#NIKKEI225',
+                     '#AMAZON', '#APPLE', '#MICROSOFT', '#SPACEX', '#VISA', '#MASTERCARD'];
     const metals = ['GOLD', 'SILVER'];
     const energy = ['BRENT_OIL', 'CrudeOIL'];
     const dollar = ['#DOLLAR_IND'];
@@ -529,6 +557,7 @@ function updatePricesOnly(prices) {
     }
     
     grid.innerHTML = html || '<div style="text-align:center;padding:40px;color:#666;grid-column:1/-1;">No price data available</div>';
+    document.getElementById('symbolCount').textContent = count;
 }
 
 function updateDashboard(data) {
@@ -593,7 +622,8 @@ def api_status():
         'status': 'running',
         'timestamp': datetime.now().isoformat(),
         'connected_clients': len(connected_clients),
-        'mt4_file_exists': os.path.exists(DASHBOARD_FILE)
+        'mt4_file_exists': os.path.exists(DASHBOARD_FILE),
+        'symbols_count': len(ALL_SYMBOLS)
     })
 
 @app.route('/api/prices')
@@ -612,10 +642,7 @@ def api_all_data():
 
 @app.route('/api/update_mt4_data', methods=['POST'])
 def update_mt4_data():
-    """
-    Receive MT4 data from Windows machine via HTTP POST
-    This is the endpoint that your Windows script will call
-    """
+    """Receive MT4 data from Windows machine via HTTP POST"""
     try:
         data = request.json
         
@@ -623,17 +650,13 @@ def update_mt4_data():
             return jsonify({'success': False, 'error': 'No data received'}), 400
         
         if data.get('prices'):
-            # Save to file
             with open(DASHBOARD_FILE, 'w') as f:
                 json.dump(data, f)
             
             logger.info(f"✅ MT4 data updated via POST: {len(data.get('prices', {}))} symbols")
             
-            # Broadcast update to all connected clients
             full_data = get_all_data_dict()
             socketio.emit('full_update', full_data)
-            
-            # Also send price update
             socketio.emit('price_update', {
                 'prices': data['prices'],
                 'timestamp': datetime.now().strftime('%H:%M:%S')
@@ -650,20 +673,7 @@ def update_mt4_data():
     except Exception as e:
         logger.error(f"❌ Error updating MT4 data: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-@app.before_request
-def before_request():
-    """Log requests and ensure quick response"""
-    # This just helps with logging
-    pass
 
-# Also add a simple GET endpoint for health check
-@app.route('/api/ping')
-def ping():
-    """Simple ping endpoint for wake-up"""
-    return jsonify({
-        'status': 'pong',
-        'timestamp': datetime.now().isoformat()
-    })
 @app.route('/api/mt4_status')
 def mt4_status():
     """Check if MT4 data is available"""
@@ -728,6 +738,7 @@ if __name__ == '__main__':
     print('=' * 60)
     print(f'📂 Looking for: {DASHBOARD_FILE}')
     print(f'📡 MT4 Data: {"✅ EXISTS" if os.path.exists(DASHBOARD_FILE) else "❌ NOT FOUND"}')
+    print(f'📊 Total Symbols: {len(ALL_SYMBOLS)}')
     print(f'🌐 Server: http://0.0.0.0:{port}')
     print(f'📤 POST endpoint: /api/update_mt4_data')
     print('=' * 60 + '\n')
