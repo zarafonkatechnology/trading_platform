@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """
 UNIFIED TRADING SYSTEM - Render Deployment
-Combines all trading platform features into one Flask app
+No numpy/pandas required - Python 3.14 compatible
 """
 
 import os
-import sys
 import json
 import logging
-import threading
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, jsonify, render_template_string
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 
@@ -55,7 +52,7 @@ DOLLAR = ['#DOLLAR_IND']
 ALL_SYMBOLS = FOREX_MAJORS + FOREX_CROSSES + INDICES + METALS + ENERGY + DOLLAR
 
 # ============================================================
-# SUPABASE CLIENT (Optional - with fallback)
+# SUPABASE CLIENT (Optional)
 # ============================================================
 
 supabase = None
@@ -68,9 +65,9 @@ try:
     supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
     logger.info("✅ Supabase client initialized")
 except ImportError:
-    logger.warning("⚠️ Supabase not available - running in fallback mode")
+    logger.warning("⚠️ Supabase not available")
 except Exception as e:
-    logger.warning(f"⚠️ Supabase initialization failed: {e}")
+    logger.warning(f"⚠️ Supabase error: {e}")
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -91,7 +88,7 @@ def fetch_signals_from_file():
     return []
 
 def get_fallback_prices():
-    """Return fallback prices when no data source is available"""
+    """Return fallback prices"""
     return {
         'EURUSD': 1.14317, 'GBPUSD': 1.34154, 'USDJPY': 162.441,
         'USDCHF': 0.89510, 'AUDUSD': 0.67260, 'USDCAD': 1.36530,
@@ -109,7 +106,6 @@ def get_all_data_dict():
     """Get all data as dictionary"""
     fallback_prices = get_fallback_prices()
     
-    # Build price data with bid/ask
     prices = {}
     for symbol in ALL_SYMBOLS:
         price = fallback_prices.get(symbol, 0)
@@ -132,7 +128,7 @@ def get_all_data_dict():
     }
 
 # ============================================================
-# WEBSOCKET EVENT HANDLERS
+# WEBSOCKET
 # ============================================================
 
 connected_clients = set()
@@ -141,13 +137,12 @@ connected_clients = set()
 def handle_connect():
     logger.info(f"🔌 Client connected: {request.sid}")
     connected_clients.add(request.sid)
-    emit('connected', {'status': 'connected', 'message': 'Welcome to Trading Platform'})
+    emit('connected', {'status': 'connected'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
     if request.sid in connected_clients:
         connected_clients.remove(request.sid)
-    logger.info(f"🔌 Client disconnected: {request.sid}")
 
 @socketio.on('request_update')
 def handle_request_update():
@@ -293,7 +288,6 @@ HTML_TEMPLATE = """
             border-radius: 10px;
         }
         .endpoints a { color: #ffd700; display: inline-block; margin: 5px 15px 5px 0; }
-        .endpoints a:hover { color: #ffe44d; }
         
         .ip-info {
             color: #888;
@@ -364,7 +358,6 @@ HTML_TEMPLATE = """
 </div>
 
 <script>
-// Socket.io
 const socket = io();
 
 socket.on('connect', function() {
@@ -383,7 +376,6 @@ socket.on('full_update', function(data) {
     }
 });
 
-// Refresh function
 async function refreshData() {
     document.getElementById('refreshStatus').textContent = '⏳ Loading...';
     try {
@@ -402,12 +394,10 @@ async function refreshData() {
 }
 
 function updateDashboard(data) {
-    // Update account
     document.getElementById('balance').textContent = '$' + (data.balance || 10000).toFixed(2);
     document.getElementById('equity').textContent = '$' + (data.equity || 10000).toFixed(2);
     document.getElementById('updated').textContent = data.timestamp || '--:--:--';
     
-    // Update signals
     const signalsList = document.getElementById('signalsList');
     if (data.signals && data.signals.length > 0) {
         let html = '';
@@ -428,7 +418,6 @@ function updateDashboard(data) {
         signalsList.innerHTML = '<div style="color: #666; text-align: center; padding: 10px;">No active signals</div>';
     }
     
-    // Update prices
     const grid = document.getElementById('pricesGrid');
     if (data.prices) {
         let html = '';
@@ -436,11 +425,9 @@ function updateDashboard(data) {
         for (const symbol of symbols.slice(0, 30)) {
             const priceData = data.prices[symbol];
             if (!priceData || !priceData.price) continue;
-            
             const bid = priceData.bid || priceData.price;
             const ask = priceData.ask || priceData.price;
             const price = priceData.price;
-            
             html += `
                 <div class="card">
                     <div class="card-symbol">${symbol}</div>
@@ -456,7 +443,6 @@ function updateDashboard(data) {
     }
 }
 
-// Countdown
 let countdown = 5;
 document.getElementById('countdown').textContent = countdown;
 setInterval(() => {
@@ -469,7 +455,6 @@ setInterval(() => {
     }
 }, 1000);
 
-// Initial load
 refreshData();
 setTimeout(() => socket.emit('request_update'), 500);
 </script>
@@ -483,12 +468,10 @@ setTimeout(() => socket.emit('request_update'), 500);
 
 @app.route('/')
 def index():
-    """Home page"""
     return render_template_string(HTML_TEMPLATE)
 
 @app.route('/health')
 def health():
-    """Health check for Render"""
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat()
@@ -496,17 +479,14 @@ def health():
 
 @app.route('/api/status')
 def api_status():
-    """System status"""
     return jsonify({
         'status': 'running',
         'timestamp': datetime.now().isoformat(),
-        'connected_clients': len(connected_clients),
-        'environment': 'render'
+        'connected_clients': len(connected_clients)
     })
 
 @app.route('/api/prices')
 def api_prices():
-    """Get prices"""
     data = get_all_data_dict()
     return jsonify({
         'success': True,
@@ -516,18 +496,15 @@ def api_prices():
 
 @app.route('/api/signals')
 def api_signals():
-    """Get signals"""
     signals = fetch_signals_from_file()
     return jsonify({'success': True, 'signals': signals})
 
 @app.route('/api/all_data')
 def api_all_data():
-    """Get all data"""
     return jsonify(get_all_data_dict())
 
 @app.route('/api/debug')
 def debug():
-    """Debug endpoint"""
     return jsonify({
         'status': 'ok',
         'signals_file_exists': os.path.exists(SIGNALS_FILE),
@@ -535,11 +512,10 @@ def debug():
     })
 
 # ============================================================
-# FILE WATCHER THREAD (Optional)
+# FILE WATCHER
 # ============================================================
 
 def file_watcher():
-    """Watch for file changes and broadcast updates"""
     last_mtime = 0
     while True:
         try:
@@ -563,14 +539,11 @@ if __name__ == '__main__':
     print('\n' + '=' * 60)
     print('🚀 TRADING PLATFORM - Render Deployment')
     print('=' * 60)
-    print(f'📂 File: render_app.py')
     print(f'🌐 Server: http://0.0.0.0:{port}')
     print('=' * 60 + '\n')
     
-    # Start file watcher thread
+    # Start file watcher
     watcher_thread = threading.Thread(target=file_watcher, daemon=True)
     watcher_thread.start()
-    logger.info("✅ File watcher thread started")
     
-    # Run with SocketIO
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
