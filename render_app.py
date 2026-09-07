@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-📊 MT4 TRADING DASHBOARD - INSTANT
-No delays - instant updates via WebSocket
+📊 MT4 DASHBOARD - Complete with WebSocket
 """
 
 import os
@@ -41,7 +40,6 @@ DASHBOARD_FILE = "dashboard_data.json"
 # GLOBALS
 # ============================================================
 
-current_data = {'prices': {}, 'balance': 0, 'equity': 0, 'timestamp': ''}
 connected_clients = set()
 
 # ============================================================
@@ -49,7 +47,7 @@ connected_clients = set()
 # ============================================================
 
 def get_all_data_dict():
-    """Get all data - INSTANT"""
+    """Get all data"""
     try:
         data = None
         source = "Fallback ❌"
@@ -116,7 +114,7 @@ def get_all_data_dict():
         return {'success': False, 'error': str(e)}
 
 # ============================================================
-# WEBSOCKET - INSTANT
+# WEBSOCKET
 # ============================================================
 
 @socketio.on('connect')
@@ -135,7 +133,7 @@ def handle_request_update():
     emit('full_update', get_all_data_dict())
 
 # ============================================================
-# HTML TEMPLATE
+# HTML
 # ============================================================
 
 HTML_TEMPLATE = """
@@ -143,7 +141,7 @@ HTML_TEMPLATE = """
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>📊 MT4 Dashboard - Real-Time</title>
+    <title>📊 MT4 Dashboard</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -179,7 +177,7 @@ HTML_TEMPLATE = """
 <body>
 <div class="container">
     <div class="header">
-        <h1>📊 MT4 Dashboard <span style="font-size:14px;color:#888;">Real-Time</span></h1>
+        <h1>📊 MT4 Dashboard <span style="font-size:14px;color:#888;">Live</span></h1>
         <div>
             <span id="wsStatus" class="status status-offline">🔌 Connecting...</span>
             <span id="mt4Status" class="status status-offline">📡 MT4: Waiting</span>
@@ -190,17 +188,17 @@ HTML_TEMPLATE = """
         <div class="account-item"><div class="account-label">💰 Balance</div><div class="account-value gold" id="balance">$---</div></div>
         <div class="account-item"><div class="account-label">📊 Equity</div><div class="account-value green" id="equity">$---</div></div>
         <div class="account-item"><div class="account-label">🕐 Updated</div><div class="account-value" style="font-size:16px;color:#aaa;" id="updated">--:--:--</div></div>
-        <div class="account-item"><div class="account-label">📡 Data Source</div><div class="account-value" style="font-size:14px;color:#ffd700;" id="dataSource">--</div></div>
+        <div class="account-item"><div class="account-label">📡 Source</div><div class="account-value" style="font-size:14px;color:#ffd700;" id="dataSource">--</div></div>
     </div>
     
-    <button class="refresh-btn" onclick="manualRefresh()">🔄 Refresh</button>
+    <button class="refresh-btn" onclick="refresh()">🔄 Refresh</button>
     <span id="refreshStatus" style="color:#888;font-size:12px;margin-left:10px;"></span>
     
     <div class="grid" id="pricesGrid">
-        <div style="text-align:center;padding:30px;color:#666;grid-column:1/-1;">Loading prices...</div>
+        <div style="text-align:center;padding:30px;color:#666;grid-column:1/-1;">Loading...</div>
     </div>
     
-    <div class="ip-info">⚡ Real-Time WebSocket | Auto-update every 50ms</div>
+    <div class="ip-info">⚡ WebSocket Connected</div>
 </div>
 
 <script>
@@ -225,27 +223,12 @@ socket.on('full_update', function(data) {
 
 socket.on('price_update', function(data) {
     if (data && data.prices) {
-        updatePricesOnly(data.prices);
+        updatePrices(data.prices);
         if (data.timestamp) {
             document.getElementById('updated').textContent = data.timestamp;
         }
     }
 });
-
-function getCardType(symbol) {
-    const forex = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD', 'EURGBP', 'EURJPY', 'EURCAD', 'EURNZD', 'EURCHF'];
-    const indices = ['#NASDAQ100', '#DJ30', '#S&P500', '#RUSS2000', '#CAC40', '#DAX40', '#FTSE100', '#NIKKEI225', '#AMAZON', '#APPLE', '#MICROSOFT', '#SPACEX', '#VISA', '#MASTERCARD'];
-    const metals = ['GOLD', 'SILVER'];
-    const energy = ['BRENT_OIL', 'CrudeOIL'];
-    const dollar = ['#DOLLAR_IND'];
-    
-    if (forex.includes(symbol)) return 'forex';
-    if (indices.includes(symbol)) return 'index';
-    if (metals.includes(symbol)) return 'metal';
-    if (energy.includes(symbol)) return 'energy';
-    if (dollar.includes(symbol)) return 'dollar';
-    return '';
-}
 
 function getDecimals(symbol) {
     if (['USDJPY', 'EURJPY'].includes(symbol)) return 3;
@@ -254,29 +237,25 @@ function getDecimals(symbol) {
     return 5;
 }
 
-function updatePricesOnly(prices) {
+function updatePrices(prices) {
     const grid = document.getElementById('pricesGrid');
     if (!prices) return;
     
     let html = '';
-    let count = 0;
     const symbols = Object.keys(prices);
     
     for (const symbol of symbols) {
-        const priceData = prices[symbol];
-        if (!priceData || !priceData.price) continue;
-        count++;
+        const p = prices[symbol];
+        if (!p || !p.price) continue;
         
-        const cardType = getCardType(symbol);
-        const price = priceData.price;
-        const bid = priceData.bid || price;
-        const ask = priceData.ask || price;
         const decimals = getDecimals(symbol);
+        const bid = p.bid || p.price;
+        const ask = p.ask || p.price;
         
         html += `
-            <div class="card card-${cardType}">
+            <div class="card">
                 <div class="card-symbol">${symbol}</div>
-                <div class="card-price">${price.toFixed(decimals)}</div>
+                <div class="card-price">${p.price.toFixed(decimals)}</div>
                 <div class="card-bid-ask">
                     <span class="bid">Bid: ${bid.toFixed(decimals)}</span>
                     <span class="ask">Ask: ${ask.toFixed(decimals)}</span>
@@ -286,18 +265,13 @@ function updatePricesOnly(prices) {
         `;
     }
     
-    grid.innerHTML = html || '<div style="text-align:center;padding:30px;color:#666;grid-column:1/-1;">No price data available</div>';
+    grid.innerHTML = html || '<div style="text-align:center;padding:30px;color:#666;grid-column:1/-1;">No data</div>';
 }
 
 function updateDashboard(data) {
-    // Update MT4 status
-    const mt4Status = document.getElementById('mt4Status');
     if (data.mt4_connected) {
-        mt4Status.className = 'status status-mt4';
-        mt4Status.textContent = '📡 MT4: Connected ✅';
-    } else {
-        mt4Status.className = 'status status-offline';
-        mt4Status.textContent = '📡 MT4: Disconnected ❌';
+        document.getElementById('mt4Status').className = 'status status-mt4';
+        document.getElementById('mt4Status').textContent = '📡 MT4: Connected ✅';
     }
     
     document.getElementById('balance').textContent = '$' + (data.balance || 0).toFixed(2);
@@ -305,65 +279,81 @@ function updateDashboard(data) {
     document.getElementById('updated').textContent = data.timestamp || '--:--:--';
     document.getElementById('dataSource').textContent = data.source || '--';
     
-    updatePricesOnly(data.prices);
+    updatePrices(data.prices);
 }
 
-async function manualRefresh() {
+async function refresh() {
     document.getElementById('refreshStatus').textContent = '⏳ Loading...';
     try {
         const response = await fetch('/api/all_data?_=' + Date.now());
         const data = await response.json();
         if (data.success) {
             updateDashboard(data);
-            document.getElementById('refreshStatus').textContent = '✅ Updated ' + data.timestamp;
-            socket.emit('request_update');
+            document.getElementById('refreshStatus').textContent = '✅ ' + data.timestamp;
         }
     } catch(e) {
         document.getElementById('refreshStatus').textContent = '❌ Error';
     }
 }
 
-manualRefresh();
+refresh();
 </script>
 </body>
 </html>
 """
 
 # ============================================================
-# ROUTES
+# ROUTES - ALL ENDPOINTS
 # ============================================================
 
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE)
 
-@app.route('/api/all_data')
-def api_all_data():
-    return jsonify(get_all_data_dict())
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+
+@app.route('/api/status')
+def api_status():
+    return jsonify({
+        'status': 'running',
+        'timestamp': datetime.now().isoformat(),
+        'connected_clients': len(connected_clients),
+        'file_exists': os.path.exists(DASHBOARD_FILE)
+    })
 
 @app.route('/api/prices')
 def api_prices():
     data = get_all_data_dict()
-    return jsonify({'success': True, 'prices': data['prices'], 'timestamp': datetime.now().isoformat()})
+    return jsonify({
+        'success': True,
+        'prices': data['prices'],
+        'timestamp': datetime.now().isoformat(),
+        'count': len(data['prices'])
+    })
 
-@app.route('/api/status')
-def api_status():
-    return jsonify({'status': 'running', 'timestamp': datetime.now().isoformat()})
+@app.route('/api/all_data')
+def api_all_data():
+    return jsonify(get_all_data_dict())
+
+@app.route('/api/websocket_status')
+def websocket_status():
+    return jsonify({
+        'connected_clients': len(connected_clients),
+        'status': 'running'
+    })
 
 @app.route('/api/update_mt4_data', methods=['POST'])
 def update_mt4_data():
-    """INSTANT update - receives data from Windows and broadcasts to WebSocket clients"""
+    """Receive MT4 data from Windows"""
     try:
         data = request.json
         if data and data.get('prices'):
-            # Save to file (for fallback)
             with open(DASHBOARD_FILE, 'w') as f:
                 json.dump(data, f)
             
-            # Get updated data
             full_data = get_all_data_dict()
-            
-            # ⭐ BROADCAST TO ALL WEBSOCKET CLIENTS INSTANTLY
             socketio.emit('full_update', full_data)
             socketio.emit('price_update', {
                 'prices': data['prices'],
@@ -383,11 +373,9 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     
     print("=" * 60)
-    print("📊 MT4 DASHBOARD - REAL-TIME WEBSOCKET")
+    print("📊 MT4 DASHBOARD")
     print("=" * 60)
-    print(f"📂 Symbols: {len(ALL_SYMBOLS)}")
     print(f"🌐 Server: http://0.0.0.0:{port}")
-    print(f"⚡ WebSocket: ws://0.0.0.0:{port}/socket.io/")
     print("=" * 60)
     
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
