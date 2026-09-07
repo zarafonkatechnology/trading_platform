@@ -1,0 +1,97 @@
+                final_action = hybrid_decision['action']
+                final_confidence = hybrid_decision['confidence']
+                reasoning = hybrid_decision['reason']
+                min_confidence = self.config.get('min_confidence', 60)
+               
+               # Find the best pair to trade based on hybrid decision
+                best_pair = None
+                best_conf = 0
+               
+                if final_action != 'HOLD' and final_confidence >= min_confidence:
+                    # Find which pair had the highest confidence among brokers
+                    for pair, decision in decisions.items():
+                        if decision.get('confidence', 0) > best_conf:
+                            best_conf = decision['confidence']
+                            best_pair = pair
+                              
+                              # If no broker signal, use the pair with highest Z-score
+                            if best_pair is None and self.broker_manager:
+                                max_z = 0
+                                for pair in self.pairs:
+                                    broker = self.broker_manager.brokers.get(pair)
+                                    if broker and hasattr(broker, 'z_score'):
+                                        z = abs(broker.z_score)
+                                        if z > max_z:
+                                        max_z = z
+                                        best_pair = pair
+                                        best_conf = final_confidence
+                              
+                              # Execute trade if we found a pair
+                            if best_pair:
+                                price = market_data.get(best_pair, 0)
+                                if price > 0 and not self._has_open_position(best_pair):
+                                    if self.cold_start_active:
+                                        # Simulate instead of real trade
+                                        sample = self._simulate_trade(best_pair, final_action, final_confidence, price)
+                                        logger.info(f"🧪 COLD START SIM: {best_pair} {final_action} -> {'WIN' if sample['win'] else 'LOSS'} (${sample['pnl']:.2f})")
+                                        # Check if cold start is now complete
+                                        self.is_cold_start_complete()
+                                        # Skip real execution this cycle
+                                        continue
+                                    else:
+                                                                # Check spread
+                                        spread_ok = self._check_spread(best_pair, price)
+                                        if spread_ok:
+                                            # Entry confirmation
+                                            if self._confirm_entry_with_candle_and_sr(best_pair, price, final_action):
+                                                # Get position size and SL/TP from broker decision
+                                                position_size = 1.0
+                                                sl = 0
+                                                tp = 0
+                                                if best_pair in decisions:
+                                                    position_size = decisions[best_pair].get('position_size', 1.0)
+                                                    sl = decisions[best_pair].get('sl', 0)
+                                                    tp = decisions[best_pair].get('tp', 0)
+                                                    # Execute trade
+                                                    consensus = {
+                                                    'signal': final_action,        
+                                                    'confidence': final_confidence,
+                                                    'reason': reasoning
+                                                    }
+                                                    trade_result = self.execution_engine.execute_signal(
+                                                        consensus,
+                                                        market_data,
+                                                        position_size=position_size
+                                                    )
+                                                    trade_result['pair'] = best_pair
+                                                    trade_result['sl'] = sl
+                                                    trade_result['tp'] = tp
+                                                    trade_result['hybrid'] = True
+                                                    # Add to executed trades
+                                                    if 'trades' not in results:
+                                                        results['trades'] = []
+                                                        results['trades'].append(trade_result)
+                                                        logger.info(f"💼 HYBRID TRADE EXECUTED: {best_pair} {final_action} @ {price:.4f}")
+                                                        print(f"\n🎯 HYBRID TRADE EXECUTED: {best_pair} {final_action} ({final_confidence:.1f}%)")
+                                                        print(f"   Size: {position_size} lots")
+                                                        print(f"   SL: {sl:.5f} | TP: {tp:.5f}")
+                                                    else:
+                                                        print(f"   ⏸️ Entry confirmation failed for {best_pair}")
+                                                else:
+                                                    print(f"   ⏸️ Spread too high for {best_pair}")
+                                            else:
+                                                    if self._has_open_position(best_pair):
+                                                        print(f"   ⏸️ Already have position on {best_pair}")
+                                                    else:
+                                                        print(f"   ❌ No price for {best_pair}")
+                        else:
+                                            print(f"   ⏸️ No suitable pair found for {final_action}")
+                else:
+                                    if final_action == 'HOLD':
+                                        print(f"\n🎯 Hybrid Decision: HOLD - No trade")
+                                    else:
+                                        print(f"\n🎯 Hybrid Decision: {final_action} ({final_confidence:.1f}%) - Confidence below threshold")
+               # ============================================================
+               # 8. LOG BROKER DECISIONS
+               # ============================================================
+               

@@ -1,0 +1,610 @@
+<!-- src/web/register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - NEXUS Trading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f1f5f9;
+            padding: 20px;
+        }
+        .register-container {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 48px;
+            width: 440px;
+            max-width: 100%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+        }
+        .register-header { text-align: center; margin-bottom: 32px; }
+        .register-header .logo {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .register-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00d4ff, #7b2ffc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .register-header p { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .form-group label .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.05);
+            color: #f1f5f9;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .form-group input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .form-group input::placeholder { color: #64748b; }
+        .form-group input.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+        }
+        .form-group .error-text {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        .form-group .error-text.show { display: block; }
+        
+        .password-strength {
+            height: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .password-strength .bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s, background 0.3s;
+        }
+        .password-strength .bar.weak { background: #ef4444; width: 25%; }
+        .password-strength .bar.medium { background: #f59e0b; width: 50%; }
+        .password-strength .bar.strong { background: #22c55e; width: 75%; }
+        .password-strength .bar.very-strong { background: #22c55e; width: 100%; }
+        
+        .password-hint {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .btn-register {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 4px;
+        }
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59,130,246,0.3);
+        }
+        .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-box {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.2);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 8px;
+        }
+        .error-box.show { display: flex; }
+        .error-box i { font-size: 16px; }
+        
+        .success-box {
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.2);
+            color: #22c55e;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 8px;
+        }
+        .success-box.show { display: flex; }
+        .success-box i { font-size: 16px; }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .login-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .login-link a:hover { text-decoration: underline; }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .status-text {
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 16px;
+        }
+        
+        .terms {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 12px 0 16px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .terms input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+            accent-color: #3b82f6;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .terms a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .terms a:hover { text-decoration: underline; }
+        
+        .password-requirements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #64748b;
+        }
+        .password-requirements .req {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .password-requirements .req .check {
+            color: #22c55e;
+            display: none;
+        }
+        .password-requirements .req .cross {
+            color: #ef4444;
+            display: none;
+        }
+        .password-requirements .req.met .check { display: inline; }
+        .password-requirements .req.met .cross { display: none; }
+        .password-requirements .req:not(.met) .check { display: none; }
+        .password-requirements .req:not(.met) .cross { display: inline; }
+        
+        @media (max-width: 600px) {
+            .register-container { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <div class="logo">🚀</div>
+            <h1>Create Account</h1>
+            <p>Join NEXUS Trading Platform</p>
+        </div>
+        
+        <div id="errorBox" class="error-box">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorText"></span>
+        </div>
+        <div id="successBox" class="success-box">
+            <i class="fas fa-check-circle"></i>
+            <span id="successText"></span>
+        </div>
+        
+        <form id="registerForm" onsubmit="handleRegister(event)" novalidate>
+            <div class="form-group">
+                <label>Full Name <span class="required">*</span></label>
+                <input type="text" id="fullName" placeholder="Enter your full name" required autofocus>
+                <div class="error-text" id="nameError">Please enter your full name (minimum 2 characters)</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Email <span class="required">*</span></label>
+                <input type="email" id="email" placeholder="Enter your email" required>
+                <div class="error-text" id="emailError">Please enter a valid email address</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Password <span class="required">*</span></label>
+                <input type="password" id="password" placeholder="Create a strong password" required minlength="8">
+                <div class="password-strength">
+                    <div class="bar" id="passwordStrengthBar"></div>
+                </div>
+                <div class="password-hint" id="passwordHint">Use 8+ characters with uppercase, lowercase, and numbers</div>
+                <div class="password-requirements" id="passwordRequirements">
+                    <span class="req" id="reqLength"><span class="cross">✗</span><span class="check">✓</span> 8+ characters</span>
+                    <span class="req" id="reqLower"><span class="cross">✗</span><span class="check">✓</span> Lowercase</span>
+                    <span class="req" id="reqUpper"><span class="cross">✗</span><span class="check">✓</span> Uppercase</span>
+                    <span class="req" id="reqNumber"><span class="cross">✗</span><span class="check">✓</span> Number</span>
+                    <span class="req" id="reqSpecial"><span class="cross">✗</span><span class="check">✓</span> Special character</span>
+                </div>
+                <div class="error-text" id="passwordError">Password must be at least 8 characters</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Confirm Password <span class="required">*</span></label>
+                <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                <div class="error-text" id="confirmError">Passwords do not match</div>
+            </div>
+            
+            <div class="terms">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-register" id="registerBtn">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+        </form>
+        
+        <div class="login-link">
+            Already have an account? <a href="/client_login.html">Sign In</a>
+        </div>
+        
+        <div class="status-text" id="statusText">Secure registration with encryption</div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api/v1';
+        
+        // ============================================================
+        // PASSWORD STRENGTH & VALIDATION
+        // ============================================================
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirmPassword');
+        
+        function validatePasswordRequirements(password) {
+            const reqs = {
+                length: password.length >= 8,
+                lower: /[a-z]/.test(password),
+                upper: /[A-Z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[^a-zA-Z0-9]/.test(password)
+            };
+            
+            document.getElementById('reqLength').className = 'req' + (reqs.length ? ' met' : '');
+            document.getElementById('reqLower').className = 'req' + (reqs.lower ? ' met' : '');
+            document.getElementById('reqUpper').className = 'req' + (reqs.upper ? ' met' : '');
+            document.getElementById('reqNumber').className = 'req' + (reqs.number ? ' met' : '');
+            document.getElementById('reqSpecial').className = 'req' + (reqs.special ? ' met' : '');
+            
+            return reqs;
+        }
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const bar = document.getElementById('passwordStrengthBar');
+            const hint = document.getElementById('passwordHint');
+            
+            // Update requirements
+            const reqs = validatePasswordRequirements(password);
+            
+            // Calculate strength
+            let strength = Object.values(reqs).filter(Boolean).length;
+            let message = '';
+            let barClass = '';
+            
+            switch(strength) {
+                case 0:
+                case 1:
+                    barClass = 'weak';
+                    message = 'Weak password';
+                    break;
+                case 2:
+                case 3:
+                    barClass = 'medium';
+                    message = 'Medium strength';
+                    break;
+                case 4:
+                    barClass = 'strong';
+                    message = 'Strong password';
+                    break;
+                case 5:
+                    barClass = 'very-strong';
+                    message = 'Very strong password!';
+                    break;
+            }
+            
+            bar.className = 'bar ' + barClass;
+            hint.textContent = message || 'Use 8+ characters with uppercase, lowercase, and numbers';
+            
+            // Check confirm password match
+            if (confirmInput.value) {
+                checkPasswordMatch();
+            }
+        });
+        
+        function checkPasswordMatch() {
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+            const error = document.getElementById('confirmError');
+            
+            if (confirm && password !== confirm) {
+                error.classList.add('show');
+                confirmInput.classList.add('error');
+                return false;
+            } else {
+                error.classList.remove('show');
+                confirmInput.classList.remove('error');
+                return true;
+            }
+        }
+        
+        confirmInput.addEventListener('input', checkPasswordMatch);
+        
+        // ============================================================
+        // UI HELPERS
+        // ============================================================
+        function showError(message) {
+            const box = document.getElementById('errorBox');
+            const text = document.getElementById('errorText');
+            text.textContent = message;
+            box.className = 'error-box show';
+            document.getElementById('successBox').className = 'success-box';
+        }
+        
+        function showSuccess(message) {
+            const box = document.getElementById('successBox');
+            const text = document.getElementById('successText');
+            text.textContent = message;
+            box.className = 'success-box show';
+            document.getElementById('errorBox').className = 'error-box';
+        }
+        
+        function hideMessages() {
+            document.getElementById('errorBox').className = 'error-box';
+            document.getElementById('successBox').className = 'success-box';
+        }
+        
+        // ============================================================
+        // REGISTRATION HANDLER
+        // ============================================================
+        async function handleRegister(event) {
+            event.preventDefault();
+            hideMessages();
+            
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmInput.value;
+            const terms = document.getElementById('terms').checked;
+            const btn = document.getElementById('registerBtn');
+            const statusText = document.getElementById('statusText');
+            
+            // Validate
+            let hasError = false;
+            
+            if (!fullName || fullName.length < 2) {
+                document.getElementById('nameError').classList.add('show');
+                document.getElementById('fullName').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('nameError').classList.remove('show');
+                document.getElementById('fullName').classList.remove('error');
+            }
+            
+            if (!email || !email.includes('@')) {
+                document.getElementById('emailError').classList.add('show');
+                document.getElementById('email').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('emailError').classList.remove('show');
+                document.getElementById('email').classList.remove('error');
+            }
+            
+            // Password validation
+            const reqs = validatePasswordRequirements(password);
+            const allValid = Object.values(reqs).every(Boolean);
+            
+            if (!allValid) {
+                document.getElementById('passwordError').textContent = 'Password does not meet all requirements';
+                document.getElementById('passwordError').classList.add('show');
+                document.getElementById('password').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('passwordError').classList.remove('show');
+                document.getElementById('password').classList.remove('error');
+            }
+            
+            if (password !== confirmPassword) {
+                document.getElementById('confirmError').classList.add('show');
+                document.getElementById('confirmPassword').classList.add('error');
+                hasError = true;
+            }
+            
+            if (!terms) {
+                showError('Please agree to the Terms of Service');
+                hasError = true;
+            }
+            
+            if (hasError) {
+                // Scroll to first error
+                const firstError = document.querySelector('.form-group .error-text.show, .error-box.show');
+                if (firstError) {
+                    firstError.closest('.form-group')?.querySelector('input')?.focus();
+                }
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Creating account...';
+            statusText.textContent = '⏳ Creating your account...';
+            
+            try {
+                console.log('📤 Sending registration request...');
+                
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        full_name: fullName,
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                console.log('📥 Response status:', response.status);
+                
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('📥 Response data:', data);
+                } catch (parseError) {
+                    console.error('❌ Failed to parse JSON:', parseError);
+                    showError('Server returned invalid response. Please try again.');
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                    btn.disabled = false;
+                    return;
+                }
+                
+                if (data.success === true) {
+                    // Success!
+                    showSuccess('✅ Account created successfully! Redirecting to login...');
+                    statusText.textContent = '✅ Account created!';
+                    btn.innerHTML = '✅ Success';
+                    
+                    // Store for auto-fill login
+                    localStorage.setItem('register_email', email);
+                    localStorage.setItem('register_name', fullName);
+                    
+                    setTimeout(() => {
+                        window.location.href = '/client_login.html';
+                    }, 2000);
+                } else {
+                    const errorMessage = data.detail || data.message || 'Registration failed. Please try again.';
+                    showError(errorMessage);
+                    statusText.textContent = '❌ Registration failed';
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('❌ Register error:', error);
+                showError('Connection error: ' + error.message);
+                statusText.textContent = '❌ Connection error';
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                btn.disabled = false;
+            }
+        }
+        
+        // ============================================================
+        // CLEAR ERRORS ON INPUT
+        // ============================================================
+        document.querySelectorAll('#registerForm input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('error');
+                const errorEl = this.parentElement.querySelector('.error-text');
+                if (errorEl) errorEl.classList.remove('show');
+                hideMessages();
+            });
+        });
+        
+        // ============================================================
+        // ENTER KEY SUPPORT
+        // ============================================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const form = document.getElementById('registerForm');
+                if (form && document.activeElement?.closest('form') === form) {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+        
+        // ============================================================
+        // AUTO-FILL FROM REGISTRATION (if coming back from register)
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const email = localStorage.getItem('register_email');
+            const name = localStorage.getItem('register_name');
+            
+            if (email && document.getElementById('email').value === '') {
+                document.getElementById('email').value = email;
+            }
+            if (name && document.getElementById('fullName').value === '') {
+                document.getElementById('fullName').value = name;
+            }
+            
+            console.log('✅ Register page loaded');
+            console.log('📡 API URL:', API_URL);
+        });
+    </script>
+</body>
+</html>

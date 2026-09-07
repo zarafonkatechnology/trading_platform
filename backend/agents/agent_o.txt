@@ -1,0 +1,258 @@
+"""
+Agent_O - Seasonality Expert
+Analyzes time-based patterns and cycles
+"""
+
+from datetime import datetime, time
+import random
+from typing import Dict
+from .base_agent import BaseAgent
+
+class SeasonalityExpert(BaseAgent):
+    """Agent O - Seasonality Analysis"""
+    
+    def __init__(self):
+        super().__init__(
+            name="Agent_O",
+            agent_type="Seasonality Expert",
+            specialization="Analyzes time-based patterns and cycles"
+        )
+        self.session_times = {
+            'asia': (0, 9),      # 00:00 - 09:00 GMT
+            'london': (8, 17),   # 08:00 - 17:00 GMT
+            'newyork': (13, 22)  # 13:00 - 22:00 GMT
+        }
+        
+    def analyze(self, signal_data):
+        """Analyze seasonal and time-based patterns"""
+        pair = signal_data.get('pair', 'EURUSD')
+        current_time = datetime.now()
+        
+        # Analyze different seasonality factors
+        day_seasonality = self._analyze_day_seasonality(current_time)
+        month_seasonality = self._analyze_month_seasonality(current_time)
+        session_analysis = self._analyze_trading_session(current_time)
+        hour_pattern = self._analyze_hour_pattern(current_time)
+        
+        # Calculate composite seasonality score
+        score = self._calculate_seasonality_score(
+            day_seasonality, month_seasonality, session_analysis, hour_pattern
+        )
+        
+        if score > 60:
+            vote = 'BUY'
+            confidence = min(80, score)
+            reasoning = self._get_bullish_pattern(day_seasonality, month_seasonality)
+        elif score < 40:
+            vote = 'SELL'
+            confidence = min(80, 100 - score)
+            reasoning = self._get_bearish_pattern(day_seasonality, month_seasonality)
+        else:
+            vote = 'HOLD'
+            confidence = 55
+            reasoning = "No strong seasonal pattern detected"
+        
+        return {
+            'agent': self.name,
+            'type': self.agent_type,
+            'vote': vote,
+            'confidence': confidence,
+            'reasoning': reasoning,
+            'seasonality': {
+                'day': day_seasonality,
+                'month': month_seasonality,
+                'session': session_analysis,
+                'hour_bias': hour_pattern,
+                'score': score
+            },
+            'timestamp': current_time.isoformat()
+        }
+    
+    def _analyze_day_seasonality(self, dt):
+        """Analyze day of week patterns"""
+        day = dt.weekday()  # 0 = Monday, 6 = Sunday
+        
+        # Forex day patterns (based on historical data)
+        patterns = {
+            0: {'bias': 'neutral', 'avg_move': 0.005, 'name': 'Monday'},
+            1: {'bias': 'bullish', 'avg_move': 0.007, 'name': 'Tuesday'},
+            2: {'bias': 'bullish', 'avg_move': 0.008, 'name': 'Wednesday'},
+            3: {'bias': 'bearish', 'avg_move': 0.006, 'name': 'Thursday'},
+            4: {'bias': 'neutral', 'avg_move': 0.004, 'name': 'Friday'},
+            5: {'bias': 'neutral', 'avg_move': 0.002, 'name': 'Saturday'},
+            6: {'bias': 'neutral', 'avg_move': 0.001, 'name': 'Sunday'}
+        }
+        
+        pattern = patterns.get(day, patterns[0])
+        pattern['bias_score'] = 65 if pattern['bias'] == 'bullish' else (35 if pattern['bias'] == 'bearish' else 50)
+        
+        return pattern
+    
+    def _analyze_month_seasonality(self, dt):
+        """Analyze month patterns"""
+        month = dt.month
+        
+        # "Sell in May and Go Away" effect
+        if month in [5, 6, 7, 8]:
+            bias = 'bearish'
+            score = 35
+            pattern = "Summer lull - historically weaker"
+        elif month in [11, 12]:
+            bias = 'bullish'
+            score = 65
+            pattern = "Santa Rally - historically stronger"
+        elif month in [1, 2]:
+            bias = 'bullish'
+            score = 60
+            pattern = "January effect - strong start"
+        else:
+            bias = 'neutral'
+            score = 50
+            pattern = "Mixed historical performance"
+        
+        return {
+            'month': month,
+            'month_name': dt.strftime('%B'),
+            'bias': bias,
+            'score': score,
+            'pattern': pattern
+        }
+    
+    def _analyze_trading_session(self, dt):
+        """Analyze which trading session is active"""
+        current_hour = dt.hour
+        
+        if 0 <= current_hour < 8:
+            session = 'asia'
+            bias = 'neutral'
+            liquidity = 'low'
+            volatility = 'low'
+        elif 8 <= current_hour < 13:
+            session = 'london_open'
+            bias = 'bullish'
+            liquidity = 'high'
+            volatility = 'high'
+        elif 13 <= current_hour < 17:
+            session = 'london_ny_overlap'
+            bias = 'bullish'
+            liquidity = 'highest'
+            volatility = 'high'
+        elif 17 <= current_hour < 22:
+            session = 'ny_only'
+            bias = 'neutral'
+            liquidity = 'high'
+            volatility = 'medium'
+        else:
+            session = 'late_ny'
+            bias = 'bearish'
+            liquidity = 'low'
+            volatility = 'low'
+        
+        return {
+            'session': session,
+            'bias': bias,
+            'liquidity': liquidity,
+            'volatility': volatility,
+            'bias_score': 65 if bias == 'bullish' else (35 if bias == 'bearish' else 50)
+        }
+    
+    def _analyze_hour_pattern(self, dt):
+        """Analyze specific hour patterns"""
+        hour = dt.hour
+        
+        # Key trading hours
+        if hour == 8:  # London open
+            pattern = "London open - momentum often starts"
+            bias_score = 70
+        elif hour == 13:  # NY open
+            pattern = "NY open - high volatility"
+            bias_score = 65
+        elif hour == 10:  # London mid
+            pattern = "London mid - trend continuation"
+            bias_score = 60
+        elif hour == 15:  # NY mid
+            pattern = "NY mid - possible reversal"
+            bias_score = 45
+        elif hour == 21:  # Late NY
+            pattern = "Late NY - position squaring"
+            bias_score = 40
+        else:
+            pattern = "Normal trading hour"
+            bias_score = 50
+        
+        return {
+            'hour': hour,
+            'pattern': pattern,
+            'bias_score': bias_score
+        }
+    
+    def _calculate_seasonality_score(self, day, month, session, hour):
+        """Calculate composite seasonality score"""
+        scores = [
+            day['bias_score'],
+            month['score'],
+            session['bias_score'],
+            hour['bias_score']
+        ]
+        return sum(scores) / len(scores)
+    
+    def _get_bullish_pattern(self, day, month):
+        reasons = []
+        if day['bias'] == 'bullish':
+            reasons.append(f"{day['name']}s historically bullish")
+        if month['bias'] == 'bullish':
+            reasons.append(month['pattern'])
+        if not reasons:
+            reasons.append("Multiple seasonal factors aligning")
+        return f"Bullish seasonality: {', '.join(reasons[:2])}"
+    
+    def _get_bearish_pattern(self, day, month):
+        reasons = []
+        if day['bias'] == 'bearish':
+            reasons.append(f"{day['name']}s historically bearish")
+        if month['bias'] == 'bearish':
+            reasons.append(month['pattern'])
+        if not reasons:
+            reasons.append("Seasonal headwinds detected")
+        return f"Bearish seasonality: {', '.join(reasons[:2])}"
+def monte_carlo_forecast(self, current_price: float, volatility: float = 0.005, 
+                         n_sims: int = 1000, horizon: int = 20) -> Dict:
+    """
+    Simulate future price paths and predict cloud position probability.
+    """
+    outcomes = {'above_cloud': 0, 'inside_cloud': 0, 'below_cloud': 0}
+    
+    for _ in range(n_sims):
+        price = current_price
+        path = [price]
+        for _ in range(horizon):
+            price *= (1 + random.gauss(0, volatility))
+            path.append(price)
+        
+        # Get Ichimoku cloud at end of simulation (simplified)
+        final_price = path[-1]
+        # Assume cloud top/bottom based on current price ± 2%
+        cloud_top = current_price * 1.01
+        cloud_bottom = current_price * 0.99
+        
+        if final_price > cloud_top:
+            outcomes['above_cloud'] += 1
+        elif final_price < cloud_bottom:
+            outcomes['below_cloud'] += 1
+        else:
+            outcomes['inside_cloud'] += 1
+    
+    probs = {k: round(v/n_sims*100, 1) for k, v in outcomes.items()}
+    
+    # Determine vote based on most probable outcome
+    if probs['above_cloud'] > 60:
+        vote = 'BUY'
+        conf = probs['above_cloud']
+    elif probs['below_cloud'] > 60:
+        vote = 'SELL'
+        conf = probs['below_cloud']
+    else:
+        vote = 'HOLD'
+        conf = probs['inside_cloud']
+    
+    return {'vote': vote, 'confidence': conf, 'probabilities': probs}

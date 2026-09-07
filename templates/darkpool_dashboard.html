@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dark Pool Whale Dashboard</title>
+    <style>
+        body { background: #0a0e27; color: white; font-family: monospace; padding: 20px; }
+        h1 { color: #ffd700; }
+        .panel { background: #16213e; padding: 20px; margin: 10px 0; border-radius: 10px; }
+        .whale-card { background: #0f3460; padding: 15px; margin: 10px; border-radius: 8px; border-left: 4px solid #ffd700; }
+        .buy { color: #4caf50; }
+        .sell { color: #f44336; }
+        .veto { color: #f44336; font-weight: bold; }
+        .confirm { color: #4caf50; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🐋 Dark Pool Whale Detector</h1>
+    <p>Detecting invisible whale footprints via FINRA TRF data</p>
+
+    <div class="panel">
+        <h2>📡 How It Works</h2>
+        <div class="whale-card">
+            <strong>🔍 The "Invisible" Detection Method:</strong><br>
+            Dark pool trades are hidden until executed. After execution, they MUST be reported to FINRA TRF.<br>
+            Your agent scans these reports for:<br>
+            • Trades > $1M (institutional size)<br>
+            • Trades at Fibonacci levels<br>
+            • Trades at Ichimoku cloud edges<br>
+            • Trades at support/resistance<br>
+            <span class="buy">🐋 When detected = Whale footprint!</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>🐋 Live Whale Detection</h2>
+        <button onclick="scanDarkPools()">🔍 Scan for Whale Footprints</button>
+        <div id="result"></div>
+    </div>
+
+    <div class="panel">
+        <h2>⚖️ Whale Veto System</h2>
+        <div id="vetoDemo"></div>
+    </div>
+
+    <script>
+        async function scanDarkPools() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="loading">🐋 Scanning dark pools...</div>';
+            
+            // Simulate API call to your backend
+            setTimeout(() => {
+                const hasWhale = Math.random() > 0.5;
+                
+                if (hasWhale) {
+                    resultDiv.innerHTML = `
+                        <div class="whale-card">
+                            <strong>🐋 WHALE FOOTPRINT DETECTED!</strong><br>
+                            <span class="buy">💰 $4.2M Dark Pool Trade at 0.618 Fibonacci</span><br>
+                            <span class="buy">🐋 Direction: BUYING below market price</span><br>
+                            <span class="buy">📐 Level: Fibonacci 0.618 - Key support</span><br>
+                            <br>
+                            <strong>Consensus Impact:</strong><br>
+                            Technicals say: BUY<br>
+                            Whale says: BUY<br>
+                            <span class="confirm">✅ WHALE CONFIRMATION - Confidence: 100%</span>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="whale-card">
+                            <strong>📡 No significant whale footprints</strong><br>
+                            Dark pool volume normal. No institutional activity detected.
+                        </div>
+                    `;
+                }
+            }, 1500);
+        }
+        
+        // Show Veto demo
+        document.getElementById('vetoDemo').innerHTML = `
+            <div class="whale-card">
+                <strong>⚖️ Bull Trap Scenario (VETO Demo):</strong><br>
+                Technicals: 📈 BUY (RSI oversold, price at support)<br>
+                Whale Detector: 🐻 SELL ($5.2M dark pool distribution)<br>
+                <span class="veto">⛔ VETO ACTIVATED: Bull Trap avoided! No trade.</span>
+            </div>
+            <div class="whale-card">
+                <strong>⚖️ Bear Trap Scenario (VETO Demo):</strong><br>
+                Technicals: 📉 SELL (resistance rejection)<br>
+                Whale Detector: 🐋 BUY ($8.1M dark pool accumulation)<br>
+                <span class="veto">⛔ VETO ACTIVATED: Bear Trap avoided! No trade.</span>
+            </div>
+            <div class="whale-card">
+                <strong>✅ Perfect Alignment Scenario:</strong><br>
+                Technicals: 📈 BUY<br>
+                Whale Detector: 🐋 BUY ($3.5M dark pool accumulation at 0.618)<br>
+                <span class="confirm">✅ WHALE CONFIRMATION - 100% Confidence - FULL POSITION</span>
+            </div>
+        `;
+    </script>
+</body>
+</html>

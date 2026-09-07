@@ -1,0 +1,18 @@
+============================================================
+BACKTEST RESULTS (FIXED)
+============================================================
+
+total_trades: 49
+winning_trades: 12
+losing_trades: 37
+win_rate: 24.5
+bounce_rate: 5.3
+total_pnl: -650
+avg_hold_time_minutes: 0
+max_drawdown: 1000
+signals_detected: 226
+calibration_signals: 226
+calibration_wins: 12
+passed: False
+
+============================================================

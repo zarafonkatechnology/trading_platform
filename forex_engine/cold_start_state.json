@@ -1,0 +1,458 @@
+{
+  "samples": [
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.1385,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T11:46:07.028801"
+    },
+    {
+      "pair": "AUDUSD",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 0.69863,
+      "win": "True",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:46:33.479593"
+    },
+    {
+      "pair": "EURGBP",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.85415,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:47:05.279000"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.45,
+      "win": "True",
+      "pnl": -300.0,
+      "timestamp": "2026-07-24T11:47:20.749116"
+    },
+    {
+      "pair": "EURCAD",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 1.60246,
+      "win": "False",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T11:47:31.625176"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.13822,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:49:12.984219"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 163.761,
+      "win": "True",
+      "pnl": 300.0,
+      "timestamp": "2026-07-24T11:49:35.216346"
+    },
+    {
+      "pair": "USDCHF",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 0.81631,
+      "win": "False",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T11:49:54.460543"
+    },
+    {
+      "pair": "USDCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.40767,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:50:07.179909"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.406,
+      "win": "False",
+      "pnl": 300.0,
+      "timestamp": "2026-07-24T11:50:53.985425"
+    },
+    {
+      "pair": "EURCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.60218,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T11:51:02.702708"
+    },
+    {
+      "pair": "EURCHF",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 0.92918,
+      "win": "True",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:51:27.328568"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.33215,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:52:49.654122"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 163.79,
+      "win": "True",
+      "pnl": 300.0,
+      "timestamp": "2026-07-24T11:52:52.150193"
+    },
+    {
+      "pair": "USDCHF",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.81645,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T11:52:55.135819"
+    },
+    {
+      "pair": "AUDUSD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.69849,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:53:13.544394"
+    },
+    {
+      "pair": "USDCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.40783,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T11:53:21.595699"
+    },
+    {
+      "pair": "NZDUSD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.57828,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:53:34.753825"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.418,
+      "win": "True",
+      "pnl": -300.0,
+      "timestamp": "2026-07-24T11:53:49.356560"
+    },
+    {
+      "pair": "EURNZD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.96698,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:54:18.061159"
+    },
+    {
+      "pair": "EURCHF",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.92924,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:54:30.938786"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.13827,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:56:03.341300"
+    },
+    {
+      "pair": "USDCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.40767,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:56:47.068016"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.417,
+      "win": "True",
+      "pnl": -300.0,
+      "timestamp": "2026-07-24T11:57:11.527101"
+    },
+    {
+      "pair": "EURCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.60222,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:57:18.049680"
+    },
+    {
+      "pair": "EURNZD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.96688,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:57:29.994541"
+    },
+    {
+      "pair": "USDCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.40781,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T11:59:34.009799"
+    },
+    {
+      "pair": "EURGBP",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.85415,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T11:59:56.397425"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.37,
+      "win": "True",
+      "pnl": -300.0,
+      "timestamp": "2026-07-24T12:00:08.500824"
+    },
+    {
+      "pair": "EURCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.60218,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:00:25.265956"
+    },
+    {
+      "pair": "EURCHF",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 0.92928,
+      "win": "False",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:01:05.508849"
+    },
+    {
+      "pair": "USDCHF",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.81631,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:02:53.020230"
+    },
+    {
+      "pair": "USDCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.40784,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:03:24.176726"
+    },
+    {
+      "pair": "EURGBP",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.85443,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:03:43.686298"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.386,
+      "win": "False",
+      "pnl": 300.0,
+      "timestamp": "2026-07-24T12:03:53.692771"
+    },
+    {
+      "pair": "EURCHF",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.92922,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:04:06.135954"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 163.738,
+      "win": "False",
+      "pnl": -300.0,
+      "timestamp": "2026-07-24T12:05:53.362254"
+    },
+    {
+      "pair": "USDCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.40777,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:06:32.140482"
+    },
+    {
+      "pair": "EURGBP",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.85447,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:07:01.580523"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.382,
+      "win": "False",
+      "pnl": 300.0,
+      "timestamp": "2026-07-24T12:07:21.270334"
+    },
+    {
+      "pair": "EURCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.60235,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:07:36.246618"
+    },
+    {
+      "pair": "EURNZD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.96711,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:07:53.813325"
+    },
+    {
+      "pair": "EURCHF",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.92938,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:08:07.533455"
+    },
+    {
+      "pair": "AUDUSD",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 0.69875,
+      "win": "True",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:10:15.210970"
+    },
+    {
+      "pair": "USDCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.40778,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:10:27.992993"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.406,
+      "win": "False",
+      "pnl": 300.0,
+      "timestamp": "2026-07-24T12:11:21.855315"
+    },
+    {
+      "pair": "EURNZD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.96751,
+      "win": "True",
+      "pnl": 3.0,
+      "timestamp": "2026-07-24T12:11:32.852832"
+    },
+    {
+      "pair": "EURGBP",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 0.85465,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:14:36.447480"
+    },
+    {
+      "pair": "EURJPY",
+      "signal": "SELL",
+      "confidence": 95,
+      "price": 186.41,
+      "win": "False",
+      "pnl": 300.0,
+      "timestamp": "2026-07-24T12:14:49.471444"
+    },
+    {
+      "pair": "EURCAD",
+      "signal": "BUY",
+      "confidence": 95,
+      "price": 1.60262,
+      "win": "False",
+      "pnl": -3.0,
+      "timestamp": "2026-07-24T12:15:02.366290"
+    }
+  ],
+  "wins": 21,
+  "losses": 29,
+  "active": false,
+  "timestamp": "2026-09-01T00:19:39.982573"
+}

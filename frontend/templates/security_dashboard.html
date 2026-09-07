@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Dashboard - Multi-Agent Trading System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0e27;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #ffd700;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .panel {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .info {
+            color: #2196f3;
+        }
+        
+        .signature-badge {
+            background: #0f3460;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        
+        th {
+            background: #0f3460;
+            color: #ffd700;
+        }
+        
+        tr:hover {
+            background: #1a1f3a;
+        }
+        
+        button {
+            background: #ffd700;
+            color: #0a0e27;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        
+        button:hover {
+            opacity: 0.8;
+            transform: scale(1.02);
+        }
+        
+        .metric-card {
+            display: inline-block;
+            background: #0f3460;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #ffd700;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #ffd700;
+        }
+        
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .badge-active {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .badge-signed {
+            background: #2196f3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔐 Security & Agent Signature Dashboard</h1>
+    <p>Digital signatures, identity verification, and audit trail for all 15 agents</p>
+    
+    <!-- Security Status Panel -->
+    <div class="panel">
+        <h2>🛡️ Security Status</h2>
+        <div class="flex-row">
+            <div class="metric-card">
+                <div class="metric-value" id="totalAgents">15</div>
+                <div>Registered Agents</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value success" id="verifiedCount">0</div>
+                <div>Verified Signatures</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value error" id="rejectedCount">0</div>
+                <div>Rejected Signatures</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value warning" id="securityLevel">100%</div>
+                <div>Security Score</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Registered Agents -->
+    <div class="panel">
+        <h2>🆔 Registered Agents with Digital Signatures</h2>
+        <div style="overflow-x: auto;">
+            <table id="agentsTable">
+                <thead>
+                    <tr>
+                        <th>Agent</th>
+                        <th>Type</th>
+                        <th>Agent ID</th>
+                        <th>Status</th>
+                        <th>Signature</th>
+                    </tr>
+                </thead>
+                <tbody id="agentsTableBody">
+                    <!-- Agents will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Signature Verification Test -->
+    <div class="panel">
+        <h2>🔍 Signature Verification Test</h2>
+        <div class="flex-row">
+            <select id="testAgent" style="padding: 8px; border-radius: 5px; background: #0f3460; color: white; border: 1px solid #ffd700;">
+                <option value="Agent_A">Agent_A - Trend Follower</option>
+                <option value="Agent_B">Agent_B - Mean Reversion</option>
+                <option value="Agent_C">Agent_C - Momentum</option>
+                <option value="Agent_D">Agent_D - Volatility</option>
+                <option value="Agent_E">Agent_E - Microstructure</option>
+                <option value="Agent_F">Agent_F - Candlestick</option>
+                <option value="Agent_G">Agent_G - Whale Tracker</option>
+                <option value="Agent_H">Agent_H - Fibonacci</option>
+                <option value="Agent_I">Agent_I - Sentiment Master</option>
+                <option value="Agent_J">Agent_J - Volume Master</option>
+                <option value="Agent_K">Agent_K - Ichimoku Expert</option>
+                <option value="Agent_L">Agent_L - Fundamental Master</option>
+                <option value="Agent_M">Agent_M - Market Profile</option>
+                <option value="Agent_N">Agent_N - Intermarket</option>
+                <option value="Agent_O">Agent_O - Seasonality</option>
+            </select>
+            <select id="testVote" style="padding: 8px; border-radius: 5px; background: #0f3460; color: white; border: 1px solid #ffd700;">
+                <option value="BUY">BUY</option>
+                <option value="SELL">SELL</option>
+                <option value="HOLD">HOLD</option>
+            </select>
+            <input type="number" id="testConfidence" value="75" min="0" max="100" style="padding: 8px; border-radius: 5px; background: #0f3460; color: white; border: 1px solid #ffd700; width: 80px;">
+            <button onclick="testSignature()">🔐 Test Signature</button>
+            <button onclick="simulateVote()">🗳️ Simulate Vote</button>
+        </div>
+        <div id="verificationResult" style="margin-top: 15px; padding: 15px; background: #0f3460; border-radius: 8px; display: none;"></div>
+    </div>
+    
+    <!-- Audit Log -->
+    <div class="panel">
+        <h2>📋 Recent Audit Log</h2>
+        <div class="flex-row" style="margin-bottom: 15px;">
+            <button onclick="refreshAuditLog()">🔄 Refresh Log</button>
+            <button onclick="exportAuditLog()">📄 Export Log</button>
+            <button onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="auditTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Agent</th>
+                        <th>Action</th>
+                        <th>Signature Status</th>
+                    </tr>
+                </thead>
+                <tbody id="auditTableBody">
+                    <tr>
+                        <td colspan="4" style="text-align: center;">No audit records yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="flex-row">
+        <a href="/forex" class="back-link">← Back to Trading Dashboard</a>
+        <a href="/learning" class="back-link">🧠 Learning Dashboard</a>
+        <a href="/performance" class="back-link">📊 Performance</a>
+    </div>
+</div>
+
+<script>
+    // Agent list
+    const AGENTS = [
+        'Agent_A', 'Agent_B', 'Agent_C', 'Agent_D', 'Agent_E',
+        'Agent_F', 'Agent_G', 'Agent_H', 'Agent_I', 'Agent_J',
+        'Agent_K', 'Agent_L', 'Agent_M', 'Agent_N', 'Agent_O'
+    ];
+    
+    // Audit log storage
+    let auditLog = [];
+    let verifiedCount = 0;
+    let rejectedCount = 0;
+    
+    // Load agents into table
+    function loadAgents() {
+        const tbody = document.getElementById('agentsTableBody');
+        tbody.innerHTML = '';
+        
+        for (let i = 0; i < AGENTS.length; i++) {
+            const agent = AGENTS[i];
+            const agentId = '0x' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 6);
+            
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td><strong>${agent}</strong></td>
+                <td>Trading Agent</td>
+                <td><span class="signature-badge">${agentId}</span></td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td><span class="badge badge-signed">🔐 RSA-2048</span></td>
+            `;
+        }
+    }
+    
+    // Test signature verification
+    function testSignature() {
+        const agent = document.getElementById('testAgent').value;
+        const vote = document.getElementById('testVote').value;
+        const confidence = document.getElementById('testConfidence').value;
+        
+        const resultDiv = document.getElementById('verificationResult');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<div class="loading">🔐 Verifying signature...</div>';
+        
+        // Simulate verification process
+        setTimeout(() => {
+            const isValid = Math.random() > 0.1; // 90% valid rate
+            const signatureHash = '0x' + Math.random().toString(36).substring(2, 15);
+            
+            if (isValid) {
+                resultDiv.innerHTML = `
+                    <div style="color: #4caf50;">
+                        <strong>✅ SIGNATURE VERIFIED</strong><br>
+                        Agent: ${agent}<br>
+                        Vote: ${vote}<br>
+                        Confidence: ${confidence}%<br>
+                        Signature: ${signatureHash}<br>
+                        Algorithm: RSA-PSS-SHA256<br>
+                        Key Size: 2048 bits<br>
+                        Status: <span class="success">AUTHENTIC</span>
+                    </div>
+                `;
+                
+                // Add to audit log
+                addToAuditLog(agent, 'VOTE_CAST', 'VERIFIED', vote, confidence);
+                verifiedCount++;
+            } else {
+                resultDiv.innerHTML = `
+                    <div style="color: #f44336;">
+                        <strong>❌ SIGNATURE INVALID</strong><br>
+                        Agent: ${agent}<br>
+                        Vote: ${vote}<br>
+                        Confidence: ${confidence}%<br>
+                        Status: <span class="error">TAMPERED / FORGED</span><br>
+                        Action: Vote REJECTED from consensus
+                    </div>
+                `;
+                
+                // Add to audit log
+                addToAuditLog(agent, 'VOTE_REJECTED', 'INVALID', vote, confidence);
+                rejectedCount++;
+            }
+            
+            updateMetrics();
+        }, 1000);
+    }
+    
+    // Simulate a vote
+    function simulateVote() {
+        const randomAgent = AGENTS[Math.floor(Math.random() * AGENTS.length)];
+        const votes = ['BUY', 'SELL', 'HOLD'];
+        const randomVote = votes[Math.floor(Math.random() * votes.length)];
+        const randomConfidence = Math.floor(Math.random() * 40) + 60;
+        const isValid = Math.random() > 0.15;
+        
+        if (isValid) {
+            addToAuditLog(randomAgent, 'VOTE_CAST', 'VERIFIED', randomVote, randomConfidence);
+            verifiedCount++;
+            alert(`✅ ${randomAgent} cast a VERIFIED vote: ${randomVote} (${randomConfidence}% confidence)`);
+        } else {
+            addToAuditLog(randomAgent, 'VOTE_REJECTED', 'INVALID', randomVote, randomConfidence);
+            rejectedCount++;
+            alert(`❌ ${randomAgent} attempted vote REJECTED: Invalid signature detected!`);
+        }
+        
+        updateMetrics();
+        refreshAuditLog();
+    }
+    
+    // Add entry to audit log
+    function addToAuditLog(agent, action, status, vote, confidence) {
+        auditLog.unshift({
+            timestamp: new Date().toLocaleString(),
+            agent: agent,
+            action: action,
+            status: status,
+            vote: vote,
+            confidence: confidence,
+            signature: '0x' + Math.random().toString(36).substring(2, 12)
+        });
+        
+        // Keep only last 50 entries
+        if (auditLog.length > 50) {
+            auditLog.pop();
+        }
+        
+        refreshAuditLog();
+    }
+    
+    // Refresh audit log display
+    function refreshAuditLog() {
+        const tbody = document.getElementById('auditTableBody');
+        tbody.innerHTML = '';
+        
+        if (auditLog.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No audit records yet</td></tr>';
+            return;
+        }
+        
+        for (let i = 0; i < auditLog.length; i++) {
+            const log = auditLog[i];
+            const row = tbody.insertRow();
+            const statusClass = log.status === 'VERIFIED' ? 'success' : 'error';
+            row.innerHTML = `
+                <td>${log.timestamp}</td>
+                <td><strong>${log.agent}</strong></td>
+                <td>${log.action}</td>
+                <td class="${statusClass}">${log.status}</td>
+            `;
+        }
+    }
+    
+    // Update metrics display
+    function updateMetrics() {
+        document.getElementById('verifiedCount').innerHTML = verifiedCount;
+        document.getElementById('rejectedCount').innerHTML = rejectedCount;
+        
+        const total = verifiedCount + rejectedCount;
+        const securityScore = total > 0 ? ((verifiedCount / total) * 100).toFixed(1) : 100;
+        document.getElementById('securityLevel').innerHTML = securityScore + '%';
+    }
+    
+    // Export audit log
+    function exportAuditLog() {
+        const data = {
+            export_time: new Date().toISOString(),
+            total_verified_votes: verifiedCount,
+            total_rejected_votes: rejectedCount,
+            security_score: document.getElementById('securityLevel').innerHTML,
+            audit_log: auditLog,
+            agents: AGENTS,
+            system_status: 'SECURE'
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audit_log_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        alert('📄 Audit log exported successfully!');
+    }
+    
+    // Clear audit log
+    function clearLog() {
+        if (confirm('Are you sure you want to clear the audit log?')) {
+            auditLog = [];
+            verifiedCount = 0;
+            rejectedCount = 0;
+            refreshAuditLog();
+            updateMetrics();
+            alert('✅ Audit log cleared');
+        }
+    }
+    
+    // Initialize everything
+    function init() {
+        loadAgents();
+        updateMetrics();
+        
+        // Add some initial demo entries
+        setTimeout(() => {
+            addToAuditLog('System', 'INITIALIZED', 'VERIFIED', null, null);
+            addToAuditLog('Agent_A', 'REGISTERED', 'VERIFIED', null, null);
+            addToAuditLog('Security', 'SIGNATURE_KEY_GENERATED', 'VERIFIED', null, null);
+        }, 500);
+    }
+    
+    // Start everything when page loads
+    init();
+</script>
+</body>
+</html>

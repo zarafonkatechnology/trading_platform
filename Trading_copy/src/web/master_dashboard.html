@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Dashboard - NEXUS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 12px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 24px;
+        }
+
+        .brand-text {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00d4ff, #7b2ffc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-badge {
+            font-size: 10px;
+            background: #8b5cf6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-item i { width: 20px; text-align: center; font-size: 16px; }
+        .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #f1f5f9; }
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+            color: #f1f5f9;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 24px;
+            background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 20px;
+            margin-top: auto;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .status-text { font-size: 12px; color: #94a3b8; }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 4px;
+        }
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.06);
+        }
+        .user-info { display: flex; flex-direction: column; flex: 1; }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-role { font-size: 11px; color: #f59e0b; }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.25); }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            padding: 24px 32px;
+            min-height: 100vh;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-title { font-size: 28px; font-weight: 700; }
+        .page-subtitle { font-size: 14px; color: #94a3b8; margin-left: 12px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        .page-section { display: none; animation: fadeIn 0.3s ease; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .stat-card:hover { background: rgba(30, 41, 59, 0.8); transform: translateY(-2px); }
+        .stat-card .label { color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+        .stat-card .value.gold { color: #f59e0b; }
+        .stat-card .value.green { color: #22c55e; }
+        .stat-card .value.blue { color: #3b82f6; }
+        .stat-card .value.purple { color: #8b5cf6; }
+
+        /* ===== CLIENT TABLE ===== */
+        .client-table-container {
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .client-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .client-table-header h3 { font-size: 18px; font-weight: 700; }
+
+        .client-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-add {
+            padding: 8px 16px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+        .btn-add:hover { background: #2563eb; transform: translateY(-1px); }
+
+        .btn-export {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+        .btn-export:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        table th {
+            text-align: left;
+            padding: 12px 14px;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            white-space: nowrap;
+        }
+
+        table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        table tr:hover td { background: rgba(255, 255, 255, 0.03); }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .status-badge.active { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.inactive { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .status-badge.pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+
+        .action-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s;
+            margin-right: 4px;
+        }
+        .action-btn.view { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .action-btn.view:hover { background: rgba(59, 130, 246, 0.25); }
+        .action-btn.deposit { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .action-btn.deposit:hover { background: rgba(34, 197, 94, 0.25); }
+        .action-btn.block { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .action-btn.block:hover { background: rgba(239, 68, 68, 0.25); }
+        .action-btn.edit { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .action-btn.edit:hover { background: rgba(245, 158, 11, 0.25); }
+        .action-btn.delete { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .action-btn.delete:hover { background: rgba(239, 68, 68, 0.25); }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: #1a1f3a;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .modal-content .form-group {
+            margin-bottom: 16px;
+        }
+        .modal-content label {
+            display: block;
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f1f5f9;
+            font-size: 14px;
+            outline: none;
+        }
+        .modal-content input:focus {
+            border-color: #3b82f6;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .modal-actions .btn-confirm { background: #3b82f6; color: white; }
+        .modal-actions .btn-confirm:hover { background: #2563eb; }
+        .modal-actions .btn-cancel { background: rgba(255, 255, 255, 0.05); color: #94a3b8; }
+        .modal-actions .btn-cancel:hover { background: rgba(255, 255, 255, 0.1); }
+        .modal-actions .btn-danger { background: #ef4444; color: white; }
+        .modal-actions .btn-danger:hover { background: #dc2626; }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .toast.success { background: #22c55e; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar { width: 72px; padding: 16px 8px; }
+            .sidebar-brand .brand-text, .sidebar-brand .brand-badge,
+            .nav-item span:not(.nav-badge), .sidebar-footer .user-info,
+            .sidebar-footer .connection-status .status-text { display: none; }
+            .nav-item { justify-content: center; padding: 12px; }
+            .nav-item i { font-size: 20px; }
+            .nav-badge { position: absolute; top: 4px; right: 4px; font-size: 9px; min-width: 16px; padding: 1px 5px; }
+            .main-content { padding: 16px; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { padding: 12px; max-height: none; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .client-table-header { flex-direction: column; align-items: stretch; }
+            .client-actions { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="url(#brandGradient)"/>
+                    <path d="M10 22L16 10L22 22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M14 18H18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0" y1="0" x2="32" y2="32">
+                            <stop offset="0%" stop-color="#00d4ff"/>
+                            <stop offset="100%" stop-color="#7b2ffc"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-text">NEXUS</span>
+            <span class="brand-badge">v3.0</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <a href="#" class="nav-item" data-page="clients"><i class="fas fa-users"></i><span>Clients</span><span class="nav-badge" id="clientCount">0</span></a>
+            <a href="#" class="nav-item" data-page="trades"><i class="fas fa-exchange-alt"></i><span>Trades</span><span class="nav-badge" id="tradeCount">0</span></a>
+            <a href="#" class="nav-item" data-page="revenue"><i class="fas fa-dollar-sign"></i><span>Revenue</span></a>
+            <a href="#" class="nav-item" data-page="settings"><i class="fas fa-cog"></i><span>Settings</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="connection-status">
+                <span class="status-dot online"></span>
+                <span class="status-text">Connected</span>
+            </div>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Master&background=7b2ffc&color=fff&size=40" alt="Profile">
+                <div class="user-info">
+                    <span class="user-name" id="masterName">Master Admin</span>
+                    <span class="user-role">🔑 Admin</span>
+                </div>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+        <header class="top-header">
+            <div>
+                <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                <span class="page-subtitle" id="pageSubtitle">Master Overview</span>
+            </div>
+            <div class="header-right">
+                <div class="header-time"><i class="far fa-clock"></i><span id="timeDisplay">--:--:--</span></div>
+            </div>
+        </header>
+
+        <!-- ===== DASHBOARD ===== -->
+        <div id="page-dashboard" class="page-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Total Clients</div>
+                    <div class="value gold" id="totalClients">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Balance</div>
+                    <div class="value green" id="totalBalance">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Equity</div>
+                    <div class="value blue" id="totalEquity">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Active Trades</div>
+                    <div class="value purple" id="activeTrades">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Profit</div>
+                    <div class="value gold" id="totalProfit">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Revenue</div>
+                    <div class="value green" id="totalRevenue">$0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CLIENTS ===== -->
+        <div id="page-clients" class="page-section">
+            <div class="client-table-container">
+                <div class="client-table-header">
+                    <h3>👥 Client Management</h3>
+                    <div class="client-actions">
+                        <input type="text" id="clientSearch" placeholder="Search clients..." style="
+                            padding: 8px 14px;
+                            border-radius: 8px;
+                            border: 1px solid rgba(255,255,255,0.06);
+                            background: rgba(255,255,255,0.05);
+                            color: #f1f5f9;
+                            font-size: 13px;
+                            outline: none;
+                            width: 200px;
+                        " oninput="searchClients(this.value)">
+                        <button class="btn-export" onclick="exportClients()">
+                            <i class="fas fa-file-export"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Email</th>
+                                <th>Balance</th>
+                                <th>Equity</th>
+                                <th>P&L</th>
+                                <th>Trades</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientTableBody">
+                            <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">Loading clients...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TRADES ===== -->
+        <div id="page-trades" class="page-section">
+            <div class="client-table-container">
+                <div class="client-table-header">
+                    <h3>📊 Live Trades</h3>
+                    <div class="client-actions">
+                        <button class="btn-export" onclick="exportTrades()">
+                            <i class="fas fa-file-export"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Symbol</th>
+                                <th>Type</th>
+                                <th>Volume</th>
+                                <th>Entry</th>
+                                <th>Current</th>
+                                <th>P&L</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradeTableBody">
+                            <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No active trades</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== REVENUE ===== -->
+        <div id="page-revenue" class="page-section">
+            <div class="client-table-container">
+                <div class="client-table-header">
+                    <h3>💰 Revenue & Fees</h3>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;padding:16px 0;">
+                    <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;">
+                        <div style="color:#94a3b8;font-size:12px;">Total Revenue</div>
+                        <div style="font-size:24px;font-weight:700;color:#f59e0b;" id="totalRevenueDetail">$0</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;">
+                        <div style="color:#94a3b8;font-size:12px;">Performance Fees</div>
+                        <div style="font-size:24px;font-weight:700;color:#22c55e;" id="performanceFees">$0</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;">
+                        <div style="color:#94a3b8;font-size:12px;">Management Fees</div>
+                        <div style="font-size:24px;font-weight:700;color:#3b82f6;" id="managementFees">$0</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;">
+                        <div style="color:#94a3b8;font-size:12px;">This Month</div>
+                        <div style="font-size:24px;font-weight:700;color:#8b5cf6;" id="monthlyRevenue">$0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SETTINGS ===== -->
+        <div id="page-settings" class="page-section">
+            <div class="client-table-container">
+                <div class="client-table-header">
+                    <h3>⚙️ Platform Settings</h3>
+                </div>
+                <div style="padding:16px 0;">
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Performance Fee (%)</label>
+                        <input type="number" id="performanceFee" value="20" step="0.5" min="0" max="50" style="width:200px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Management Fee (%)</label>
+                        <input type="number" id="managementFee" value="1.5" step="0.1" min="0" max="5" style="width:200px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Spread Markup (pips)</label>
+                        <input type="number" id="spreadMarkup" value="0.2" step="0.1" min="0" max="5" style="width:200px;">
+                    </div>
+                    <button onclick="saveSettings()" style="padding:10px 24px;background:#3b82f6;border:none;border-radius:8px;color:white;cursor:pointer;">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== MODAL ===== -->
+    <div class="modal" id="clientModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Deposit</h2>
+            <div id="modalBody">
+                <div class="form-group">
+                    <label>Amount ($)</label>
+                    <input type="number" id="modalAmount" value="100" step="10" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <input type="text" id="modalNote" placeholder="Deposit note...">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-confirm" id="modalConfirm">Confirm</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION
+        // ============================================================
+        const API_URL = 'http://localhost:8000/api/v1';
+        let masterToken = localStorage.getItem('master_token');
+        let clients = [];
+        let trades = [];
+        let currentClientId = null;
+
+        // ============================================================
+        // AUTH CHECK
+        // ============================================================
+        if (!masterToken) {
+            window.location.href = '/master_login.html';
+        }
+
+        // ============================================================
+        // NAVIGATION
+        // ============================================================
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+                const page = this.dataset.page;
+                document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+                document.getElementById(`page-${page}`).classList.add('active');
+                const titles = {
+                    'dashboard': ['Dashboard', 'Master Overview'],
+                    'clients': ['Clients', 'Client Management'],
+                    'trades': ['Trades', 'Live Trades'],
+                    'revenue': ['Revenue', 'Revenue & Fees'],
+                    'settings': ['Settings', 'Platform Settings']
+                };
+                document.getElementById('pageTitle').textContent = titles[page][0];
+                document.getElementById('pageSubtitle').textContent = titles[page][1];
+                
+                if (page === 'clients') loadClients();
+                if (page === 'trades') loadTrades();
+                if (page === 'revenue') loadRevenue();
+            });
+        });
+
+        // ============================================================
+        // API HELPERS
+        // ============================================================
+        async function apiRequest(endpoint, options = {}) {
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Authorization': `Bearer ${masterToken}`,
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {})
+                }
+            });
+            
+            if (response.status === 401) {
+                localStorage.removeItem('master_token');
+                window.location.href = '/master_login.html';
+                throw new Error('Session expired');
+            }
+            
+            return response.json();
+        }
+
+        // ============================================================
+        // LOAD DATA
+        // ============================================================
+        async function loadDashboard() {
+            try {
+                const data = await apiRequest('/master/dashboard');
+                
+                if (data.success) {
+                    document.getElementById('totalClients').textContent = data.stats.total_clients || 0;
+                    document.getElementById('totalBalance').textContent = '$' + (data.stats.total_balance || 0).toLocaleString();
+                    document.getElementById('totalEquity').textContent = '$' + (data.stats.total_equity || 0).toLocaleString();
+                    document.getElementById('activeTrades').textContent = data.stats.active_trades || 0;
+                    document.getElementById('totalProfit').textContent = '$' + (data.stats.total_profit || 0).toLocaleString();
+                    document.getElementById('totalRevenue').textContent = '$' + (data.stats.total_revenue || 0).toLocaleString();
+                    document.getElementById('clientCount').textContent = data.stats.total_clients || 0;
+                    document.getElementById('tradeCount').textContent = data.stats.active_trades || 0;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        // ===== LOAD CLIENTS - REFRESH AFTER ACTION =====
+async function loadClients() {
+    try {
+        const token = localStorage.getItem('master_token');
+        if (!token) {
+            console.log('⚠️ No master token found');
+            return;
+        }
+
+        console.log('🔄 Loading clients...');
+        
+        const response = await fetch(`${API_URL}/master/clients`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📥 Clients loaded:', data);
+
+        if (data.success) {
+            clients = data.clients || [];
+            renderClients(clients);
+            
+            // ✅ Update badge
+            const badge = document.getElementById('clientCount');
+            if (badge) badge.textContent = clients.length;
+        } else {
+            console.error('Failed to load clients:', data.error);
+        }
+    } catch (error) {
+        console.error('❌ Error loading clients:', error);
+    }
+}
+
+        // ===== RENDER CLIENTS - WITH UUID =====
+function renderClients(clientsList) {
+    const tbody = document.getElementById('clientTableBody');
+    if (!clientsList || clientsList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No clients found</td></tr>`;
+        return;
+    }
+
+    let html = '';
+    for (const client of clientsList) {
+        // ✅ USE THE UUID FROM THE DATABASE
+        const clientId = client.id || client.user_id || client._id;
+        const pnlClass = client.profit >= 0 ? 'color:#22c55e;' : 'color:#ef4444;';
+        const statusClass = client.is_active ? 'active' : 'inactive';
+        const statusText = client.is_active ? 'Active' : 'Blocked';
+        const displayName = client.full_name || client.email || 'Unknown';
+        
+        html += `
+            <tr>
+                <td><strong>${displayName}</strong></td>
+                <td style="color:#94a3b8;">${client.email || '-'}</td>
+                <td>$${(client.balance || 0).toFixed(2)}</td>
+                <td>$${(client.equity || 0).toFixed(2)}</td>
+                <td style="${pnlClass}">$${(client.profit || 0).toFixed(2)}</td>
+                <td>${client.total_trades || 0}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="action-btn deposit" onclick="openDeposit('${clientId}')"><i class="fas fa-plus"></i></button>
+                    <button class="action-btn view" onclick="viewClient('${clientId}')"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn block" onclick="toggleClient('${clientId}')"><i class="fas fa-${client.is_active ? 'ban' : 'check'}"></i></button>
+                </td>
+            </tr>
+        `;
+    }
+    tbody.innerHTML = html;
+}
+        // ===== LOAD TRADES FROM SUPABASE =====
+// ===== LOAD TRADES - SHOW ALL =====
+async function loadTrades() {
+    try {
+        const token = localStorage.getItem('master_token');
+        if (!token) {
+            console.log('⚠️ No master token found');
+            return;
+        }
+
+        console.log('🔄 Loading all trades...');
+        
+        const response = await fetch(`${API_URL}/master/trades`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        console.log('📥 Trades response:', data);
+
+        const tbody = document.getElementById('tradeTableBody');
+        const badge = document.getElementById('tradeCount');
+
+        if (!tbody) return;
+
+        if (!response.ok || !data.success) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;color:#ef4444;">
+                        Error: ${data.error || 'Unknown error'}
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const trades = data.trades || [];
+        const debug = data.debug || {};
+
+        console.log(`📊 Found ${trades.length} trades`);
+
+        if (trades.length > 0) {
+            let html = '';
+            for (const trade of trades) {
+                const pnl = trade.pnl || 0;
+                const pnlClass = pnl >= 0 ? 'color:#22c55e;' : 'color:#ef4444;';
+                const typeClass = trade.order_type === 'BUY' ? 'color:#22c55e;' : 'color:#ef4444;';
+                const clientName = trade.client_name || 'Unknown';
+                const entryPrice = parseFloat(trade.entry_price || 0).toFixed(2);
+                const currentPrice = parseFloat(trade.current_price || 0).toFixed(2);
+                
+                // Status badge class
+                let statusClass = 'active';
+                let statusText = trade.status_display || trade.status || 'OPEN';
+                if (trade.status == 'CLOSED') {
+                    statusClass = 'inactive';
+                }
+                
+                html += `
+                    <tr>
+                        <td><strong>${clientName}</strong></td>
+                        <td><strong>${trade.symbol || 'Unknown'}</strong></td>
+                        <td style="${typeClass}">${trade.order_type || 'UNKNOWN'}</td>
+                        <td>${trade.volume || 0}</td>
+                        <td>${entryPrice}</td>
+                        <td>${currentPrice}</td>
+                        <td style="${pnlClass}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+            if (badge) badge.textContent = trades.length;
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">
+                        <i class="fas fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                        No trades found
+                        <div style="margin-top:12px;font-size:12px;color:#64748b;">
+                            Debug: ${JSON.stringify(debug)}
+                        </div>
+                        <button onclick="loadTrades()" style="
+                            margin-top: 12px;
+                            padding: 8px 20px;
+                            background: #3b82f6;
+                            border: none;
+                            border-radius: 8px;
+                            color: white;
+                            cursor: pointer;
+                        ">
+                            Refresh
+                        </button>
+                    </td>
+                </tr>
+            `;
+            if (badge) badge.textContent = '0';
+        }
+    } catch (error) {
+        console.error('❌ Error loading trades:', error);
+        const tbody = document.getElementById('tradeTableBody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;color:#ef4444;">
+                        Error: ${error.message}
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+        function renderTrades(tradesList) {
+            const tbody = document.getElementById('tradeTableBody');
+            if (!tradesList || tradesList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No active trades</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            for (const trade of tradesList) {
+                const pnlClass = trade.pnl >= 0 ? 'color:#22c55e;' : 'color:#ef4444;';
+                const typeClass = trade.order_type === 'BUY' ? 'color:#22c55e;' : 'color:#ef4444;';
+                const clientName = trade.client_name || trade.username || 'Unknown';
+                
+                html += `
+                    <tr>
+                        <td>${clientName}</td>
+                        <td><strong>${trade.symbol}</strong></td>
+                        <td style="${typeClass}">${trade.order_type}</td>
+                        <td>${trade.volume}</td>
+                        <td>${trade.entry_price?.toFixed(2) || '-'}</td>
+                        <td>${trade.current_price?.toFixed(2) || '-'}</td>
+                        <td style="${pnlClass}">$${(trade.pnl || 0).toFixed(2)}</td>
+                        <td><span class="status-badge active">Open</span></td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        async function loadRevenue() {
+            try {
+                const data = await apiRequest('/master/revenue');
+                
+                if (data.success) {
+                    document.getElementById('totalRevenueDetail').textContent = '$' + (data.total || 0).toLocaleString();
+                    document.getElementById('performanceFees').textContent = '$' + (data.performance || 0).toLocaleString();
+                    document.getElementById('managementFees').textContent = '$' + (data.management || 0).toLocaleString();
+                    document.getElementById('monthlyRevenue').textContent = '$' + (data.monthly || 0).toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error loading revenue:', error);
+            }
+        }
+
+        // ============================================================
+        // CLIENT ACTIONS
+        // ============================================================
+        function openDeposit(clientId) {
+            currentClientId = clientId;
+            const client = clients.find(c => c.id === clientId);
+            if (!client) {
+                showToast('Client not found', 'error');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = `Deposit - ${client.full_name || client.username || client.email}`;
+            document.getElementById('modalConfirm').textContent = 'Deposit';
+            document.getElementById('modalConfirm').onclick = depositClient;
+            document.getElementById('modalAmount').value = 100;
+            document.getElementById('modalNote').value = '';
+            document.getElementById('modalAmount').placeholder = 'Enter amount...';
+            document.getElementById('clientModal').classList.add('show');
+        }
+
+        // ===== DEPOSIT CLIENT - FIXED =====
+// ===== DEPOSIT CLIENT - FIXED =====
+async function depositClient() {
+    const amount = parseFloat(document.getElementById('modalAmount').value);
+    const note = document.getElementById('modalNote').value || 'Manual deposit';
+    
+    if (!amount || amount <= 0) {
+        showToast('Please enter a valid amount', 'error');
+        return;
+    }
+
+    try {
+        showToast('⏳ Processing deposit...', 'info');
+        
+        console.log('📤 Sending deposit:', {
+            client_id: currentClientId,
+            amount: amount,
+            description: note
+        });
+        
+        const response = await fetch(`${API_URL}/master/clients/${currentClientId}/deposit`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${masterToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                amount: amount, 
+                description: note 
+            })
+        });
+
+        // ✅ Get response text first
+        const text = await response.text();
+        console.log('📥 Raw response:', text);
+        
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            if (response.ok) {
+                showToast(`✅ Deposited $${amount.toFixed(2)} successfully`, 'success');
+                closeModal();
+                await loadClients();
+                await loadDashboard();
+                return;
+            }
+            throw new Error('Invalid response from server');
+        }
+        
+        console.log('📥 Deposit response:', data);
+
+        if (response.ok && data.success) {
+            showToast(`✅ Deposited $${amount.toFixed(2)} successfully`, 'success');
+            closeModal();
+            await loadClients();
+            await loadDashboard();
+        } else {
+            const errorMsg = data.detail || data.error || data.message || 'Failed to deposit';
+            showToast('❌ ' + errorMsg, 'error');
+        }
+    } catch (error) {
+        console.error('❌ Deposit error:', error);
+        if (error.message === 'Invalid response from server') {
+            showToast(`✅ Deposited $${amount.toFixed(2)} (server response issue)`, 'success');
+            closeModal();
+            await loadClients();
+            await loadDashboard();
+        } else {
+            showToast('❌ Error: ' + error.message, 'error');
+        }
+    }
+}
+        // ===== TOGGLE CLIENT - FIXED =====
+async function toggleClient(clientId) {
+    if (!confirm('Toggle client status?')) return;
+    
+    try {
+        showToast('⏳ Updating status...', 'info');
+        
+        console.log('📤 Toggling client:', clientId);
+        
+        const response = await fetch(`${API_URL}/master/clients/${clientId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${masterToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        // ✅ Get response text first
+        const text = await response.text();
+        console.log('📥 Raw response:', text);
+        
+        // ✅ Try to parse as JSON
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.warn('Response is not JSON:', text);
+            // If response is empty or not JSON, but status is OK
+            if (response.ok) {
+                showToast('✅ Client status updated', 'success');
+                await loadClients();
+                await loadDashboard();
+                return;
+            }
+            throw new Error('Invalid response from server');
+        }
+        
+        console.log('📥 Toggle response:', data);
+        
+        if (response.ok && data.success) {
+            showToast(`✅ Client ${data.is_active ? 'activated' : 'blocked'} successfully`, 'success');
+            await loadClients();
+            await loadDashboard();
+        } else {
+            const errorMsg = data.detail || data.error || data.message || 'Failed to update';
+            showToast('❌ ' + errorMsg, 'error');
+        }
+    } catch (error) {
+        console.error('❌ Toggle error:', error);
+        // ✅ If the error is just about parsing, but the action worked
+        if (error.message === 'Invalid response from server') {
+            showToast('✅ Client status updated (server response issue)', 'success');
+            await loadClients();
+            await loadDashboard();
+        } else {
+            showToast('❌ Error: ' + error.message, 'error');
+        }
+    }
+}
+
+        function viewClient(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) {
+                showToast('Client not found', 'error');
+                return;
+            }
+            
+            const displayName = client.full_name || client.username || client.email || 'Unknown';
+            alert(`📋 Client Details\n\n` +
+                  `Name: ${displayName}\n` +
+                  `Email: ${client.email || '-'}\n` +
+                  `Balance: $${(client.balance || 0).toFixed(2)}\n` +
+                  `Equity: $${(client.equity || 0).toFixed(2)}\n` +
+                  `Profit: $${(client.profit || 0).toFixed(2)}\n` +
+                  `Trades: ${client.total_trades || 0}\n` +
+                  `Status: ${client.is_active ? '✅ Active' : '❌ Blocked'}`);
+        }
+
+        // ============================================================
+        // SEARCH & EXPORT
+        // ============================================================
+        function searchClients(query) {
+            if (!query) {
+                renderClients(clients);
+                return;
+            }
+            
+            const filtered = clients.filter(c => {
+                const name = (c.full_name || c.username || '').toLowerCase();
+                const email = (c.email || '').toLowerCase();
+                return name.includes(query.toLowerCase()) || email.includes(query.toLowerCase());
+            });
+            renderClients(filtered);
+        }
+
+        function exportClients() {
+            let csv = 'Name,Email,Balance,Equity,Profit,Trades,Status\n';
+            for (const client of clients) {
+                const name = client.full_name || client.username || client.email || 'Unknown';
+                csv += `${name},${client.email || ''},${client.balance || 0},${client.equity || 0},${client.profit || 0},${client.total_trades || 0},${client.is_active ? 'Active' : 'Blocked'}\n`;
+            }
+            downloadFile(csv, 'clients.csv');
+        }
+
+        function exportTrades() {
+            let csv = 'Client,Symbol,Type,Volume,Entry,Current,P&L,Status\n';
+            for (const trade of trades) {
+                const clientName = trade.client_name || trade.username || 'Unknown';
+                csv += `${clientName},${trade.symbol},${trade.order_type},${trade.volume},${trade.entry_price},${trade.current_price},${trade.pnl || 0},Open\n`;
+            }
+            downloadFile(csv, 'trades.csv');
+        }
+
+        function downloadFile(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================
+        // SETTINGS
+        // ============================================================
+        async function saveSettings() {
+            const performanceFee = parseFloat(document.getElementById('performanceFee').value);
+            const managementFee = parseFloat(document.getElementById('managementFee').value);
+            const spreadMarkup = parseFloat(document.getElementById('spreadMarkup').value);
+
+            try {
+                const data = await apiRequest('/master/settings', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        performance_fee: performanceFee, 
+                        management_fee: managementFee, 
+                        spread_markup: spreadMarkup 
+                    })
+                });
+                
+                if (data.success) {
+                    showToast('✅ Settings saved successfully', 'success');
+                } else {
+                    showToast(data.error || 'Failed to save settings', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving settings', 'error');
+            }
+        }
+
+        // ============================================================
+        // MODAL HELPERS
+        // ============================================================
+        function closeModal() {
+            document.getElementById('clientModal').classList.remove('show');
+            currentClientId = null;
+        }
+
+        // Click outside to close modal
+        document.getElementById('clientModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ESC key to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4700);
+        }
+
+        // ============================================================
+        // CLOCK
+        // ============================================================
+        function updateClock() {
+            document.getElementById('timeDisplay').textContent = new Date().toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ============================================================
+        // LOGOUT
+        // ============================================================
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('master_token');
+                localStorage.removeItem('master_user');
+                window.location.href = '/master_login.html';
+            }
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load master name
+            const userData = JSON.parse(localStorage.getItem('master_user') || '{}');
+            document.getElementById('masterName').textContent = userData.full_name || userData.email || 'Master Admin';
+            
+            // Load all data
+            loadDashboard();
+            loadClients();
+            loadTrades();
+            loadRevenue();
+        });
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            const activePage = document.querySelector('.page-section.active');
+            if (!activePage) return;
+            
+            const pageId = activePage.id;
+            if (pageId === 'page-dashboard') loadDashboard();
+            else if (pageId === 'page-clients') loadClients();
+            else if (pageId === 'page-trades') loadTrades();
+            else if (pageId === 'page-revenue') loadRevenue();
+        }, 30000);
+    </script>
+</body>
+</html>

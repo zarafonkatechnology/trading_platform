@@ -1,0 +1,58 @@
+from datetime import datetime
+from .base_agent import BaseAgent
+
+class VolumeMaster(BaseAgent):
+    """Agent J - Volume Profile Analysis"""
+    
+    def __init__(self):
+        super().__init__(
+            name="Agent_j",
+            agent_type="Volume Master",
+            specialization="Volume Profile & Order Flow Analysis"
+        )        
+    def analyze(self, signal_data):
+        """Analyze volume patterns and order flow"""
+        pair = signal_data.get('pair', 'EURUSD')
+        current_price = signal_data.get('price', 1.0950)
+        
+        # Mock volume analysis
+        volume_trend = self._analyze_volume_trend(pair)
+        order_flow = self._analyze_order_flow()
+        
+        if volume_trend == 'increasing' and order_flow == 'buying':
+            vote = 'BUY'
+            confidence = 85
+            reasoning = "Increasing volume with buying pressure"
+        elif volume_trend == 'decreasing' and order_flow == 'selling':
+            vote = 'SELL'
+            confidence = 80
+            reasoning = "Decreasing volume with selling pressure"
+        elif volume_trend == 'spiking':
+            vote = 'BUY' if order_flow == 'buying' else 'SELL'
+            confidence = 75
+            reasoning = f"Volume spike detected - {order_flow} pressure"
+        else:
+            vote = 'HOLD'
+            confidence = 55
+            reasoning = "No clear volume signal"
+        
+        return {
+            'agent': self.name,
+            'type': self.agent_type,
+            'vote': vote,
+            'confidence': confidence,
+            'reasoning': reasoning,
+            'volume_trend': volume_trend,
+            'order_flow': order_flow,
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _analyze_volume_trend(self, pair):
+        """Analyze volume trend - mock implementation"""
+        import random
+        return random.choice(['increasing', 'decreasing', 'flat', 'spiking'])
+    
+    def _analyze_order_flow(self):
+        """Analyze order flow - mock implementation"""
+        import random
+        return random.choice(['buying', 'selling', 'neutral'])

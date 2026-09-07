@@ -1,0 +1,3199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 50-Agent Trading Platform | Graduation Project</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+header {
+    background: linear-gradient(135deg, #0a0e27 0%, #0f142e 100%);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+nav {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+nav a {
+    text-decoration: none;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+nav li {
+    list-style: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+nav a:hover li {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+nav a:hover {
+    color: #ffffff;
+}
+
+nav a:active li {
+    transform: translateY(1px);
+}
+
+nav a:hover li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 12px;
+    background: radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.4), transparent);
+    opacity: 0;
+    animation: pulseGlow 0.4s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes pulseGlow {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    transition: width 0.3s ease, left 0.3s ease;
+    border-radius: 2px;
+}
+
+nav a:hover::after {
+    width: calc(100% - 2.4rem);
+    left: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: 0.8rem 1rem;
+    }
+    
+    nav {
+        gap: 0.4rem;
+    }
+    
+    nav li {
+        padding: 0.45rem 0.9rem;
+        font-size: 0.8rem;
+    }
+    
+    nav a {
+        font-size: 0.8rem;
+    }
+    
+    nav a:hover::after {
+        width: calc(100% - 1.8rem);
+        left: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    nav li {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.7rem;
+    }
+    
+    nav a {
+        font-size: 0.7rem;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0e27;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+body {
+    background: #0a0c15;
+    margin: 0;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+}
+.price-up {
+    animation: priceUp 0.5s ease;
+}
+
+.price-down {
+    animation: priceDown 0.5s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.knowledge-item {
+    animation: fadeIn 0.3s ease;
+}
+@keyframes priceUp {
+    0% { color: #4caf50; transform: scale(1); }
+    50% { color: #66bb6a; transform: scale(1.05); }
+    100% { color: inherit; transform: scale(1); }
+}
+
+@keyframes priceDown {
+    0% { color: #f44336; transform: scale(1); }
+    50% { color: #ef5350; transform: scale(0.95); }
+    100% { color: inherit; transform: scale(1); }
+}
+
+.last-price {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-top: 5px;
+}
+
+.change-positive {
+    color: #4caf50;
+}
+
+.change-negative {
+    color: #f44336;
+}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Stats */
+        .stats-header {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.12);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+        
+        /* Two Column Layout */
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        /* Agent List Panel */
+        .agent-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .agent-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+        border-radius: 1rem;
+    }
+        .agent-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .agent-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .agent-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+            border-left-color: #ffd700;
+        }
+        
+        .agent-name {
+            font-weight: 600;
+            color: #ffd700;
+        }
+        
+        .agent-type {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-left: 8px;
+        }
+        
+        .agent-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+        }
+        
+        .agent-xp { color: #4caf50; }
+        .agent-tokens { color: #2196f3; }
+        .agent-accuracy { color: #ff9800; }
+        
+        /* Knowledge Feed Panel */
+        .knowledge-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .knowledge-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+        
+        .knowledge-feed {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .knowledge-item {
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            border-left: 3px solid #4caf50;
+            transition: all 0.3s;
+        }
+        
+        .knowledge-item:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateX(3px);
+        }
+        
+        .knowledge-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .knowledge-from {
+            color: #ffd700;
+            font-weight: 600;
+        }
+        
+        .knowledge-to {
+            color: #2196f3;
+        }
+        
+        .knowledge-topic {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .knowledge-content {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        .knowledge-reward {
+            font-size: 11px;
+            color: #4caf50;
+            margin-top: 5px;
+        }
+        
+        /* Teaching Panel */
+        .teaching-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .teaching-panel h3 {
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            color: white;
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffd700;
+            color: white;
+            background: rgb(0, 0, 0);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #0a0e27;
+            padding: 10px 10px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(255,215,0,0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50, #2196f3);
+            color: white;
+            padding: 10px 10px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #4caf50, #2196f3);
+            color: white;
+            padding: 10px 10px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800, #f44336);
+            color: white;
+            padding: 10px 10px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 10px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .tab-btn { padding: 10px 10px;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #1a1f3a;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .modal-header h2 {
+            color: #ffd700;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            animation: slideIn 0.3s ease;
+            z-index: 1100;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .toast.error {
+            background: #f44336;
+        }
+        
+        .toast.warning {
+            background: #ff9800;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #ffd700;
+            border-radius: 10px;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            background: #4caf50;
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .badge-gold {
+            background: #ffd700;
+            color: #0a0e27;
+        }
+        
+        .badge-success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .badge-info {
+            background: #2196f3;
+            color: white;
+        }
+        
+        /* Auto-save indicator */
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: monospace;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+            .stats-header {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="http://localhost:5000/forex"><li>Forex Trading</li></a>
+            <a href="http://localhost:5000/advisor"><li>DeepSeek Trading Advisor</li></a>
+            <a href="http://localhost:5000/security"><li>Security</li></a>
+            <a href="http://localhost:5000/darkpool"><li>Dark Pool</li></a>
+            <a href="http://localhost:5000/trades"><li>Trade History</li></a>
+            <a href="http://localhost:5000/training"><li>Legendary Trading</li></a>
+            <a href="http://localhost:5000/whisper"><li>Whisper Analyst</li></a>
+            <a href="http://localhost:5000/teaching_center"><li>DeepSeek AI Teaching Center</li></a>
+            <a href="http://localhost:5000/agent_talk"><li>Agent Talk</li></a>
+
+        </nav>
+    </header>
+    <div class="container">
+<!-- Auto-Trader Control Panel -->
+<div class="panel">
+    <h3 style="text-align: center;">💹 Auto-Trader Control</h3>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="autoTraderStatus">OFF</div>
+            <div>Status</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="autoTraderTrades">0</div>
+            <div>Today's Trades</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="autoTraderTotal">0</div>
+            <div>Total Trades</div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="toggleAutoTrader(true)" class="btn-success" id="startAutoBtn">▶️ Start Auto-Trader</button>
+        <button onclick="toggleAutoTrader(false)" class="btn-danger" id="stopAutoBtn">⏹️ Stop Auto-Trader</button>
+        <input type="range" id="confidenceSlider" min="50" max="95" value="75" onchange="updateConfidence()">
+        <span id="confidenceValue">75%</span>
+    </div>
+    <div id="autoTraderLog" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px;">
+        <div>Auto-Trader ready. Start to begin automated trading.</div>
+    </div>
+</div>
+        <!-- Agent Comparison Panel -->
+<div class="panel">
+    <div class="panel">
+        <br>
+    <h3>📈 Agent Learning Curves</h3>
+    <select id="learningCurveAgent" onchange="loadLearningCurve()" style="
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+    border: 1px solid #ddd;
+    background: rgb(0, 0, 0);
+    font-size: 16px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease;
+">
+        <option  value="">Select Agent</option>
+    </select>
+    <canvas id="learningCurveChart" style="max-height: 20px; margin-top: 15px;"></canvas>
+</div>
+<br>
+    <h3>🏆 Agent Leaderboard</h3>
+    <br>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+        <div class="stat-card">
+            <div style="font-size: 24px;">🥇</div>
+            <div id="bestAccuracyAgent">-</div>
+            <div style="font-size: 12px;">Highest Accuracy</div>
+        </div>
+        <div class="stat-card">
+            <div style="font-size: 24px;">💰</div>
+            <div id="bestXPAgent">-</div>
+            <div style="font-size: 12px;">Most XP</div>
+        </div>
+        <div class="stat-card">
+            <div style="font-size: 24px;">🗳️</div>
+            <div id="mostVotesAgent">-</div>
+            <div style="font-size: 12px;">Most Votes</div>
+        </div>
+    </div>
+</div>
+<br>
+<div class="panel">
+    <h3>📉 Risk Management Dashboard</h3>
+    <br>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+        <div class="stat-card">
+            <div class="stat-value" id="winRate">-</div>
+            <div>Win Rate</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="sharpeRatio">-</div>
+            <div>Sharpe Ratio</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="maxDrawdown">-</div>
+            <div>Max Drawdown</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="profitFactor">-</div>
+            <div>Profit Factor</div>
+        </div>
+    </div>
+    <div style="margin-top: 15px;">
+        <div class="stat-card">
+            <div class="stat-value" id="totalTrades">-</div>
+            <div>Total Trades | <span id="winningTrades">0</span> Wins / <span id="losingTrades">0</span> Losses</div>
+        </div>
+    </div>
+</div>
+      <div class="panel">
+        <h3>📊 Agent Performance Analytics</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+        <canvas id="winRateChart" style="max-height: 300px;"></canvas>
+        <p style="text-align: center; font-size: 12px;">Agent Win Rate Comparison</p>
+        </div>
+        <div>
+        <canvas id="xpChart" style="max-height: 300px;"></canvas>
+        <p style="text-align: center; font-size: 12px;">Agent XP Accumulation</p>
+        </div>
+    </div>
+</div>
+        <div class="stats-header">
+            <div class="stat-card">
+                <div class="stat-value" id="totalAgents">5</div>
+                <div class="stat-label">🤖 Agents</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalXP">0</div>
+                <div class="stat-label">💰 Total XP</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTokens">0</div>
+                <div class="stat-label">🎴 Total Tokens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalAchievements">0</div>
+                <div class="stat-label">🏆 Achievements</div>
+            </div>
+        </div>
+        
+        <!-- Two Column Layout -->
+        <div class="two-columns">
+            <!-- Agent List Panel -->
+            <div class="agent-panel">
+                <h3>🤖 Agent Roster</h3>
+                <div class="agent-list" id="agentList">
+                    <div style="text-align:center; padding:20px;">Loading agents...</div>
+                </div>
+            </div>
+            
+            <!-- Knowledge Exchange Feed -->
+            <div class="knowledge-panel">
+                <h3>💬 Knowledge Exchange</h3>
+                <div class="knowledge-feed" id="knowledgeFeed">
+                    <div style="text-align:center; padding:20px;">No knowledge exchanges yet.<br>Teach an agent to get started!</div>
+                </div>
+            </div>
+        </div>
+
+<!-- DeepSeek Trading Advisor Panel -->
+<div class="panel">
+    <h3 style="text-align: center;">🎓 DeepSeek Trading Advisor</h3>
+    <p>Get AI advice on voting decisions and learn to trade better</p>
+    <br>
+    <div style="gap: 15px;">
+        <button onclick="getVoteAdvice()" class="btn-primary">📊 Analyze My Vote</button>
+        <button onclick="getConsensusAdvice()" class="btn-success">🤝 Get Consensus Advice</button>
+        <button onclick="teachAgentVoting()" class="btn-warning">📚 Teach Me to Vote</button>
+    </div>
+    
+    <div id="advisorResult" style="margin-top: 15px; display: none; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; max-height: 400px; overflow-y: auto;">
+    </div>
+</div>    
+<!-- Advisor Dashboard Tab -->
+<div id="tab-advisor" class="tab-content">
+    <br>
+    <h3 style="text-align: center;">🎓 DeepSeek Advisor Performance Dashboard</h3>
+    
+    <div class="stats-grid" id="advisorStats">
+        <div class="stat-card">
+            <div class="stat-value" id="advisorAccuracy">0%</div>
+            <div>Advisor Accuracy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="advisorTotal">0</div>
+            <div>Total Predictions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="advisorCorrect">0</div>
+            <div>Correct Predictions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="advisorPnL">$0</div>
+            <div>Total P&L</div>
+        </div>
+    </div>
+    
+    <!-- Accuracy Chart -->
+    <div style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+        <h4>📈 Advisor Accuracy Trend</h4>
+        <canvas id="advisorAccuracyChart" height="200"></canvas>
+    </div>
+    
+    <h4>Recent Advisor Decisions</h4>
+    <br>
+    <table class="data-table" id="advisorHistoryTable">
+        <thead>
+            <tr><th>Time</th><th>Decision</th><th>Confidence</th><th>Outcome</th><th>Correct?</th><th>P&L</th>
+        </thead>
+        <tbody id="advisorHistoryBody"></tbody>
+    </table>
+    
+    <div style="margin-top: 20px;">
+        <button onclick="refreshAdvisorData()" class="btn-primary">🔄 Refresh Data</button>
+        <button onclick="exportAdvisorReport()" class="btn-success">📥 Export Report</button>
+        <button onclick="clearAdvisorHistory()" class="btn-danger">🗑️ Clear History</button>
+    </div>
+</div><!-- DeepSeek AI Learning Panel -->
+<div class="panel">
+    <h3 style="text-align: center;">🧠 Learn from DeepSeek AI</h3>
+    <br>
+    <div class="form-group">
+        <label>Select Agent</label>
+        <select id="deepseekAgentSelect">
+            <option value="Agent_A">Agent_A </option>
+            <option value="Agent_B">Agent_B </option>
+            <option value="Agent_C">Agent_C </option>
+            <option value="Agent_D">Agent_D </option>
+            <option value="Agent_E">Agent_E </option>
+            <option value="Agent_F">Agent_F </option>
+            <option value="Agent_G">Agent_G </option>
+            <option value="Agent_H">Agent_H </option>
+            <option value="Agent_I">Agent_I </option>
+            <option value="Agent_J">Agent_j </option>
+            <option value="Agent_K">Agent_K </option>
+            <option value="Agent_L">Agent_L </option>
+            <option value="Agent_M">Agent_M </option>
+            <option value="Agent_N">Agent_N </option>
+            <option value="Agent_G">Agent_O </option>
+            <option value="Agent_P">Agent_P </option>
+            <option value="Agent_Q">Agent_Q </option>
+            <option value="Agent_R">Agent_R </option>
+            <option value="Agent_S">Agent_S </option>
+            <option value="Agent_T">Agent_T </option>
+            <option value="Agent_U">Agent_U</option>
+            <option value="Agent_V">Agent_M </option>
+
+        </select>
+    </div>
+    <div class="form-group">
+        <label>What concept do you want to teach?</label>
+        <input type="text" id="deepseekConcept" placeholder="e.g., RSI Divergence, Fibonacci Retracement, Bullish Engulfing">
+    </div>
+    <button onclick="learnFromDeepSeek()" class="btn-primary">🧠 Learn from DeepSeek AI (+30 XP)</button>
+    <br>
+    <div id="deepseekResult" style="margin-top: 15px; display: none; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px;"></div>
+<br>
+</div>
+
+<button class="tab-btn" onclick="showTab('advisor')">🎓 Advisor Dashboard</button>
+<!-- DeepSeek Market Analysis Panel -->
+<div class="panel">
+ <br>
+
+    <h3 style="text-align: center;">📊 DeepSeek Market Analysis</h3>
+    <div class="form-group">
+        <label>Asset</label>
+        <select id="deepseekAsset">
+            <option value="XAU/USD">Gold (XAU/USD)</option>
+            <option value="XAG/USD">Silver (XAG/USD)</option>
+            <option value="BCO/USD">Brent Oil</option>
+            <option value="S&P500/USD">S&P 500</option>
+            <option value="EURUSD">Euro/USD</option>
+        </select>
+    </div>
+    <button onclick="getDeepSeekAnalysis()" class="btn-primary">🔍 Get AI Analysis</button>
+    <br>
+    <div id="deepseekAnalysis" style="margin-top: 15px; display: none; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px;"></div>
+<br>
+</div>
+<!-- Talk to Agent Panel -->
+<div class="panel">
+    <h3 style="text-align: center;">💬 Talk to Agent</h3>
+    <br>
+    <div style=" gap: 10px; margin-bottom: 10px;">
+        <select id="talkAgentSelect" style="padding: 6px 30%;">
+            <option value="Agent_A">Agent_A (Trend Follower)</option>
+            <option value="Agent_B">Agent_B (Mean Reversion)</option>
+            <option value="Agent_C">Agent_C (Momentum)</option>
+            <option value="Agent_D">Agent_D (Volatility)</option>
+            <option value="Agent_E">Agent_E (Microstructure)</option>
+            <option value="Agent_F">Agent_F (Candlestick)</option>
+            <option value="Agent_G">Agent_G (Whale)</option>
+            <option value="Agent_H">Agent_H (Fibonacci)</option>
+            <option value="Agent_I">Agent_I (Sentiment Master)</option>
+            <option value="Agent_G">Agent_J (Volume Profile)</option>
+            <option value="Agent_H">Agent_K (Ichimoku Clouad)</option>
+            <option value="Agent_H">Agent_L (Economic Calendar)</option>
+            <option value="Agent_M">Agent_M (MarketProfile Master)</option>
+            <option value="Agent_N">Agent_N (Intermarket Master)</option>
+            <option value="Agent_O">Agent_O (Seasonality Expert)</option>          
+        </select>
+        <button onclick="talkToAgent()" class="btn-primary">💬 Send Message</button>
+    </div>
+    <input type="text" id="talkMessage" placeholder="Ask something... (e.g., 'teach me about RSI', 'share with Agent_B')" style="width: 100%; margin-bottom: 10px; padding: 10px;">
+    <div id="agentResponse" style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 12px; min-height: 60px; font-size: 14px;">
+        💡 Type a message above and click Send to talk to an agent.
+    </div>
+</div>
+<div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button onclick="shareKnowledge()" class="btn-secondary" style="background: #2196f3;">📚 Share Knowledge</button>
+    <button onclick="refreshAgents()" class="btn-secondary">🔄 Refresh Agents</button>
+</div>
+<br>
+        <!-- Teaching Panel -->
+        <div class="teaching-panel">
+            <h3>📚 Teach Your Agents</h3>
+            <div class="form-group">
+                <label>🎯 Select Agent</label>
+                <select id="targetAgent">
+                    <option value="Agent_A">Agent_A (Trend Follower)</option>
+                    <option value="Agent_B">Agent_B (Mean Reversion)</option>
+                    <option value="Agent_C">Agent_C (Momentum)</option>
+                    <option value="Agent_D">Agent_D (Volatility)</option>
+                    <option value="Agent_E">Agent_E (Microstructure)</option>
+                    <option value="Agent_F">Agent_F (Candlestick)</option>
+                    <option value="Agent_G">Agent_G (Whale)</option>
+                    <option value="Agent_H">Agent_H (Fibonnico)</option>
+                    <option value="Agent_I">Agent_I (Sentiment Master)</option>
+                    <option value="Agent_G">Agent_J (Volume Profile)</option>
+                    <option value="Agent_H">Agent_K (Ichimoku Clouad)</option>
+                    <option value="Agent_H">Agent_L (Economic Calendar)</option>
+                    <option value="Agent_M">Agent_M (MarketProfile Master)</option>
+                    <option value="Agent_N">Agent_N (Intermarket Master)</option>
+                    <option value="Agent_O">Agent_O (Seasonality Expert)</option>
+                    <option value="ALL">📢 BROADCAST TO ALL AGENTS</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📖 Topic / What do you want to teach?</label>
+                <input type="text" id="topicName" placeholder="e.g., RangeScalp_from_OPEC, Bollinger_Breakout, RSI_Divergence">
+            </div>
+            <div class="form-group">
+                <label>💡 Content / Knowledge to share</label>
+                <textarea id="knowledgeContent" rows="3" placeholder="Detailed knowledge, strategy, or insight for the agent..."></textarea>
+            </div>
+            <div class="button-group">
+                <button onclick="exportReport()" style="background: #4caf50;">📥 Export Agents Report (CSV)</button>
+
+                <button class="btn btn-primary" onclick="teachAgent()">🎓 Teach Agent (+50 XP, +10 Tokens)</button>
+                <button class="btn btn-success" onclick="teachAllAgents()">📢 Broadcast to All Agents</button>
+                <button class="btn btn-warning" onclick="requestKnowledge()">❓ Request Knowledge</button>
+                <button class="btn btn-secondary" onclick="saveAllData()">💾 Save All Data</button>
+                <div class="panel">
+            <h3>📚 Knowledge Exchange &nbsp;
+                <button onclick="clearKnowledge()" style="float: right; border-radius: 5px; background: #dc3545; color: white; padding: 10px 10px; font-size: 12px;">🗑️ Clear</button>
+            </h3> 
+             <div id="knowledgeFeed" style="max-height: 400px; overflow-y: auto;"></div>
+</div>
+                <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh</button>
+            </div>
+
+        </div>
+<!-- Agent Discovery Panel -->
+<div class="panel">
+    <h3 style="text-align: center;">🔍 Agent Discovery Network</h3>
+    <br>
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <select id="discoveryAgentSelect" style="flex: 1;">
+            <option value="Agent_A">Agent_A</option>
+            <option value="Agent_B">Agent_B</option>
+            <option value="Agent_C">Agent_C</option>
+            <option value="Agent_D">Agent_D</option>
+            <option value="Agent_E">Agent_E</option>
+            <option value="Agent_F">Agent_F</option>
+            <option value="Agent_G">Agent_G</option>
+            <option value="Agent_H">Agent_H</option>
+            <option value="Agent_I">Agent_I</option>
+            <option value="Agent_j">Agent_j</option>
+            <option value="Agent_K">Agent_K</option>
+            <option value="Agent_L">Agent_L</option>
+            <option value="Agent_M">Agent_M</option>
+            <option value="Agent_N">Agent_N</option>
+            <option value="Agent_O">Agent_O</option>
+        </select>
+        <button onclick="loadDiscoveredAgents()" class="btn-primary">🔍 Discover</button>
+    </div>
+    <div id="discoveryResults" style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px; min-height: 100px;">
+        <p>Select an agent and click "Discover" to find connected agents</p>
+    </div>
+</div>
+</div>
+<!-- Market Data Panel -->
+<div class="teaching-panel" style="margin-top:0;">
+    <h3>📈 Real-Time Market Data <span style="font-size:12px;" id="dataSource">( LIVE)</span></h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+        <!-- Market Status -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;">
+            <h4>🕐 Market Status</h4>
+            <div id="marketStatus">Loading...</div>
+        </div>
+        
+        <!-- Account Info -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;">
+            <h4>💰 Account</h4>
+            <div id="accountInfo">Loading...</div>
+        </div>
+    </div>
+    
+    <!-- Live Prices -->
+    <div style="margin-top: 20px;">
+        <h4>📊 Live Market Prices <span style="font-size:11px;" id="lastUpdate"></span></h4>
+        <div id="livePrices" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px;">
+            <div style="text-align:center; padding:20px;">Loading live prices...</div>
+        </div>
+    </div>
+    
+    <!-- Trading Signals -->
+    <div style="margin-top: 20px;">
+        <h4>🎯 Trading Signals</h4>
+        <div id="tradingSignals" style="max-height: 400px; overflow-y: auto;">
+            <div style="text-align:center; padding:20px;">Click "Scan for Signals" to analyze market</div>
+        </div>
+        <button class="btn btn-primary" onclick="scanSignals()" style="margin-top: 15px;">🔄 Scan for Signals</button>
+    </div>
+</div>
+<div class="panel">
+    <h3>🧠 RL Agent Learning Progress</h3>
+    <div id="rlStats">
+        <p>Loading RL statistics...</p>
+    </div>
+    &nbsp;<button onclick="refreshRLStats()" style="padding: 10px 15px; border-radius: 7px;">🔄 Refresh RL Stats</button>
+
+</div>
+<!-- Knowledge Verification Panel -->
+<!-- Knowledge Verification Panel -->
+<div class="panel">
+    <h3>🔐 Knowledge Verification System</h3>
+    <div class="stats-grid" id="verificationStats">
+        <div class="stat-card">
+            <div class="stat-value" id="totalVerifications">0</div>
+            <div>Total Verifications</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="verifiedRate">0%</div>
+            <div>Verification Rate</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="reputationScore">0.5</div>
+            <div>Avg Reputation</div>
+        </div>
+    </div>
+    
+    <h4>Verification Layers</h4>
+    <div id="verificationLayers">
+        <div class="knowledge-item">✅ Layer 1: Source Verification - Digital signatures checked</div>
+        <div class="knowledge-item">✅ Layer 2: Consistency Check - Logical validation</div>
+        <div class="knowledge-item">✅ Layer 3: Historical Accuracy - Pattern matching</div>
+        <div class="knowledge-item">✅ Layer 4: Cross-Reference - Multi-source verification</div>
+        <div class="knowledge-item">✅ Layer 5: Plausibility Check - Extreme claim detection</div>
+    </div>
+    
+    <button onclick="testVerification()" class="btn-primary" style="margin-top: 15px;">🔬 Test Verification</button>
+    <br>
+    <div id="verificationResult" style="margin-top: 15px; display: none;"></div>
+
+<br>
+</div>
+</div>
+<button onclick="teachAdvanced()" style="background: #9c27b0; color: white;">🧠 TEACH ADVANCED (Cooperation + Deception + Dark Pool)</button>
+<button onclick="teachCooperation()" style="background: #3f51b5; color: white;">🤝 Teach Whale Alliance</button>
+<button onclick="teachDeception()" style="background: #ff5722; color: white;">🎭 Teach Deception Detection</button>
+<script>
+
+async function teachAdvanced() {
+    const res = await fetch('/api/teach_advanced', {method: 'POST'});
+    const data = await res.json();
+    alert(`✅ Taught ${data.taught} agents advanced strategies!`);
+    location.reload();
+}
+
+async function teachCooperation() {
+    const strategy = prompt('Strategy: whale_alliance, volume_ichimoku_sync, sentiment_contrarian', 'whale_alliance');
+    const res = await fetch('/api/teach_cooperation', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({strategy: strategy})
+    });
+    const data = await res.json();
+    alert(`✅ ${data.strategy} taught to ${data.agents_taught.length} agents!`);
+}
+
+async function teachDeception() {
+    const res = await fetch('/api/teach_deception', {method: 'POST'});
+    const data = await res.json();
+    alert(`✅ Deception detection taught to ${data.taught} agents!`);
+}
+
+async function toggleAutoTrader(enabled) {
+    const response = await fetch('/api/auto_trader/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: enabled })
+    });
+    const data = await response.json();
+    if (data.success) {
+        updateAutoTraderStatus();
+        showToast(`Auto-Trader ${enabled ? 'started' : 'stopped'}!`, 'success');
+    }
+}
+
+async function updateAutoTraderStatus() {
+    const response = await fetch('/api/auto_trader/status');
+    const data = await response.json();
+    if (data.success) {
+        const stats = data.stats;
+        document.getElementById('autoTraderStatus').innerText = stats.is_active ? '🟢 ACTIVE' : '🔴 OFF';
+        document.getElementById('autoTraderTrades').innerText = stats.daily_trades;
+        document.getElementById('autoTraderTotal').innerText = stats.total_trades;
+        
+        // Update log
+        if (stats.recent_trades && stats.recent_trades.length > 0) {
+            let logHtml = '';
+            for (const trade of stats.recent_trades.reverse()) {
+                logHtml += `<div>💹 ${trade.action} at $${trade.price} (${trade.confidence}% conf) - ${trade.timestamp}</div>`;
+            }
+            document.getElementById('autoTraderLog').innerHTML = logHtml;
+        }
+    }
+}
+
+async function updateConfidence() {
+    const slider = document.getElementById('confidenceSlider');
+    const value = slider.value;
+    document.getElementById('confidenceValue').innerText = value + '%';
+    
+    await fetch('/api/auto_trader/confidence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confidence: parseInt(value) })
+    });
+}
+
+setInterval(updateAutoTraderStatus, 10000);
+updateAutoTraderStatus();
+async function refreshAdvisorData() {
+    try {
+        // Load performance stats
+        const perfRes = await fetch('/api/advisor/performance');
+        const perfData = await perfRes.json();
+        
+        if (perfData.success) {
+            document.getElementById('advisorAccuracy').innerText = `${perfData.accuracy}%`;
+            document.getElementById('advisorTotal').innerText = perfData.total_predictions;
+            document.getElementById('advisorCorrect').innerText = perfData.correct_predictions;
+            document.getElementById('advisorPnL').innerText = `$${perfData.total_pnl}`;
+        }
+        
+        // Load history
+        const historyRes = await fetch('/api/advisor/history');
+        const historyData = await historyRes.json();
+        
+        if (historyData.success && historyData.history) {
+            let html = '';
+            for (const h of historyData.history) {
+                const correctBadge = h.was_correct ? '<span class="badge-success">✅ Yes</span>' : '<span class="badge-danger">❌ No</span>';
+                const pnlColor = h.actual_pnl >= 0 ? 'badge-success' : 'badge-danger';
+                html += `<tr>
+                    <td>${new Date(h.created_at).toLocaleString()}</td>
+                    <td>${h.advisor_decision}</td>
+                    <td>${h.advisor_confidence}%</td>
+                    <td>${h.actual_outcome}</td>
+                    <td>${correctBadge}</td>
+                    <td><span class="${pnlColor}">$${h.actual_pnl}</span></td>
+                </tr>`;
+            }
+            document.getElementById('advisorHistoryBody').innerHTML = html || '<td><td colspan="6">No history yet</td></tr>';
+        }
+    } catch (error) {
+        console.error('Refresh advisor error:', error);
+    }
+}
+
+async function clearAdvisorHistory() {
+    if (confirm('Are you sure you want to clear advisor history?')) {
+        await fetch('/api/advisor/clear_history', {method: 'POST'});
+        refreshAdvisorData();
+        showToast('Advisor history cleared!', 'success');
+    }
+}
+
+// Auto-refresh every 30 seconds
+setInterval(refreshAdvisorData, 30000);
+refreshAdvisorData();
+async function getVoteAdvice() {
+    const resultDiv = document.getElementById('advisorResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="text-align:center;">🤔 Asking DeepSeek Advisor...</div>';
+    
+    // Get current selected agent
+    const agentSelect = document.getElementById('talkAgentSelect');
+    const agentName = agentSelect ? agentSelect.value : 'Agent_A';
+    
+    // Get agent type
+    let agentType = 'Trend Follower';
+    if (agentName === 'Agent_B') agentType = 'Mean Reversion';
+    else if (agentName === 'Agent_C') agentType = 'Momentum';
+    else if (agentName === 'Agent_D') agentType = 'Volatility';
+    else if (agentName === 'Agent_E') agentType = 'Microstructure';
+    else if (agentName === 'Agent_F') agentType = 'Candlestick';
+    else if (agentName === 'Agent_G') agentType = 'Whale Tracker';
+    else if (agentName === 'Agent_H') agentType = 'Fibonacci';
+    
+    // Get sample vote (in production, use actual vote)
+    const sampleVote = document.getElementById('signalAction')?.value || 'BUY';
+    const sampleConfidence = 75;
+    
+    try {
+        const response = await fetch('/api/advisor/analyze_vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                agent_name: agentName,
+                agent_type: agentType,
+                signal: {
+                    asset_type: 'XAU/USD',
+                    current_price: 2350,
+                    confidence_percent: 80
+                },
+                features: {
+                    rsi_14: 55,
+                    volatility: 0.8,
+                    trend_strength: 60
+                },
+                vote: sampleVote,
+                confidence: sampleConfidence
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <strong>🤖 DeepSeek Advisor says:</strong><br>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                    ${data.advice.replace(/\n/g, '<br>')}
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `<strong>❌ Error:</strong> ${data.error}`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+    }
+}
+async function getConsensusAdvice() {
+    const resultDiv = document.getElementById('advisorResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="text-align:center;">🤔 Analyzing market and votes...</div>';
+    
+    // Get current prices from live market
+    let currentPrice = 0;
+    try {
+        const priceRes = await fetch('/api/market/prices');
+        const priceData = await priceRes.json();
+        if (priceData.prices && priceData.prices['🥇 Gold']) {
+            currentPrice = priceData.prices['🥇 Gold'];
+        } else {
+            currentPrice = 2350;
+        }
+    } catch(e) {
+        currentPrice = 2350;
+    }
+    
+    // Get real RSI from market features
+    let rsi = 55;
+    try {
+        const featuresRes = await fetch('/api/market/features');
+        const featuresData = await featuresRes.json();
+        if (featuresData.rsi) rsi = featuresData.rsi;
+    } catch(e) {}
+    
+    // Simulate votes from all agents (in production, get real votes)
+    const sampleVotes = {
+        'Agent_A': {'vote': 'BUY', 'confidence': 85},
+        'Agent_B': {'vote': 'SELL', 'confidence': 45},
+        'Agent_C': {'vote': 'BUY', 'confidence': 78},
+        'Agent_D': {'vote': 'BUY', 'confidence': 72},
+        'Agent_E': {'vote': 'HOLD', 'confidence': 60},
+        'Agent_F': {'vote': 'BUY', 'confidence': 82}
+    };
+    
+    try {
+        const response = await fetch('/api/advisor/consensus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                votes: sampleVotes,
+                signal: {
+                    asset_type: 'XAU/USD',
+                    current_price: currentPrice,
+                    confidence_percent: 80
+                },
+                features: {
+                    rsi_14: rsi,
+                    volatility: 0.8,
+                    trend_strength: 60
+                }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div style="background: linear-gradient(135deg, #1a1f3a, #0a0e27); border-radius: 12px; padding: 15px;">
+                    <strong>🤝 DeepSeek Real-Time Trading Plan</strong>
+                    <div style="margin-top: 10px; font-size: 14px; line-height: 1.6;">
+                        ${data.advice.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `<strong>❌ Error:</strong> ${data.error}`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+    }
+}
+async function teachAgentVoting() {
+    const resultDiv = document.getElementById('advisorResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="text-align:center;">📚 Generating lesson...</div>';
+    
+    const agentSelect = document.getElementById('talkAgentSelect');
+    const agentName = agentSelect ? agentSelect.value : 'Agent_A';
+    
+    let agentType = 'Trend Follower';
+    if (agentName === 'Agent_B') agentType = 'Mean Reversion';
+    else if (agentName === 'Agent_C') agentType = 'Momentum';
+    else if (agentName === 'Agent_D') agentType = 'Volatility';
+    else if (agentName === 'Agent_E') agentType = 'Microstructure';
+    else if (agentName === 'Agent_F') agentType = 'Candlestick';
+    else if (agentName === 'Agent_G') agentType = 'Whale Tracker';
+    else if (agentName === 'Agent_H') agentType = 'Fibonacci';
+    
+    // Sample past votes
+    const pastVotes = [
+        {'vote': 'BUY', 'was_correct': True, 'confidence': 85},
+        {'vote': 'BUY', 'was_correct': False, 'confidence': 90},
+        {'vote': 'SELL', 'was_correct': True, 'confidence': 75},
+        {'vote': 'HOLD', 'was_correct': True, 'confidence': 60},
+        {'vote': 'BUY', 'was_correct': True, 'confidence': 80}
+    ];
+    
+    const performance = {
+        'win_rate': 60,
+        'avg_confidence': 78,
+        'total_votes': 50
+    };
+    
+    try {
+        const response = await fetch('/api/advisor/teach_agent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                agent_name: agentName,
+                agent_type: agentType,
+                past_votes: pastVotes,
+                performance: performance
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <strong>📚 Voting Lesson for ${agentName}:</strong><br>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                    ${data.lesson.replace(/\n/g, '<br>')}
+                </div>
+                <div style="margin-top: 10px; color: #4caf50;">🎓 +30 XP for learning!</div>
+            `;
+            
+            // Refresh agent list to show XP update
+            setTimeout(() => loadAgents(), 2000);
+        } else {
+            resultDiv.innerHTML = `<strong>❌ Error:</strong> ${data.error}`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+    }
+}
+async function learnFromDeepSeek() {
+    const agentName = document.getElementById('deepseekAgentSelect').value;
+    const concept = document.getElementById('deepseekConcept').value;
+    
+    if (!concept) {
+        showToast('Please enter a concept to learn', 'error');
+        return;
+    }
+    
+    const resultDiv = document.getElementById('deepseekResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="text-align:center;">🧠 Asking DeepSeek AI...</div>';
+    
+    try {
+        const response = await fetch('/api/agent/deepseek/learn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                agent_name: agentName,
+                concept: concept
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <strong>✅ ${agentName} learned from DeepSeek!</strong><br>
+                <strong>Concept:</strong> ${data.concept}<br>
+                <strong>Lesson:</strong><br>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                    ${data.lesson.replace(/\n/g, '<br>')}
+                </div>
+                <strong>XP Gained:</strong> +${data.xp_gained}<br>
+            `;
+            loadAgents();
+            showToast(`${agentName} learned from DeepSeek! +30 XP`, 'success');
+        } else {
+            resultDiv.innerHTML = `<strong>❌ Error:</strong> ${data.error}`;
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+        showToast('Error connecting to DeepSeek', 'error');
+    }
+}
+
+async function getDeepSeekAnalysis() {
+    const asset = document.getElementById('deepseekAsset').value;
+    const resultDiv = document.getElementById('deepseekAnalysis');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="text-align:center;">🤖 Getting AI market analysis...</div>';
+    
+    // Get current price for the asset
+    let price = 0;
+    try {
+        const priceRes = await fetch('/api/market/prices');
+        const priceData = await priceRes.json();
+        if (priceData.prices) {
+            if (asset === 'XAU/USD') price = priceData.prices['🥇 Gold'] || 2385;
+            else if (asset === 'XAG/USD') price = priceData.prices['🥈 Silver'] || 28.5;
+            else if (asset === 'BCO/USD') price = priceData.prices['🛢️ Brent Oil'] || 89.75;
+            else if (asset === 'S&P500/USD') price = priceData.prices['📊 S&P 500'] || 5200;
+            else if (asset === 'EURUSD') price = priceData.prices['💶 Euro'] || 1.07;
+        }
+    } catch(e) {}
+    
+    try {
+        const response = await fetch('/api/agent/deepseek/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                asset: asset,
+                price: price,
+                indicators: { rsi: 55, macd: 'neutral', trend: 'neutral', volatility: 'medium' }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.analysis) {
+            resultDiv.innerHTML = `
+                <strong>🤖 DeepSeek AI Analysis for ${asset}</strong><br>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 10px;">
+                    ${data.analysis.replace(/\n/g, '<br>')}
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `<strong>⚠️ Could not get analysis</strong>`;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+    }
+}
+// ============================================
+// TALK TO AGENT FUNCTION
+// ============================================
+async function loadVerificationStatus() {
+    try {
+        const response = await fetch('/api/verification/status');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Safely access properties
+            const totalVerifications = data.total_verifications || 0;
+            const verificationRate = data.verification_rate || 0;
+            
+            document.getElementById('totalVerifications').innerText = totalVerifications;
+            document.getElementById('verifiedRate').innerText = `${(verificationRate * 100).toFixed(0)}%`;
+            
+            // Safely calculate average reputation
+            const trustedSources = data.trusted_sources || {};
+            const scores = Object.values(trustedSources);
+            const avgRep = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0.5;
+            document.getElementById('reputationScore').innerText = avgRep.toFixed(2);
+        }
+    } catch (error) {
+        console.error('Verification status error:', error);
+        // Set default values on error
+        document.getElementById('totalVerifications').innerText = '0';
+        document.getElementById('verifiedRate').innerText = '0%';
+        document.getElementById('reputationScore').innerText = '0.5';
+    }
+}
+async function testVerification() {
+    const testKnowledge = {
+        topic: "RSI Divergence",
+        content: "When price makes lower low but RSI makes higher low, it indicates bullish divergence.",
+        confidence: 0.85,
+        source: "Technical Analysis"
+    };
+    
+    const resultDiv = document.getElementById('verificationResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="text-align:center;">🔍 Verifying knowledge...</div>';
+    
+    // Generate a valid signature that matches the server's expected format
+    const timestamp = new Date().toISOString();
+    const agentName = 'Test_Agent';
+    
+    // This must match the server's signature generation
+    // expected_sig = hashlib.sha256(f"{agent_name}{timestamp}secret".encode()).hexdigest()[:32]
+    async function generateValidSignature(agent, ts) {
+        const message = `${agent}${ts}secret`;
+        const encoder = new TextEncoder();
+        const data = encoder.encode(message);
+        const hash = await crypto.subtle.digest('SHA-256', data);
+        // Convert to hex and take first 32 chars
+        const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        return hex.substring(0, 32);
+    }
+    
+    const validSignature = await generateValidSignature(agentName, timestamp);
+    
+    try {
+        const response = await fetch('/api/verification/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                knowledge: testKnowledge,
+                source_agent: agentName,
+                signature: validSignature,
+                timestamp: timestamp
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.verification) {
+            const v = data.verification;
+            const overallScore = v.overall_score || 0;
+            const layersPassed = v.layers_passed || [];
+            const layersFailed = v.layers_failed || [];
+            
+            const passedText = layersPassed.join(', ') || 'None';
+            const failedText = layersFailed.join(', ') || 'None';
+            
+            if (v.verified) {
+                resultDiv.innerHTML = `
+                    <div style="background: rgba(76,175,80,0.2); border-radius: 10px; padding: 15px;">
+                        <strong>✅ Knowledge VERIFIED!</strong><br>
+                        Score: ${(overallScore * 100).toFixed(0)}%<br>
+                        Layers Passed: ${passedText}<br>
+                        Recommendation: ${v.recommendation || 'ACCEPT'}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div style="background: rgba(244,67,54,0.2); border-radius: 10px; padding: 15px;">
+                        <strong>❌ Knowledge REJECTED!</strong><br>
+                        Score: ${(overallScore * 100).toFixed(0)}%<br>
+                        Failed Layers: ${failedText}<br>
+                        Recommendation: ${v.recommendation || 'REJECT'}
+                    </div>
+                `;
+            }
+        } else {
+            resultDiv.innerHTML = `
+                <div style="background: rgba(255,152,0,0.2); border-radius: 10px; padding: 15px;">
+                    <strong>⚠️ Verification Error</strong><br>
+                    ${data.error || 'Unknown error'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+        resultDiv.innerHTML = `
+            <div style="background: rgba(244,67,54,0.2); border-radius: 10px; padding: 15px;">
+                <strong>❌ Error</strong><br>
+                ${error.message}
+            </div>
+        `;
+    }
+}
+async function loadDiscoveredAgents() {
+    const agentName = document.getElementById('discoveryAgentSelect').value;
+    const resultsDiv = document.getElementById('discoveryResults');
+    
+    resultsDiv.innerHTML = '<div style="text-align:center;">Discovering agents...</div>';
+    
+    try {
+        const response = await fetch(`/api/discovery/agents/${agentName}`);
+        const data = await response.json();
+        
+        if (data.success && data.discovered_agents.length > 0) {
+            let html = '<strong>🔗 Discovered Agents:</strong><br><br>';
+            for (const agent of data.discovered_agents) {
+                html += `<div style="padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                            🤖 <strong>${agent.name}</strong><br>
+                            📅 Discovered: ${new Date(agent.discovered_at).toLocaleString()}<br>
+                            📡 Status: <span class="badge-success">${agent.status}</span>
+                         </div>`;
+            }
+            resultsDiv.innerHTML = html;
+        } else {
+            resultsDiv.innerHTML = '<p>No other agents discovered yet. Discovery service is running in background.</p>';
+        }
+    } catch (error) {
+        resultsDiv.innerHTML = '<p>Error loading discovery data</p>';
+    }
+}
+
+// Auto-discover every 30 seconds
+setInterval(loadDiscoveredAgents, 30000);
+async function shareKnowledgeWith(targetAgent) {
+    const fromAgent = document.getElementById('discoveryAgentSelect').value;
+    const topic = prompt('What knowledge topic to share?', 'Trading Insight');
+    const content = prompt('What content to share?', 'I learned that...');
+    
+    if (!topic || !content) return;
+    
+    const response = await fetch('/api/agent/share_knowledge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            from_agent: fromAgent,
+            to_agent: targetAgent,
+            topic: topic,
+            content: content
+        })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+        showToast(`Knowledge shared with ${targetAgent}!`, 'success');
+    } else {
+        showToast('Failed to share knowledge', 'error');
+    }
+}
+async function talkToAgent() {
+    const agentName = document.getElementById('talkAgentSelect').value;
+    const message = document.getElementById('talkMessage').value;
+    const responseDiv = document.getElementById('agentResponse');
+    
+    if (!message) {
+        responseDiv.innerHTML = '⚠️ Please enter a message before sending.';
+        responseDiv.style.borderLeft = '3px solid #ff9800';
+        return;
+    }
+    
+    // Show loading
+    responseDiv.innerHTML = '🤔 Thinking...';
+    responseDiv.style.borderLeft = '3px solid #ffd700';
+    
+    try {
+        const response = await fetch('/api/talk_to_agent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                agent_name: agentName,
+                message: message
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            responseDiv.innerHTML = `
+                <strong>🤖 ${agentName}:</strong><br>
+                ${data.response}
+            `;
+            responseDiv.style.borderLeft = '3px solid #4caf50';
+            document.getElementById('talkMessage').value = '';
+            
+            // Refresh agent list to show XP changes
+            if (typeof loadAgents === 'function') {
+                loadAgents();
+            }
+            if (typeof loadKnowledge === 'function') {
+                loadKnowledge();
+            }
+        } else {
+            responseDiv.innerHTML = `❌ Error: ${data.error || 'Something went wrong'}`;
+            responseDiv.style.borderLeft = '3px solid #f44336';
+        }
+    } catch (error) {
+        console.error('Talk to agent error:', error);
+        responseDiv.innerHTML = `❌ Connection error: ${error.message}`;
+        responseDiv.style.borderLeft = '3px solid #f44336';
+    }
+}
+
+// Allow pressing Enter to send
+document.addEventListener('DOMContentLoaded', function() {
+    const messageInput = document.getElementById('talkMessage');
+    if (messageInput) {
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                talkToAgent();
+            }
+        });
+    }
+});
+async function shareKnowledge() {
+    const fromAgent = document.getElementById('talkAgentSelect').value;
+    const toAgent = prompt('Which agent do you want to share knowledge with?', 'Agent_B');
+    
+    if (!toAgent) return;
+    
+    const topic = prompt('What topic do you want to share?', 'Trading Strategy');
+    const content = prompt('What content do you want to share?', 'My analysis shows a bullish pattern forming.');
+    
+    if (!topic || !content) return;
+    
+    try {
+        const response = await fetch('/api/share_knowledge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                from_agent: fromAgent,
+                to_agent: toAgent,
+                topic: topic,
+                content: content
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadKnowledge();
+            loadAgents();
+        } else {
+            showToast(data.error || 'Failed to share', 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+// Initialize charts
+let winRateChart = null;
+let xpChart = null;
+
+async function updateCharts() {
+    const response = await fetch('/api/agents');
+    const data = await response.json();
+    
+    if (data.success && data.agents) {
+        const agents = data.agents;
+        const labels = agents.map(a => a.name);
+        const winRates = agents.map(a => a.vote_accuracy || 0);
+        const xpValues = agents.map(a => a.xp_points || 0);
+        
+        // Win Rate Chart
+        if (winRateChart) {
+            winRateChart.destroy();
+        }
+        winRateChart = new Chart(document.getElementById('winRateChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Vote Accuracy (%)',
+                    data: winRates,
+                    backgroundColor: '#ffd700',
+                    borderColor: '#ff8c00',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Accuracy (%)', color: '#fff' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Agents', color: '#fff' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#fff' } }
+                }
+            }
+        });
+        
+        // XP Chart
+        if (xpChart) {
+            xpChart.destroy();
+        }
+        xpChart = new Chart(document.getElementById('xpChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total XP',
+                    data: xpValues,
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                    borderColor: '#4caf50',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'XP Points', color: '#fff' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Agents', color: '#fff' }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#fff' } }
+                }
+            }
+        });
+    }
+}
+
+// Update charts when agents load
+setInterval(updateCharts, 30000);
+updateCharts();
+async function exportReport() {
+    window.open('/api/export/agents_report.csv', '_blank');
+}
+
+
+async function loadRiskMetrics() {
+    try {
+        const response = await fetch('/api/risk/metrics');
+        const data = await response.json();
+        
+        if (data.success && data.metrics) {
+            const m = data.metrics;
+            document.getElementById('winRate').innerText = m.win_rate + '%';
+            document.getElementById('sharpeRatio').innerText = m.sharpe_ratio;
+            document.getElementById('maxDrawdown').innerText = '$' + m.max_drawdown;
+            document.getElementById('profitFactor').innerText = m.profit_factor;
+            document.getElementById('totalTrades').innerText = m.total_trades;
+            document.getElementById('winningTrades').innerText = m.winning_trades;
+            document.getElementById('losingTrades').innerText = m.losing_trades;
+        }
+    } catch (error) {
+        console.error('Error loading risk metrics:', error);
+    }
+}
+
+// Load risk metrics every 30 seconds
+setInterval(loadRiskMetrics, 30000);
+loadRiskMetrics();
+
+async function loadComparison() {
+    try {
+        const response = await fetch('/api/agents/comparison');
+        const data = await response.json();
+        
+        if (data.success && data.comparison) {
+            const c = data.comparison;
+            document.getElementById('bestAccuracyAgent').innerHTML = `${c.best_accuracy?.name || '-'}<br><small>${c.best_accuracy?.value || 0}%</small>`;
+            document.getElementById('bestXPAgent').innerHTML = `${c.best_xp?.name || '-'}<br><small>${c.best_xp?.value || 0} XP</small>`;
+            document.getElementById('mostVotesAgent').innerHTML = `${c.most_votes?.name || '-'}<br><small>${c.most_votes?.value || 0} votes</small>`;
+        }
+    } catch (error) {
+        console.error('Error loading comparison:', error);
+    }
+}
+
+setInterval(loadComparison, 30000);
+loadComparison();async function loadComparison() {
+    try {
+        const response = await fetch('/api/agents/comparison');
+        const data = await response.json();
+        
+        if (data.success && data.comparison) {
+            const c = data.comparison;
+            document.getElementById('bestAccuracyAgent').innerHTML = `${c.best_accuracy?.name || '-'}<br><small>${c.best_accuracy?.value || 0}%</small>`;
+            document.getElementById('bestXPAgent').innerHTML = `${c.best_xp?.name || '-'}<br><small>${c.best_xp?.value || 0} XP</small>`;
+            document.getElementById('mostVotesAgent').innerHTML = `${c.most_votes?.name || '-'}<br><small>${c.most_votes?.value || 0} votes</small>`;
+        }
+    } catch (error) {
+        console.error('Error loading comparison:', error);
+    }
+}
+
+setInterval(loadComparison, 30000);
+loadComparison();
+
+let learningCurveChart = null;
+
+async function loadLearningCurve() {
+    const agentName = document.getElementById('learningCurveAgent').value;
+    if (!agentName) return;
+    
+    const response = await fetch(`/api/agent/learning_curve/${agentName}`);
+    const data = await response.json();
+    
+    if (data.success && data.learning_curve) {
+        const cycles = data.learning_curve.map(d => d.cycle);
+        const rewards = data.learning_curve.map(d => d.reward);
+        
+        if (learningCurveChart) {
+            learningCurveChart.destroy();
+        }
+        
+        learningCurveChart = new Chart(document.getElementById('learningCurveChart'), {
+            type: 'line',
+            data: {
+                labels: cycles,
+                datasets: [{
+                    label: 'Average Reward per Cycle',
+                    data: rewards,
+                    borderColor: '#ffd700',
+                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Reward', color: '#fff' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Training Cycle', color: '#fff' }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Populate agent dropdown
+async function populateAgentDropdown() {
+    const response = await fetch('/api/agents');
+    const data = await response.json();
+    if (data.success && data.agents) {
+        const select = document.getElementById('learningCurveAgent');
+        select.innerHTML = '<option value="">Select Agent</option>' + 
+            data.agents.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+    }
+}
+
+populateAgentDropdown();
+
+async function refreshRLStats() {
+    try {
+        const response = await fetch('/api/rl_status');
+        const data = await response.json();
+        if (data.success && data.agents) {
+            let html = '<table class="data-table">';
+            html += '<tr><th>Agent</th><th>Q-Table Size</th><th>Win Rate</th><th>Exploration</th></tr>';
+            for (const agent of data.agents) {
+                html += `<tr>
+                    <td>${agent.name}</td>
+                    <td>${agent.q_table_size}</td>
+                    <td>${agent.win_rate}%</td>
+                    <td>${(agent.exploration_rate * 100).toFixed(1)}%</td>
+                </tr>`;
+            }
+            html += '</table>';
+            document.getElementById('rlStats').innerHTML = html;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Refresh every 30 seconds
+setInterval(refreshRLStats, 30000);
+refreshRLStats();
+</script>
+<!-- Agent Conversations Panel -->
+<div class="teaching-panel" style="margin-top:0;">
+    <h3>💬 Agent Conversations & Knowledge Sharing</h3>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <!-- Send Message -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;">
+            <h4>📨 Send Message</h4>
+            <div class="form-group">
+                <label>From Agent</label>
+                <select id="conversationFromAgent">
+                    <option value="Agent_A">Agent_A</option>
+                    <option value="Agent_B">Agent_B</option>
+                    <option value="Agent_C">Agent_C</option>
+                    <option value="Agent_D">Agent_D</option>
+                    <option value="Agent_E">Agent_E</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>To Agent</label>
+                <select id="conversationToAgent">
+                    <option value="Agent_A">Agent_A</option>
+                    <option value="Agent_B">Agent_B</option>
+                    <option value="Agent_C">Agent_C</option>
+                    <option value="Agent_D">Agent_D</option>
+                    <option value="Agent_E">Agent_E</option>
+                    <option value="ALL">ALL AGENTS</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea id="conversationMessage" rows="2" placeholder="What do you want to say?"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="sendAgentMessage()">💬 Send Message</button>
+        </div>
+        
+        <!-- Share Knowledge -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;">
+            <h4>📚 Share Knowledge</h4>
+            <div class="form-group">
+                <label>From Agent</label>
+                <select id="shareFromAgent">
+                    <option value="Agent_A">Agent_A</option>
+                    <option value="Agent_B">Agent_B</option>
+                    <option value="Agent_C">Agent_C</option>
+                    <option value="Agent_D">Agent_D</option>
+                    <option value="Agent_E">Agent_E</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>To Agent</label>
+                <select id="shareToAgent">
+                    <option value="Agent_A">Agent_A</option>
+                    <option value="Agent_B">Agent_B</option>
+                    <option value="Agent_C">Agent_C</option>
+                    <option value="Agent_D">Agent_D</option>
+                    <option value="Agent_E">Agent_E</option>
+                    <option value="ALL">ALL AGENTS</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Topic / Knowledge Type</label>
+                <input type="text" id="shareTopic" placeholder="e.g., RSI Strategy, Risk Management">
+            </div>
+            <div class="form-group">
+                <label>Content</label>
+                <textarea id="shareContent" rows="2" placeholder="Share your knowledge..."></textarea>
+            </div>
+            <button class="btn btn-success" onclick="shareKnowledge()">🎓 Share Knowledge (+15 XP)</button>
+        </div>
+    </div>
+    
+    <!-- Group Discussion & Trade Suggestions -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;">
+            <h4>🗣️ Start Group Discussion</h4>
+            <div class="form-group">
+                <label>Topic</label>
+                <select id="discussionTopic">
+                    <option value="market_trend">📈 Market Trend Analysis</option>
+                    <option value="risk_management">⚠️ Risk Management</option>
+                    <option value="opportunity">🎯 Trading Opportunities</option>
+                    <option value="learning">📖 Learning & Strategies</option>
+                </select>
+            </div>
+            <button class="btn btn-warning" onclick="startGroupDiscussion()">Start Discussion</button>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;">
+            <h4>💡 Suggest Trade Idea</h4>
+            <div class="form-group">
+                <label>From Agent</label>
+                <select id="suggestFromAgent">
+                    <option value="Agent_A">Agent_A</option>
+                    <option value="Agent_B">Agent_B</option>
+                    <option value="Agent_C">Agent_C</option>
+                    <option value="Agent_D">Agent_D</option>
+                    <option value="Agent_E">Agent_E</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Trade Suggestion</label>
+                <input type="text" id="tradeSuggestion" placeholder="e.g., BUY Bitcoin at $50,000 with stop at $49,000">
+            </div>
+            <div class="form-group">
+                <label>Confidence (%)</label>
+                <input type="range" id="suggestionConfidence" min="0" max="100" value="75">
+                <span id="confidenceValue">75%</span>
+            </div>
+            <button class="btn btn-info" onclick="suggestTrade()">💡 Suggest Trade</button>
+        </div>
+    </div>
+    
+    <!-- Conversation Feed -->
+    <div style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 15px; max-height: 400px; overflow-y: auto;">
+        <h4>📜 Conversation Feed</h4>
+        <div id="conversationFeed">
+            <div style="text-align:center; padding:20px;">No conversations yet. Send a message to start!</div>
+        </div>
+    </div>
+</div>
+        <!-- Achievements Section -->
+        <div class="teaching-panel" style="margin-top:0;">
+            <h3>🏆 Recent Achievements</h3>
+            <div id="achievementsList" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <div style="text-align:center; padding:20px; width:100%;">Complete achievements by teaching agents and trading!</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Agent Details Modal -->
+    <div id="agentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Agent Details</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalContent">Loading...</div>
+        </div>
+    </div>
+    
+    <div class="auto-save-indicator" id="autoSaveIndicator">
+        💾 Auto-saving every 30 seconds
+    </div>
+    
+
+    <script>
+
+
+
+function updateTeachDropdown(agents) {
+    const select = document.getElementById('teachAgent');
+    if (select) {
+        let html = '<option value="ALL">📢 BROADCAST TO ALL AGENTS</option>';
+        agents.forEach(agent => {
+            html += `<option value="${agent.name}">${agent.name} (${agent.type})</option>`;
+        });
+        select.innerHTML = html;
+    }
+}
+
+function updateConversationDropdowns(agents) {
+    const fromSelect = document.getElementById('fromAgent');
+    const toSelect = document.getElementById('toAgent');
+    
+    if (fromSelect && toSelect) {
+        let options = '';
+        agents.forEach(agent => {
+            options += `<option value="${agent.name}">${agent.name}</option>`;
+        });
+        fromSelect.innerHTML = options;
+        toSelect.innerHTML = options;
+    }
+}
+        // Socket.IO connection
+        const socket = io();
+        
+        // Knowledge exchange data (in-memory store)
+        let knowledgeExchanges = [];
+        let agentsData = [];
+        
+        // Socket event handlers
+// Add to existing socket event listeners
+socket.on('new_conversation', function(data) {
+    console.log('New conversation:', data);
+    loadConversations();
+    showToast(`New message from ${data.from_agent}`, 'info');
+});
+
+socket.on('knowledge_shared', function(data) {
+    console.log('Knowledge shared:', data);
+    loadKnowledgeFeed();
+    refreshData();
+    showToast(`${data.from_agent} shared knowledge with ${data.to_agent}`, 'success');
+});
+
+socket.on('group_discussion', function(data) {
+    console.log('Group discussion:', data);
+    loadConversations();
+    showToast(`Group discussion started on "${data.topic}" with ${data.participants} agents`, 'info');
+});
+
+socket.on('trade_suggestion', function(data) {
+    console.log('Trade suggestion:', data);
+    loadConversations();
+    showToast(`${data.from_agent} suggested a trade idea`, 'warning');
+});
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            refreshData();
+        });
+        
+        socket.on('agent_update', function(data) {
+            console.log('Agent update received');
+            if (data.agents) {
+                agentsData = data.agents;
+                updateAgentList(data.agents);
+                updateStats(data.agents);
+            }
+        });
+        
+        socket.on('save_confirmation', function(data) {
+            showToast(`💾 Auto-saved at ${new Date(data.timestamp).toLocaleTimeString()} | XP: ${data.total_xp}`, 'success');
+        });
+        
+        socket.on('broadcast_completed', function(data) {
+            showToast(`📢 Broadcast complete! +${data.total_xp_awarded} XP across all agents`, 'success');
+            refreshData();
+        });
+        
+        // Update agent list
+        function updateAgentList(agents) {
+            const container = document.getElementById('agentList');
+            if (!agents || agents.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px;">No agents found</div>';
+                return;
+            }
+            
+            container.innerHTML = agents.map(agent => `
+                <div class="agent-item" onclick="showAgentDetails('${agent.name}')">
+                    <div>
+                        <span class="agent-name">${agent.name}</span>
+                        <span class="agent-type">${agent.type || 'Trading Agent'}</span>
+                        <div class="progress-bar" style="width:100px; margin-top:5px;">
+                            <div class="progress-fill" style="width: ${agent.trust_weight * 100}%"></div>
+                        </div>
+                    </div>
+                    <div class="agent-stats">
+                        <span class="agent-xp">⚡${agent.xp_points || 0}</span>
+                        <span class="agent-tokens">🎴${agent.token_balance || 0}</span>
+                        <span class="agent-accuracy">📊${agent.vote_accuracy || 0}%</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Update statistics
+        function updateStats(agents) {
+            const totalXP = agents.reduce((sum, a) => sum + (a.xp_points || 0), 0);
+            const totalTokens = agents.reduce((sum, a) => sum + (a.token_balance || 0), 0);
+            const totalAchievements = Math.floor(totalXP / 1000);
+            
+            document.getElementById('totalXP').textContent = totalXP.toLocaleString();
+            document.getElementById('totalTokens').textContent = totalTokens.toLocaleString();
+            document.getElementById('totalAchievements').textContent = totalAchievements;
+            document.getElementById('totalAgents').textContent = agents.length;
+        }
+        
+        // Update knowledge feed
+        function updateKnowledgeFeed() {
+            const container = document.getElementById('knowledgeFeed');
+            if (!knowledgeExchanges || knowledgeExchanges.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px;">No knowledge exchanges yet.<br>Teach an agent to get started!</div>';
+                return;
+            }
+            
+            container.innerHTML = knowledgeExchanges.slice(0, 20).map(k => `
+                <div class="knowledge-item">
+                    <div class="knowledge-header">
+                        <span class="knowledge-from">${k.from_agent || 'User'}</span>
+                        <span>→</span>
+                        <span class="knowledge-to">${k.to_agent || 'ALL'}</span>
+                        <span style="opacity:0.5;">${k.timestamp || new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="knowledge-topic">📚 ${k.topic || 'Knowledge Share'}</div>
+                    <div class="knowledge-content">${(k.content || '').substring(0, 150)}${(k.content || '').length > 150 ? '...' : ''}</div>
+                    ${k.xp_reward ? `<div class="knowledge-reward">+${k.xp_reward} XP, +${k.token_reward} Tokens</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        // Teach a single agent
+        async function teachAgent() {
+            const agent = document.getElementById('targetAgent').value;
+            if (agent === 'ALL') {
+                teachAllAgents();
+                return;
+            }
+            
+            const topic = document.getElementById('topicName').value;
+            const content = document.getElementById('knowledgeContent').value;
+            
+            if (!topic || !content) {
+                showToast('Please enter topic and content', 'error');
+                return;
+            }
+            
+            showToast(`Teaching ${agent}...`, 'warning');
+            
+            try {
+                const response = await fetch('/api/teach_agent', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        agent_name: agent,
+                        topic: topic,
+                        content: content,
+                        teacher: 'User'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('topicName').value = '';
+                    document.getElementById('knowledgeContent').value = '';
+                    
+                    // Add to local knowledge feed
+                    knowledgeExchanges.unshift({
+                        from_agent: 'User',
+                        to_agent: agent,
+                        topic: topic,
+                        content: content,
+                        xp_reward: 50,
+                        token_reward: 10,
+                        timestamp: new Date().toLocaleTimeString()
+                    });
+                    updateKnowledgeFeed();
+                    refreshData();
+                } else {
+                    showToast(data.error || 'Failed to teach agent', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Teach all agents (broadcast)
+async function teachAllAgents() {
+    const topic = document.getElementById('topicName').value;
+    const content = document.getElementById('knowledgeContent').value;
+    
+    if (!topic || !content) {
+        alert('Please enter topic and content');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/teach_all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic: topic, content: content })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('topicName').value = '';
+            document.getElementById('knowledgeContent').value = '';
+            
+            // Use the correct function name based on your dashboard
+            if (typeof loadAgents === 'function') {
+                loadAgents();
+            }
+            if (typeof loadKnowledge === 'function') {
+                loadKnowledge();
+            }
+            if (typeof refreshAgents === 'function') {
+                refreshAgents();
+            }
+            // If none work, just reload the page
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to broadcast');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+        
+        // Request knowledge from another agent
+        async function requestKnowledge() {
+            const fromAgent = document.getElementById('targetAgent').value;
+            if (fromAgent === 'ALL') {
+                showToast('Please select a specific agent to request from', 'error');
+                return;
+            }
+            
+            const topic = document.getElementById('topicName').value;
+            const question = document.getElementById('knowledgeContent').value;
+            
+            if (!topic || !question) {
+                showToast('Please enter topic and your question', 'error');
+                return;
+            }
+            
+            const toAgent = prompt('Which agent do you want to ask?', 'Agent_B');
+            if (!toAgent) return;
+            
+            showToast(`Requesting knowledge from ${toAgent}...`, 'warning');
+            
+            try {
+                const response = await fetch('/api/request_knowledge', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        from_agent: fromAgent,
+                        to_agent: toAgent,
+                        topic: topic,
+                        question: question
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('topicName').value = '';
+                    document.getElementById('knowledgeContent').value = '';
+                } else {
+                    showToast(data.error || 'Failed to request knowledge', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Save all data manually
+        async function saveAllData() {
+            showToast('Saving all data...', 'warning');
+            try {
+                const response = await fetch('/api/save_all_data', {method: 'POST'});
+                const data = await response.json();
+                if (data.success) {
+                    showToast('✅ Data saved successfully!', 'success');
+                } else {
+                    showToast('Save failed', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Refresh all data
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/agents');
+                const data = await response.json();
+                if (data.success) {
+                    agentsData = data.agents;
+                    updateAgentList(data.agents);
+                    updateStats(data.agents);
+                }
+                
+                // Load knowledge exchanges
+                const knowledgeResponse = await fetch('/api/knowledge_exchanges');
+                const knowledgeData = await knowledgeResponse.json();
+                if (knowledgeData.success) {
+                    knowledgeExchanges = knowledgeData.exchanges || [];
+                    updateKnowledgeFeed();
+                }
+            } catch (error) {
+                console.error('Refresh error:', error);
+            }
+        }
+        
+        // Show agent details modal
+        async function showAgentDetails(agentName) {
+            try {
+                const response = await fetch(`/api/agent/${agentName}`);
+                const data = await response.json();
+                
+                if (data.success && data.agent) {
+                    const agent = data.agent;
+                    document.getElementById('modalTitle').textContent = `🤖 ${agent.name}`;
+                    document.getElementById('modalContent').innerHTML = `
+                        <div style="margin-bottom:20px;">
+                            <p><strong>Type:</strong> ${agent.type || 'Trading Agent'}</p>
+                            <p><strong>Specialization:</strong> ${agent.specialization || 'General Trading'}</p>
+                            <p><strong>Level:</strong> ${Math.floor(agent.xp_points / 1000) + 1}</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:15px; margin-bottom:20px;">
+                            <h4>📊 Performance</h4>
+                            <p>XP: <strong>${agent.xp_points}</strong></p>
+                            <p>Tokens: <strong>${agent.token_balance}</strong></p>
+                            <p>Trust Weight: <strong>${(agent.trust_weight * 100).toFixed(1)}%</strong></p>
+                            <p>Vote Accuracy: <strong>${agent.vote_accuracy || 0}%</strong></p>
+                            <p>Total Votes: <strong>${agent.total_votes || 0}</strong> (${agent.correct_votes || 0} correct)</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:15px;">
+                            <h4>📚 Knowledge Learned</h4>
+                            <div id="agentTopics">Loading...</div>
+                        </div>
+                    `;
+                    document.getElementById('agentModal').style.display = 'flex';
+                    
+                    // Load agent's learned topics
+                    const topicsResponse = await fetch(`/api/agent_topics/${agentName}`);
+                    const topicsData = await topicsResponse.json();
+                    if (topicsData.success && topicsData.topics.length > 0) {
+                        document.getElementById('agentTopics').innerHTML = topicsData.topics.map(t => `
+                            <div style="margin:8px 0; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px;">
+                                <strong>${t.topic_name}</strong>
+                                <div style="font-size:12px; opacity:0.7;">${t.content.substring(0, 100)}...</div>
+                                <div style="font-size:11px; color:#4caf50;">+${t.xp_gained} XP</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        document.getElementById('agentTopics').innerHTML = '<p>No topics learned yet. Teach this agent!</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading agent details:', error);
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('agentModal').style.display = 'none';
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // Auto-refresh every 10 seconds
+        setInterval(refreshData, 10000);
+        
+        // Initial load
+        refreshData();
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+        
+        // Close modal when clicking outside
+        window.onclick = function(e) {
+            const modal = document.getElementById('agentModal');
+            if (e.target === modal) closeModal();
+        };
+// ============================================
+// AGENT CONVERSATION FUNCTIONS
+// ============================================
+
+// Send message between agents
+async function sendAgentMessage() {
+    const fromAgent = document.getElementById('conversationFromAgent').value;
+    const toAgent = document.getElementById('conversationToAgent').value;
+    const message = document.getElementById('conversationMessage').value;
+    
+    if (!message) {
+        showToast('Please enter a message', 'error');
+        return;
+    }
+    
+    showToast(`Sending message from ${fromAgent} to ${toAgent}...`, 'warning');
+    
+    try {
+        const response = await fetch('/api/agent_conversation', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                from_agent: fromAgent,
+                to_agent: toAgent,
+                message: message,
+                message_type: 'direct'
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            document.getElementById('conversationMessage').value = '';
+            loadConversations();
+            refreshData();
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Load knowledge feed
+// Global variable to track last update
+let lastKnowledgeCount = 0;
+
+async function loadKnowledge() {
+    try {
+        const response = await fetch('/api/knowledge_exchanges');
+        const data = await response.json();
+        
+        if (data.success && data.exchanges) {
+            const container = document.getElementById('knowledgeFeed');
+            if (container) {
+                // Only update if count changed or every 10 seconds
+                if (data.exchanges.length !== lastKnowledgeCount) {
+                    lastKnowledgeCount = data.exchanges.length;
+                    
+                    // Show last 30 exchanges
+                    const last30 = data.exchanges.slice(0, 30);
+                    let html = '';
+                    for (const ex of last30) {
+                        const time = ex.timestamp ? new Date(ex.timestamp).toLocaleTimeString() : '';
+                        html += `
+                            <div class="knowledge-item" style="animation: fadeIn 0.3s ease;">
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; opacity: 0.7;">
+                                    <span>${escapeHtml(ex.from_agent)} → ${escapeHtml(ex.to_agent)}</span>
+                                    <span>${time}</span>
+                                </div>
+                                <div style="font-weight: bold; margin-top: 5px;">${escapeHtml(ex.topic)}</div>
+                                <div style="font-size: 12px; margin-top: 3px;">${escapeHtml(ex.content.substring(0, 100))}${ex.content.length > 100 ? '...' : ''}</div>
+                                ${ex.xp_reward ? `<div style="color: #4caf50; font-size: 11px; margin-top: 5px;">+${ex.xp_reward} XP</div>` : ''}
+                            </div>
+                        `;
+                    }
+                    container.innerHTML = html || '<div style="text-align:center; padding:20px;">No knowledge exchanges yet</div>';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Load knowledge error:', error);
+    }
+}
+
+// Refresh every 3 seconds (faster to catch new exchanges)
+setInterval(loadKnowledge, 3000);
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+// Clear all knowledge exchanges
+async function clearKnowledge() {
+    if (confirm('Are you sure you want to clear all knowledge exchanges?')) {
+        const response = await fetch('/api/clear_knowledge', {method: 'POST'});
+        const data = await response.json();
+        if (data.success) {
+            showToast('Knowledge exchange cleared!');
+            loadKnowledge(); // Reload to show empty
+        }
+    }
+}
+// Auto-refresh every 5 seconds
+setInterval(loadKnowledge, 50000);
+
+// Share knowledge between agents
+async function shareKnowledge() {
+    const fromAgent = document.getElementById('shareFromAgent').value;
+    const toAgent = document.getElementById('shareToAgent').value;
+    const topic = document.getElementById('shareTopic').value;
+    const content = document.getElementById('shareContent').value;
+    
+    if (!topic || !content) {
+        showToast('Please enter topic and content', 'error');
+        return;
+    }
+    
+    showToast(`Sharing knowledge from ${fromAgent} to ${toAgent}...`, 'warning');
+    
+    try {
+        const response = await fetch('/api/agent_share_knowledge', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                from_agent: fromAgent,
+                to_agent: toAgent,
+                knowledge_type: 'insight',
+                topic: topic,
+                content: content
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            document.getElementById('shareTopic').value = '';
+            document.getElementById('shareContent').value = '';
+            loadConversations();
+            loadKnowledgeFeed();
+            refreshData();
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Start group discussion
+async function startGroupDiscussion() {
+    const topicSelect = document.getElementById('discussionTopic');
+    const topic = topicSelect.options[topicSelect.selectedIndex].text;
+    
+    showToast(`Starting group discussion on "${topic}"...`, 'warning');
+    
+    try {
+        const response = await fetch('/api/initiate_group_discussion', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                topic: topic,
+                initiated_by: 'User'
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            loadConversations();
+            
+            // Show discussion messages
+            let discussionHtml = '<div style="background:rgba(255,215,0,0.1); padding:10px; border-radius:10px; margin-bottom:10px;">';
+            discussionHtml += '<strong>🗣️ GROUP DISCUSSION: ' + topic + '</strong><br>';
+            for (const msg of data.discussion) {
+                discussionHtml += `<span style="color:#ffd700;">${msg.from_agent}:</span> ${msg.message}<br>`;
+            }
+            discussionHtml += '</div>';
+            
+            // Add to conversation feed temporarily
+            const feed = document.getElementById('conversationFeed');
+            feed.innerHTML = discussionHtml + feed.innerHTML;
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Suggest trade
+async function suggestTrade() {
+    const fromAgent = document.getElementById('suggestFromAgent').value;
+    const suggestion = document.getElementById('tradeSuggestion').value;
+    const confidence = document.getElementById('suggestionConfidence').value;
+    
+    if (!suggestion) {
+        showToast('Please enter a trade suggestion', 'error');
+        return;
+    }
+    
+    showToast(`${fromAgent} suggesting trade idea...`, 'warning');
+    
+    try {
+        const response = await fetch('/api/agent_suggest_trade', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                agent_name: fromAgent,
+                suggestion: suggestion,
+                confidence: parseInt(confidence),
+                target_agents: ['ALL']
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            document.getElementById('tradeSuggestion').value = '';
+            loadConversations();
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+// Load conversations
+async function loadConversations() {
+    try {
+        const response = await fetch('/api/agent_conversations');
+        const data = await response.json();
+        
+        if (data.success && data.conversations.length > 0) {
+            const feed = document.getElementById('conversationFeed');
+            feed.innerHTML = data.conversations.slice(0, 30).map(conv => {
+                let icon = '💬';
+                let color = '#4caf50';
+                if (conv.message_type === 'trade_suggestion') {
+                    icon = '💡';
+                    color = '#ff9800';
+                } else if (conv.message_type === 'group_discussion') {
+                    icon = '🗣️';
+                    color = '#ffd700';
+                } else if (conv.message_type === 'direct') {
+                    icon = '📨';
+                    color = '#2196f3';
+                }
+                
+                return `
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px; margin-bottom: 10px; border-left: 3px solid ${color};">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; opacity: 0.7;">
+                            <span>${icon} ${conv.from_agent} → ${conv.to_agent}</span>
+                            <span>${conv.timestamp}</span>
+                        </div>
+                        <div style="margin-top: 5px;">${conv.message}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch (error) {
+        console.error('Load conversations error:', error);
+    }
+}
+
+// Update confidence slider display
+document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.getElementById('suggestionConfidence');
+    if (slider) {
+        slider.addEventListener('input', function() {
+            document.getElementById('confidenceValue').textContent = this.value + '%';
+        });
+    }
+});
+
+// Load conversations on page load and every 5 seconds
+setInterval(loadConversations, 5000);
+// ============================================
+//  REAL-TIME MARKET DATA
+// ============================================
+
+// Symbol display configuration
+const symbolConfig = {
+    'GOLD': { icon: '🥇', name: 'Gold', color: '#ffd700', symbol: 'GOLD' },
+    'SILVER': { icon: '🥈', name: 'Silver', color: '#c0c0c0', symbol: 'SILVER' },
+    'WTI': { icon: '🛢️', name: 'WTI Oil', color: '#ff9800', symbol: 'CrudeOIL' },
+    'BRENT': { icon: '🛢️', name: 'Brent Oil', color: '#ff9800', symbol: 'BRENT_OIL' },
+    'SP500': { icon: '📊', name: 'S&P 500', color: '#4caf50', symbol: 'S&P500' },
+    'EURUSD': { icon: '💶', name: 'Euro', color: '#2196f3', symbol: 'EURUSD' },
+    'GBPUSD': { icon: '💷', name: 'British Pound', color: '#9c27b0', symbol: 'GBPUSD' }
+};
+
+let previousPrices = {};
+
+async function loadMarketStatus() {
+    try {
+        const response = await fetch('/api/market/status');
+        const data = await response.json();
+        
+        if (data.success) {
+            const status = data.status;
+            const html = `
+                <p><span class="badge-success">● ${status.is_open ? 'MARKET OPEN' : 'MARKET CLOSED'}</span></p>
+                <p>Source: ${status.source || ''}</p>
+                <p>Status: ${status.message || 'Real-time data active'}</p>
+                <p>Connected: ${status.connected ? '✅ Yes' : '⚠️ Demo Mode'}</p>
+            `;
+            document.getElementById('marketStatus').innerHTML = html;
+        }
+    } catch (error) {
+        console.error('Market status error:', error);
+        document.getElementById('marketStatus').innerHTML = '<p>Market: <span class="badge-warning">Loading...</span></p>';
+    }
+}
+async function loadMarketPrices() {
+    try {
+        const response = await fetch('/api/market/prices');
+        const data = await response.json();
+        
+        if (data.success && data.prices) {
+            let html = '';
+            for (const [name, price] of Object.entries(data.prices)) {
+                html += `
+                    <div class="price-card">
+                        <div>${name}</div>
+                        <div class="price-value">$${price}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('livePrices').innerHTML = html;
+            document.getElementById('priceSource').innerHTML = `Source: ${data.source || ''}`;
+        }
+    } catch (error) {
+        console.error('Error loading prices:', error);
+    }
+}
+
+// Auto-refresh every 5 seconds
+setInterval(loadMarketPrices, 5000);
+async function loadAccountInfo() {
+    try {
+        const response = await fetch('/api/market/account');
+        const data = await response.json();
+        
+        if (data.success && data.account) {
+            const account = data.account;
+            const balance = account.balance || 100000;
+            const html = `
+                <p>💰 Balance: <strong>$${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong></p>
+                <p>📈 Buying Power: <strong>$${balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</strong></p>
+                <p>💵 Currency: ${account.currency || 'USD'}</p>
+                <p>🎴 Type: ${account.is_demo ? 'Demo Account' : 'Live Account'}</p>
+            `;
+            document.getElementById('accountInfo').innerHTML = html;
+        }
+    } catch (error) {
+        console.error('Account info error:', error);
+    }
+}
+
+async function loadLivePrices() {
+    try {
+        const response = await fetch('/api/market/prices');
+        const data = await response.json();
+        
+        // Update data source indicator
+        if (data.source) {
+            document.getElementById('dataSource').innerHTML = `(${data.source})`;
+        }
+        document.getElementById('lastUpdate').innerHTML = `Updated: ${new Date().toLocaleTimeString()}`;
+        
+        if (data.success && data.prices) {
+            let html = '';
+            const displayOrder = ['GOLD', 'SILVER', 'WTI', 'SP500', 'EURUSD', 'GBPUSD'];
+            
+            for (const key of displayOrder) {
+                const config = symbolConfig[key];
+                if (config) {
+                    let price = data.prices[key];
+                    
+                    if (price && price > 0) {
+                        // Calculate change
+                        let changeHtml = '';
+                        let animationClass = '';
+                        
+                        if (previousPrices[key]) {
+                            const change = ((price - previousPrices[key]) / previousPrices[key]) * 100;
+                            if (change > 0) {
+                                changeHtml = `<div class="change-positive" style="font-size: 11px;">▲ ${change.toFixed(2)}%</div>`;
+                                animationClass = 'price-up';
+                            } else if (change < 0) {
+                                changeHtml = `<div class="change-negative" style="font-size: 11px;">▼ ${Math.abs(change).toFixed(2)}%</div>`;
+                                animationClass = 'price-down';
+                            }
+                        }
+                        
+                        const formattedPrice = key === 'EURUSD' || key === 'GBPUSD' 
+                            ? price.toFixed(4) 
+                            : `$${price.toFixed(2)}`;
+                        
+                        html += `
+                            <div style="background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5)); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid ${config.color}40;">
+                                <div style="font-size: 28px;">${config.icon}</div>
+                                <div style="font-weight: bold; margin-top: 5px;">${config.name}</div>
+                                <div class="${animationClass}" style="font-size: 18px; color: ${config.color}; margin-top: 8px; font-weight: bold;">
+                                    ${formattedPrice}
+                                </div>
+                                ${changeHtml}
+                                <div style="font-size: 10px; opacity: 0.5; margin-top: 8px;">
+                                    ${new Date().toLocaleTimeString()}
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Store for next comparison
+                        previousPrices[key] = price;
+                    }
+                }
+            }
+            
+            if (html) {
+                document.getElementById('livePrices').innerHTML = html;
+            } else {
+                document.getElementById('livePrices').innerHTML = '<div style="text-align:center; padding:40px;">No price data available</div>';
+            }
+        }
+    } catch (error) {
+        console.error('Live prices error:', error);
+        document.getElementById('livePrices').innerHTML = '<div style="text-align:center; padding:40px;">Error loading prices</div>';
+    }
+}
+
+async function scanSignals() {
+    showToast('🔍 Analyzing market for trading signals...', 'warning');
+    
+    try {
+        const response = await fetch('/api/market/signals');
+        const data = await response.json();
+        
+        if (data.success && data.signals && data.signals.length > 0) {
+            let html = '';
+            for (const signal of data.signals) {
+                const actionClass = signal.action === 'BUY' ? 'badge-success' : 'badge-danger';
+                const strengthClass = signal.signal_strength === 'STRONG_SIGNAL' ? 'badge-success' : 'badge-warning';
+                const signalIcon = signal.action === 'BUY' ? '📈' : '📉';
+                
+                html += `
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid ${signal.action === 'BUY' ? '#4caf50' : '#f44336'};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                            <div>
+                                <span style="font-size: 20px;">${signal.name}</span>
+                                <span style="font-size: 24px; margin-left: 10px;">${signalIcon}</span>
+                            </div>
+                            <div>
+                                <span class="${actionClass}" style="margin-right: 8px; padding: 4px 12px;">${signal.action}</span>
+                                <span class="${strengthClass}" style="padding: 4px 12px;">${signal.signal_strength}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <span>💰 Price: <strong>$${typeof signal.price === 'number' ? signal.price.toFixed(2) : parseFloat(signal.price).toFixed(2)}</strong></span>
+                            <span style="margin-left: 20px;">🎯 Confidence: <strong>${signal.confidence}%</strong></span>
+                        </div>
+                        <div style="font-size: 12px; opacity: 0.7; margin-top: 8px;">
+                            📊 ${signal.reasons ? signal.reasons[0] : 'Technical analysis based on real market data'}
+                        </div>
+                        <div style="font-size: 11px; opacity: 0.5; margin-top: 8px;">
+                            Source: ${data.source || ''} | ${new Date(signal.timestamp).toLocaleTimeString()}
+                        </div>
+                        <button onclick="submitTrade('${signal.symbol}', '${signal.action}')" class="btn btn-primary" style="margin-top: 12px; padding: 6px 15px;">⚡ Execute Trade</button>
+                    </div>
+                `;
+            }
+            document.getElementById('tradingSignals').innerHTML = html;
+            showToast(`✅ Found ${data.signals.length} trading signals!`, 'success');
+        } else {
+            document.getElementById('tradingSignals').innerHTML = '<div style="text-align:center; padding:40px;">🔍 No signals found. Market may be ranging.</div>';
+            showToast('No signals found', 'info');
+        }
+    } catch (error) {
+        console.error('Scan signals error:', error);
+        document.getElementById('tradingSignals').innerHTML = '<div style="text-align:center; padding:40px;">⚠️ Error loading signals. Please try again.</div>';
+        showToast('Error scanning signals', 'error');
+    }
+}
+
+async function submitTrade(symbol, action) {
+    const units = prompt(`📊 Enter units to ${action} for ${symbol}:`, action === 'BUY' ? '100' : '100');
+    if (!units) return;
+    
+    showToast(`📝 Submitting ${action} order for ${units} ${symbol}...`, 'warning');
+    
+    try {
+        const response = await fetch('/api/market/order', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                instrument: symbol,
+                units: parseInt(units),
+                side: action.toLowerCase()
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(`✅ Order executed! ${action} ${units} ${symbol} @ $${data.order?.price}`, 'success');
+            loadAccountInfo();
+        } else {
+            showToast(`❌ Order failed: ${data.error || 'Unknown error'}`, 'error');
+        }
+    } catch (error) {
+        showToast(`✅ [DEMO] ${action} ${units} ${symbol} - Demo order simulated`, 'success');
+    }
+}
+
+// Auto-refresh prices every 3 seconds
+let priceInterval;
+
+function startPriceUpdates() {
+    if (priceInterval) clearInterval(priceInterval);
+    priceInterval = setInterval(() => {
+        loadLivePrices();
+    }, 3000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadMarketStatus();
+    loadAccountInfo();
+    loadLivePrices();
+    startPriceUpdates();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (priceInterval) clearInterval(priceInterval);
+});
+    </script>
+
+</body>
+</html>

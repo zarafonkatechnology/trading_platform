@@ -1,0 +1,326 @@
+<!-- templates/platform2_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Platform 2 | Instructor Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0e27; color: #e0e0e0; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #1a1f3a, #0a0e27); padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .header h1 { color: #ffd700; }
+        .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tab-btn { background: rgba(255,255,255,0.1); border: none; padding: 10px 20px; border-radius: 10px; color: white; cursor: pointer; }
+        .tab-btn.active { background: #ffd700; color: #0a0e27; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: rgba(255,255,255,0.08); border-radius: 15px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #ffd700; }
+        .data-table { width: 100%; background: rgba(0,0,0,0.3); border-radius: 15px; overflow-x: auto; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .data-table th { background: rgba(255,215,0,0.2); color: #ffd700; }
+        .badge-success { background: #4caf50; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+        .badge-danger { background: #f44336; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+        .badge-warning { background: #ff9800; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+        button { background: #ffd700; color: #0a0e27; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+        .progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 6px; overflow: hidden; }
+        .progress-fill { background: #4caf50; height: 100%; width: 0%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📊 Platform 2: Instructor Dashboard</h1>
+        <p>Complete transparency | All data accessible | Expandable database</p>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('agents')">🤖 Agents & Expandability</button>
+        <button class="tab-btn" onclick="showTab('telegram')">📨 Telegram Signals</button>
+        <button class="tab-btn" onclick="showTab('supervisor')">⚖️ Supervisor Votes</button>
+        <button class="tab-btn" onclick="showTab('errors')">❌ Error Correction & ML</button>
+        <button class="tab-btn" onclick="showTab('gatekeeper')">🚪 Gatekeeper Audit</button>
+        <button class="tab-btn" onclick="showTab('collaboration')">🤝 Collaboration & Zero Errors</button>
+    </div>
+    
+    <!-- Agents Tab -->
+    <div id="tab-agents" class="tab-content active">
+        <button onclick="addDemoAgent()">➕ Add Demo Agent (Test Expandability)</button>
+        <h3>🤖 Agents (Expandable - New agents auto-appear)</h3>
+        <div class="stats-grid" id="agentStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Agent</th><th>Type</th><th>XP</th><th>Tokens</th><th>Trust Weight</th><th>Accuracy</th><th>Votes</th><th>Knowledge Shared</th><th>Status</th></tr></thead>
+            <tbody id="agentsTable"></tbody>
+        </table>
+        <div style="margin-top:20px;"><button onclick="addDemoAgent()">➕ Add Demo Agent (Test Expandability)</button></div>
+    </div>
+    
+    <!-- Telegram Tab -->
+    <div id="tab-telegram" class="tab-content">
+        <h3>📨 Telegram Signals</h3>
+        <div class="stats-grid" id="telegramStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Asset</th><th>Price</th><th>Confidence</th><th>Strength</th><th>Raw Message</th></tr></thead>
+            <tbody id="telegramTable"></tbody>
+        </table>
+    </div>
+    
+    <!-- Supervisor Tab -->
+    <div id="tab-supervisor" class="tab-content">
+        <h3>⚖️ Supervisor Vote Records</h3>
+        <div id="voteAccuracyChart"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Agent</th><th>Vote</th><th>Was Correct?</th><th>Error Type</th><th>XP Change</th><th>Asset</th></tr></thead>
+            <tbody id="voteTable"></tbody>
+        </table>
+    </div>
+    
+    <!-- Error Correction & ML Tab -->
+    <div id="tab-errors" class="tab-content">
+        <h3>❌ Error Correction & ML Training</h3>
+        <div class="stats-grid" id="errorStats"></div>
+        <button onclick="startTrainingCycle()" style="margin-bottom:15px;">🔄 Start ML Training Cycle</button>
+        <h4>Training Cycles History</h4>
+        <table class="data-table">
+            <thead><tr><th>Cycle</th><th>Started</th><th>Agents Trained</th><th>Pre-Accuracy</th><th>Post-Accuracy</th><th>Status</th></tr></thead>
+            <tbody id="trainingTable"></tbody>
+        </table>
+        <h4>Agent Errors & Root Causes</h4>
+        <table class="data-table">
+            <thead><tr><th>Agent</th><th>Error Category</th><th>Root Cause</th><th>Severity</th><th>Fixed?</th><th>Action</th></tr></thead>
+            <tbody id="errorsTable"></tbody>
+        </table>
+    </div>
+    
+    <!-- Gatekeeper Tab -->
+    <div id="tab-gatekeeper" class="tab-content">
+        <h3>🚪 Gatekeeper Audit (Three Pillars)</h3>
+        <div class="stats-grid" id="gatekeeperStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Agent</th><th>Identity</th><th>Logic</th><th>Resource</th><th>Gate Status</th><th>Block Reason</th></tr></thead>
+            <tbody id="gatekeeperTable"></tbody>
+        </table>
+    </div>
+    
+    <!-- Collaboration Tab -->
+    <div id="tab-collaboration" class="tab-content">
+        <h3>🤝 Collaboration & Zero Error Metrics</h3>
+        <div class="stats-grid" id="collabStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Consensus %</th><th>Teamwork Score</th><th>Zero Error Contribution</th></tr></thead>
+            <tbody id="collabTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+<!-- In platform2_dashboard.html -->
+
+    function loadAgents() {
+        fetch('/api/platform2/agents')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) renderAgentTable(data.agents);
+            });
+    }
+    setInterval(loadAgents, 10000);  // auto-refresh every 10 seconds
+    
+    async function fetchJSON(url) {
+        const res = await fetch(url);
+        return res.json();
+    }
+    
+    async function loadAgents() {
+        const data = await fetchJSON('/api/platform2/agents');
+        if (!data.success) return;
+        const agents = data.agents;
+        const tbody = document.querySelector('#agentsTable tbody');
+        tbody.innerHTML = agents.map(a => `
+            <tr>
+                <td>${a.agent_name}</td><td>${a.agent_type || '-'}</td>
+                <td>${a.xp_points}</td><td>${a.token_balance}</td>
+                <td>${(a.trust_weight * 100).toFixed(1)}%<div class="progress-bar"><div class="progress-fill" style="width:${a.trust_weight*100}%"></div></div></td>
+                <td><span class="${a.vote_accuracy >= 70 ? 'badge-success' : 'badge-warning'}">${a.vote_accuracy}%</span></td>
+                <td>${a.total_votes} (${a.correct_votes}✓)</td>
+                <td>${a.knowledge_shared_count}</td>
+                <td>${a.is_active ? '✅ Active' : '❌ Inactive'}</td>
+            </tr>
+        `).join('');
+        document.getElementById('agentStats').innerHTML = `
+            <div class="stat-card"><div class="stat-value">${agents.length}</div><div class="stat-label">Total Agents</div></div>
+            <div class="stat-card"><div class="stat-value">${agents.reduce((s,a)=>s+a.xp_points,0)}</div><div class="stat-label">Total XP</div></div>
+        `;
+    }
+    
+    async function loadTelegram() {
+        const data = await fetchJSON('/api/platform2/telegram_signals');
+        if (!data.success) return;
+        const signals = data.signals;
+        const tbody = document.querySelector('#telegramTable tbody');
+        tbody.innerHTML = signals.map(s => `
+            <tr>
+                <td>${new Date(s.received_at).toLocaleString()}</td>
+                <td>${s.asset_type}</td>
+                <td>$${s.current_price}</td>
+                <td>${s.confidence_percent}%</td>
+                <td><span class="${s.signal_strength === 'STRONG_SIGNAL' ? 'badge-success' : s.signal_strength === 'SIGNAL' ? 'badge-warning' : 'badge-danger'}">${s.signal_strength}</span></td>
+                <td>${(s.raw_message || '').substring(0, 50)}...</td>
+            </tr>
+        `).join('');
+        const strong = signals.filter(s => s.signal_strength === 'STRONG_SIGNAL').length;
+        document.getElementById('telegramStats').innerHTML = `
+            <div class="stat-card"><div class="stat-value">${signals.length}</div><div class="stat-label">Total Signals</div></div>
+            <div class="stat-card"><div class="stat-value">${strong}</div><div class="stat-label">Strong Signals</div></div>
+        `;
+    }
+    
+    async function loadVotes() {
+        const data = await fetchJSON('/api/platform2/vote_records');
+        if (!data.success) return;
+        const votes = data.votes;
+        const tbody = document.querySelector('#votesTable tbody');
+        tbody.innerHTML = votes.map(v => `
+            <tr>
+                <td>${new Date(v.timestamp).toLocaleString()}</td>
+                <td>${v.agent_name}</td>
+                <td>${v.vote_cast}</td>
+                <td>${v.was_correct ? '✅ Yes' : '❌ No'}</td>
+                <td>${v.error_type || '-'}</td>
+                <td>${v.xp_gained ? '+' + v.xp_gained : v.xp_lost ? '-' + v.xp_lost : 0}</td>
+                <td>${v.asset_type}</td>
+            </tr>
+        `).join('');
+    }
+    
+    async function loadErrors() {
+        const data = await fetchJSON('/api/platform2/agent_errors');
+        if (!data.success) return;
+        const errors = data.errors;
+        const tbody = document.querySelector('#errorsTable tbody');
+        tbody.innerHTML = errors.map(e => `
+            <tr>
+                <td>${e.agent_name}</td>
+                <td>${e.error_category}</td>
+                <td>${e.root_cause || e.error_description}</td>
+                <td>${e.severity}/10</td>
+                <td>${e.is_fixed ? '✅ Fixed' : '❌ Pending'}</td>
+                <td>${!e.is_fixed ? `<button onclick="fixError(${e.id})">Fix</button>` : '-'}</td>
+            </tr>
+        `).join('');
+        document.getElementById('errorStats').innerHTML = `
+            <div class="stat-card"><div class="stat-value">${errors.length}</div><div class="stat-label">Total Errors</div></div>
+            <div class="stat-card"><div class="stat-value">${errors.filter(e=>!e.is_fixed).length}</div><div class="stat-label">Unfixed</div></div>
+        `;
+    }
+    
+    async function loadTrainingCycles() {
+        const data = await fetchJSON('/api/platform2/training_cycles');
+        if (!data.success) return;
+        const cycles = data.cycles;
+        const tbody = document.querySelector('#trainingTable tbody');
+        tbody.innerHTML = cycles.map(c => `
+            <tr>
+                <td>#${c.cycle_number}</td>
+                <td>${new Date(c.started_at).toLocaleString()}</td>
+                <td>${c.agents_trained ? c.agents_trained.length : 0}</td>
+                <td>${c.pre_training_accuracy || '-'}%</td>
+                <td>${c.post_training_accuracy || '-'}%</td>
+                <td><span class="${c.status === 'COMPLETED' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+            </tr>
+        `).join('');
+    }
+    
+    async function loadGatekeeper() {
+        const data = await fetchJSON('/api/platform2/gatekeeper_audit');
+        if (!data.success) return;
+        const audits = data.audits;
+        const tbody = document.querySelector('#gatekeeperTable tbody');
+        tbody.innerHTML = audits.map(a => `
+            <tr>
+                <td>${new Date(a.timestamp).toLocaleString()}</td>
+                <td>${a.agent_name}</td>
+                <td>${a.pillar1_identity_passed ? '✅' : '❌'}</td>
+                <td>${a.pillar2_logic_passed ? '✅' : '❌'}</td>
+                <td>${a.pillar3_resource_passed ? '✅' : '❌'}</td>
+                <td><span class="${a.gate_status === 'OPEN' ? 'badge-success' : 'badge-danger'}">${a.gate_status}</span></td>
+                <td>${a.block_reason || '-'}</td>
+            </tr>
+        `).join('');
+        const opened = audits.filter(a => a.gate_status === 'OPEN').length;
+        const blocked = audits.length - opened;
+        document.getElementById('gatekeeperStats').innerHTML = `
+            <div class="stat-card"><div class="stat-value">${opened}</div><div class="stat-label">Gates Opened</div></div>
+            <div class="stat-card"><div class="stat-value">${blocked}</div><div class="stat-label">Gates Blocked</div></div>
+        `;
+    }
+    
+    async function loadCollaboration() {
+        const data = await fetchJSON('/api/platform2/collaboration_metrics');
+        if (!data.success) return;
+        const metrics = data.metrics;
+        const tbody = document.querySelector('#collabTable tbody');
+        tbody.innerHTML = metrics.map(m => `
+            <tr>
+                <td>${new Date(m.timestamp).toLocaleString()}</td>
+                <td>${m.consensus_percentage}%</td>
+                <td>${m.teamwork_score}</td>
+                <td>${m.zero_error_contribution ? '🏆 Yes' : '-'}</td>
+            </tr>
+        `).join('');
+        const avgTeamwork = (metrics.reduce((s,m)=>s+m.teamwork_score,0)/metrics.length).toFixed(1);
+        document.getElementById('collabStats').innerHTML = `
+            <div class="stat-card"><div class="stat-value">${metrics.filter(m=>m.zero_error_contribution).length}</div><div class="stat-label">Zero Error Trades</div></div>
+            <div class="stat-card"><div class="stat-value">${avgTeamwork}</div><div class="stat-label">Avg Teamwork Score</div></div>
+        `;
+    }
+    
+    async function fixError(errorId) {
+        await fetch('/api/platform2/correct_agent_error', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({error_id: errorId, correction_method: 'manual'})
+        });
+        loadErrors();
+    }
+    
+    async function startTrainingCycle() {
+        await fetch('/api/platform2/start_training', {method: 'POST'});
+        alert('Training cycle started! Refresh to see progress.');
+        loadTrainingCycles();
+    }
+    
+    async function addDemoAgent() {
+        await fetch('/api/platform2/add_demo_agent', {method: 'POST'});
+        loadAgents();
+    }
+    
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+    
+    // Load all data on page load
+    loadAgents();
+    loadTelegram();
+    loadVotes();
+    loadErrors();
+    loadTrainingCycles();
+    loadGatekeeper();
+    loadCollaboration();
+    setInterval(() => {
+        loadAgents();
+        loadTelegram();
+        loadVotes();
+        loadErrors();
+        loadTrainingCycles();
+        loadGatekeeper();
+        loadCollaboration();
+    }, 30000);
+</script>
+</body>
+</html>

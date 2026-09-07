@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Layer-Based Voting Dashboard</title>
+    <style>
+        body { background: #0a0e27; color: white; font-family: monospace; padding: 20px; }
+        .layer { background: #16213e; padding: 15px; margin: 10px 0; border-radius: 10px; }
+        .direction { border-left: 4px solid #2196f3; }
+        .confirmation { border-left: 4px solid #4caf50; }
+        .entry { border-left: 4px solid #ff9800; }
+        .risk { border-left: 4px solid #f44336; }
+        .vote-buy { color: #4caf50; }
+        .vote-sell { color: #f44336; }
+        .vote-hold { color: #ff9800; }
+        .final { background: #0f3460; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0; }
+        .strong-buy { color: #4caf50; font-size: 24px; }
+        .strong-sell { color: #f44336; font-size: 24px; }
+    </style>
+</head>
+<body>
+    <h1>🗳️ Layer-Based Voting System</h1>
+    <div id="content">Loading...</div>
+    
+    <script>
+        async function loadVoting() {
+            const res = await fetch('/api/consensus/layer');
+            const data = await res.json();
+            
+            if (data.success) {
+                let html = '';
+                const layers = ['direction', 'confirmation', 'entry', 'risk'];
+                const layerNames = {'direction': '🔵 DIRECTION (35%)', 'confirmation': '🟢 CONFIRMATION (30%)', 'entry': '🟡 ENTRY (25%)', 'risk': '🔴 RISK (10%)'};
+                
+                for (const layer of layers) {
+                    html += `<div class="layer ${layer}">`;
+                    html += `<h3>${layerNames[layer]}</h3>`;
+                    html += `<div>Score: ${data.layer_scores[layer] || 0}</div>`;
+                    html += `<div class="vote-${data.layer_directions[layer]?.toLowerCase()}">Direction: ${data.layer_directions[layer] || 'HOLD'}</div>`;
+                    html += `</div>`;
+                }
+                
+                html += `<div class="final">`;
+                html += `<div class="${data.final.action.toLowerCase().replace('_', '-')}">🎯 FINAL: ${data.final.action}</div>`;
+                html += `<div>Confidence: ${data.final.confidence}%</div>`;
+                html += `<div>Score: ${data.final.score}</div>`;
+                html += `</div>`;
+                
+                document.getElementById('content').innerHTML = html;
+            }
+        }
+        
+        loadVoting();
+        setInterval(loadVoting, 15000);
+    </script>
+</body>
+</html>

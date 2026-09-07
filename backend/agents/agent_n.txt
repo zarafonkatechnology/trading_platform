@@ -1,0 +1,143 @@
+"""
+Agent_N - Intermarket Master
+Analyzes correlations between asset classes
+"""
+
+from datetime import datetime
+import random
+from .base_agent import BaseAgent
+
+class IntermarketMaster(BaseAgent):
+    """Agent N - Intermarket Analysis"""
+    
+    def __init__(self):
+        super().__init__(
+            name="Agent_N",
+            agent_type="Intermarket Master",
+            specialization="Analyzes correlations between asset classes"
+        )
+        self.correlations = {
+            'dxy': -0.85,    # USD negative correlation with EUR
+            'bonds_10y': 0.40,   # Bonds vs EUR
+            'sp500': -0.20,      # Stocks vs EUR
+            'gold': 0.30         # Gold vs EUR
+        }
+        
+    def analyze(self, signal_data):
+        """Analyze intermarket correlations"""
+        pair = signal_data.get('pair', 'EURUSD')
+        
+        # Fetch intermarket data (mock for demo)
+        market_data = self._fetch_intermarket_data()
+        
+        # Calculate composite score
+        composite_score = self._calculate_composite_score(market_data)
+        
+        # Determine vote based on intermarket signals
+        if composite_score > 60:
+            vote = 'BUY'
+            confidence = min(85, composite_score)
+            reasoning = self._generate_bullish_reasoning(market_data)
+        elif composite_score < 40:
+            vote = 'SELL'
+            confidence = min(85, 100 - composite_score)
+            reasoning = self._generate_bearish_reasoning(market_data)
+        else:
+            vote = 'HOLD'
+            confidence = 55
+            reasoning = "Mixed intermarket signals - Wait for alignment"
+        
+        return {
+            'agent': self.name,
+            'type': self.agent_type,
+            'vote': vote,
+            'confidence': confidence,
+            'reasoning': reasoning,
+            'intermarket_data': market_data,
+            'composite_score': composite_score,
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _fetch_intermarket_data(self):
+        """Fetch real intermarket data"""
+        # In production: fetch from OANDA or other APIs
+        # For demo: generate realistic values
+        
+        return {
+            'dxy': {  # US Dollar Index
+                'price': random.uniform(100, 106),
+                'trend': random.choice(['up', 'down', 'sideways']),
+                'strength': random.randint(30, 70)
+            },
+            'us_bonds_10y': {
+                'yield': random.uniform(3.5, 4.5),
+                'trend': random.choice(['up', 'down']),
+                'inversion': random.choice([True, False])
+            },
+            'sp500': {
+                'price': random.uniform(4500, 5200),
+                'trend': random.choice(['bullish', 'bearish', 'neutral']),
+                'vix': random.uniform(12, 25)
+            },
+            'gold': {
+                'price': random.uniform(2300, 2500),
+                'trend': random.choice(['up', 'down']),
+                'correlation_eur': random.uniform(0.2, 0.5)
+            }
+        }
+    
+    def _calculate_composite_score(self, data):
+        """Calculate overall intermarket score (0-100)"""
+        score = 50
+        
+        # DXY effect (inverse for EURUSD)
+        if data['dxy']['trend'] == 'down':
+            score += 15
+        elif data['dxy']['trend'] == 'up':
+            score -= 15
+        
+        # Risk sentiment
+        if data['sp500']['trend'] == 'bullish':
+            score += 10
+        elif data['sp500']['trend'] == 'bearish':
+            score -= 10
+        
+        # Gold correlation
+        if data['gold']['trend'] == 'up' and data['gold']['correlation_eur'] > 0.3:
+            score += 10
+        elif data['gold']['trend'] == 'down':
+            score -= 5
+        
+        # VIX (fear gauge)
+        if data['sp500']['vix'] > 20:
+            score -= 10
+        elif data['sp500']['vix'] < 15:
+            score += 5
+        
+        return max(0, min(100, score))
+    
+    def _generate_bullish_reasoning(self, data):
+        reasons = []
+        if data['dxy']['trend'] == 'down':
+            reasons.append("DXY weakening (USD weakness)")
+        if data['sp500']['trend'] == 'bullish':
+            reasons.append("Risk-on sentiment from equities")
+        if data['gold']['trend'] == 'up':
+            reasons.append("Gold confirming bullish move")
+        if data['sp500']['vix'] < 15:
+            reasons.append("Low fear environment")
+        
+        return f"Bullish intermarket: {', '.join(reasons[:2])}" if reasons else "Neutral intermarket signals"
+    
+    def _generate_bearish_reasoning(self, data):
+        reasons = []
+        if data['dxy']['trend'] == 'up':
+            reasons.append("DXY strengthening (USD strength)")
+        if data['sp500']['trend'] == 'bearish':
+            reasons.append("Risk-off sentiment from equities")
+        if data['gold']['trend'] == 'down':
+            reasons.append("Gold not confirming")
+        if data['sp500']['vix'] > 20:
+            reasons.append("Elevated fear (VIX > 20)")
+        
+        return f"Bearish intermarket: {', '.join(reasons[:2])}" if reasons else "Neutral intermarket signals"

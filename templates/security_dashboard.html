@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Dashboard - Multi-Agent System</title>
+    <style>
+        body { background: #1a1a2e; color: white; font-family: monospace; padding: 20px; }
+        h1 { color: #ffd700; }
+        .panel { background: #16213e; padding: 20px; margin: 10px 0; border-radius: 10px; }
+        .success { color: #4caf50; }
+        .warning { color: #ff9800; }
+        .error { color: #f44336; }
+        .signature-badge { background: #0f3460; padding: 5px 10px; border-radius: 5px; font-family: monospace; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Security & Agent Signature Dashboard</h1>
+    
+    <div class="panel">
+        <h2>📊 Audit Summary</h2>
+        <div id="auditSummary">Loading...</div>
+    </div>
+    
+    <div class="panel">
+        <h2>🆔 Registered Agents</h2>
+        <div id="agentsList">Loading...</div>
+    </div>
+    
+    <div class="panel">
+        <h2>✅ Verified Votes</h2>
+        <div id="verifiedVotes">Loading...</div>
+    </div>
+    
+    <div class="panel">
+        <h2>❌ Rejected Votes</h2>
+        <div id="rejectedVotes">Loading...</div>
+    </div>
+    
+    <div class="panel">
+        <h2>🔍 Verify a Vote Signature</h2>
+        <button onclick="verifyVote()">Test Signature Verification</button>
+        <div id="verificationResult"></div>
+    </div>
+    
+    <script>
+        async function loadAuditReport() {
+            const res = await fetch('/api/secure/audit_report');
+            const data = await res.json();
+            
+            document.getElementById('auditSummary').innerHTML = `
+                <p>Total Votes: ${data.total_votes_submitted}</p>
+                <p>Verified Votes: <span class="success">${data.verified_votes}</span></p>
+                <p>Rejected Votes: <span class="error">${data.rejected_votes}</span></p>
+                <p>Verification Rate: <span class="warning">${data.verification_rate.toFixed(1)}%</span></p>
+                <p>Audit Integrity: <span class="success">${data.audit_integrity[0]}</span></p>
+            `;
+        }
+        
+        async function loadAgents() {
+            const agents = ['Agent_A', 'Agent_B', 'Agent_C', 'Agent_D', 'Agent_E', 
+                           'Agent_F', 'Agent_G', 'Agent_H', 'Agent_I', 'Agent_J',
+                           'Agent_K', 'Agent_L', 'Agent_M', 'Agent_N', 'Agent_O'];
+            
+            let html = '<table><tr><th>Agent</th><th>Agent ID</th><th>Status</th><th>Registered</th></tr>';
+            
+            for (const agent of agents) {
+                const res = await fetch(`/api/secure/agent_identity/${agent}`);
+                const data = await res.json();
+                if (data.success) {
+                    html += `<tr>
+                        <td>${agent}</td>
+                        <td><span class="signature-badge">${data.agent.agent_id}</span></td>
+                        <td class="success">Active</td>
+                        <td>${new Date(data.agent.registered_at).toLocaleString()}</td>
+                    </tr>`;
+                }
+            }
+            html += '</table>';
+            document.getElementById('agentsList').innerHTML = html;
+        }
+        
+        async function verifyVote() {
+            document.getElementById('verificationResult').innerHTML = '<div class="warning">Verifying...</div>';
+            
+            // Test verification with sample data
+            const testVote = {
+                vote_data: {
+                    agent_name: 'Agent_A',
+                    vote: 'BUY',
+                    confidence: 85,
+                    timestamp: new Date().toISOString()
+                },
+                signature: 'test_signature',
+                public_key: 'test_key'
+            };
+            
+            const res = await fetch('/api/secure/verify_vote', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(testVote)
+            });
+            const data = await res.json();
+            
+            document.getElementById('verificationResult').innerHTML = `
+                <div class="${data.verified ? 'success' : 'error'}">
+                    Signature Verification: ${data.verified ? '✅ PASSED' : '❌ FAILED'}
+                    ${data.verified ? '' : '<br>Invalid signature detected'}
+                </div>
+            `;
+        }
+        
+        loadAuditReport();
+        loadAgents();
+        setInterval(loadAuditReport, 30000);
+    </script>
+</body>
+</html>

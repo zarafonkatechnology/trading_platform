@@ -1,0 +1,278 @@
+{
+  "agent_stats": {
+    "Agent_X": {
+      "trades": [
+        {
+          "pair": "EURUSD",
+          "signal": "BUY",
+          "pnl": 50,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_U"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486973"
+        },
+        {
+          "pair": "GBPUSD",
+          "signal": "SELL",
+          "pnl": -30,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_P"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486982"
+        },
+        {
+          "pair": "EURUSD",
+          "signal": "SELL",
+          "pnl": 20,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_E"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486988"
+        }
+      ],
+      "wins": 2,
+      "losses": 1,
+      "total_pnl": 40
+    },
+    "Agent_U": {
+      "trades": [
+        {
+          "pair": "EURUSD",
+          "signal": "BUY",
+          "pnl": 50,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_U"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486973"
+        },
+        {
+          "pair": "AUDUSD",
+          "signal": "BUY",
+          "pnl": -10,
+          "agents_involved": [
+            "Agent_U",
+            "Agent_P"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486990"
+        }
+      ],
+      "wins": 1,
+      "losses": 1,
+      "total_pnl": 40
+    },
+    "Agent_P": {
+      "trades": [
+        {
+          "pair": "GBPUSD",
+          "signal": "SELL",
+          "pnl": -30,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_P"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486982"
+        },
+        {
+          "pair": "AUDUSD",
+          "signal": "BUY",
+          "pnl": -10,
+          "agents_involved": [
+            "Agent_U",
+            "Agent_P"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486990"
+        }
+      ],
+      "wins": 0,
+      "losses": 2,
+      "total_pnl": -40
+    },
+    "Agent_D": {
+      "trades": [
+        {
+          "pair": "USDJPY",
+          "signal": "BUY",
+          "pnl": 80,
+          "agents_involved": [
+            "Agent_D",
+            "Agent_C"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486985"
+        }
+      ],
+      "wins": 1,
+      "losses": 0,
+      "total_pnl": 80
+    },
+    "Agent_C": {
+      "trades": [
+        {
+          "pair": "USDJPY",
+          "signal": "BUY",
+          "pnl": 80,
+          "agents_involved": [
+            "Agent_D",
+            "Agent_C"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486985"
+        }
+      ],
+      "wins": 1,
+      "losses": 0,
+      "total_pnl": 80
+    },
+    "Agent_E": {
+      "trades": [
+        {
+          "pair": "EURUSD",
+          "signal": "SELL",
+          "pnl": 20,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_E"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486988"
+        }
+      ],
+      "wins": 1,
+      "losses": 0,
+      "total_pnl": 20
+    }
+  },
+  "pair_stats": {
+    "EURUSD": {
+      "trades": [
+        {
+          "pair": "EURUSD",
+          "signal": "BUY",
+          "pnl": 50,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_U"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486973"
+        },
+        {
+          "pair": "EURUSD",
+          "signal": "SELL",
+          "pnl": 20,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_E"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486988"
+        }
+      ],
+      "wins": 2,
+      "losses": 0,
+      "total_pnl": 70
+    },
+    "GBPUSD": {
+      "trades": [
+        {
+          "pair": "GBPUSD",
+          "signal": "SELL",
+          "pnl": -30,
+          "agents_involved": [
+            "Agent_X",
+            "Agent_P"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486982"
+        }
+      ],
+      "wins": 0,
+      "losses": 1,
+      "total_pnl": -30
+    },
+    "USDJPY": {
+      "trades": [
+        {
+          "pair": "USDJPY",
+          "signal": "BUY",
+          "pnl": 80,
+          "agents_involved": [
+            "Agent_D",
+            "Agent_C"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486985"
+        }
+      ],
+      "wins": 1,
+      "losses": 0,
+      "total_pnl": 80
+    },
+    "AUDUSD": {
+      "trades": [
+        {
+          "pair": "AUDUSD",
+          "signal": "BUY",
+          "pnl": -10,
+          "agents_involved": [
+            "Agent_U",
+            "Agent_P"
+          ],
+          "timestamp": "2026-07-16T13:12:11.486990"
+        }
+      ],
+      "wins": 0,
+      "losses": 1,
+      "total_pnl": -10
+    }
+  },
+  "system_stats": {
+    "total_trades": 5,
+    "wins": 3,
+    "losses": 2,
+    "total_pnl": 110.0,
+    "avg_win": 36.666666666666664,
+    "avg_loss": 55.0,
+    "max_win": 80,
+    "max_loss": -30,
+    "win_rate": 0.6,
+    "profit_factor": 1.0,
+    "sharpe_ratio": 0.0,
+    "max_drawdown": 30.0,
+    "equity_curve": [
+      {
+        "timestamp": "2026-07-16T13:12:11.486973",
+        "equity": 50.0,
+        "pnl": 50
+      },
+      {
+        "timestamp": "2026-07-16T13:12:11.486982",
+        "equity": 20.0,
+        "pnl": -30
+      },
+      {
+        "timestamp": "2026-07-16T13:12:11.486985",
+        "equity": 100.0,
+        "pnl": 80
+      },
+      {
+        "timestamp": "2026-07-16T13:12:11.486988",
+        "equity": 120.0,
+        "pnl": 20
+      },
+      {
+        "timestamp": "2026-07-16T13:12:11.486990",
+        "equity": 110.0,
+        "pnl": -10
+      }
+    ],
+    "daily_pnl": {
+      "2026-07-16": 110
+    },
+    "monthly_pnl": {
+      "2026-07": 110
+    }
+  },
+  "start_time": "2026-07-16T13:12:11.485405",
+  "current_equity": 110.0,
+  "peak_equity": 120.0,
+  "trade_counter": 5,
+  "last_save": "2026-07-16T13:12:11.489699"
+}

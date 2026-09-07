@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Whisper Agent - Leak Detection</title>
+    <style>
+        body { background: #0a0e27; color: white; font-family: monospace; padding: 20px; }
+        h1 { color: #ffd700; }
+        .panel { background: #16213e; padding: 20px; margin: 10px 0; border-radius: 10px; }
+        .leak-card { background: #0f3460; padding: 15px; margin: 10px; border-radius: 8px; border-left: 4px solid #ffd700; }
+        .evidence { color: #ff9800; font-size: 14px; margin-top: 10px; }
+        .buy { color: #4caf50; }
+        .sell { color: #f44336; }
+        .hold { color: #ff9800; }
+        button { background: #ffd700; color: #0a0e27; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🕵️ Agent_P - Whisper Analyst</h1>
+    <p>Dark Pool Detection | Unusual Options Flow | Order Book Spoofing</p>
+    
+    <div class="panel">
+        <h2>🔍 Scan for Market Leaks</h2>
+        <select id="ticker">
+            <option value="EURUSD">EURUSD</option>
+            <option value="GBPUSD">GBPUSD</option>
+            <option value="GOLD">Gold (XAU/USD)</option>
+            <option value="S&P500">S&P 500</option>
+        </select>
+        <button onclick="scanLeaks()">🕵️ Scan for Whispers</button>
+        <div id="result"></div>
+    </div>
+    
+    <div class="panel">
+        <h2>📡 How Whisper Agent Works</h2>
+        <div class="leak-card">
+            <strong>🐋 Dark Pool Sonar:</strong>
+            <p>Detects hidden institutional trades. When price moves but volume is hidden = WHALES ARE MOVING.</p>
+            <div class="evidence">Evidence: "40%+ volume executed in dark pools"</div>
+        </div>
+        <div class="leak-card">
+            <strong>🔥 Unusual Options Flow:</strong>
+            <p>Detects OTM Call/Put buying. When someone buys 10,000 OTM calls = INSIDER KNOWLEDGE.</p>
+            <div class="evidence">Evidence: "Volume 500% above open interest"</div>
+        </div>
+        <div class="leak-card">
+            <strong>🎭 Order Book Spoofing:</strong>
+            <p>Detects fake walls. Large orders placed then cancelled = MANIPULATION.</p>
+            <div class="evidence">Evidence: "Sell wall vanished instantly"</div>
+        </div>
+    </div>
+    
+    <script>
+        async function scanLeaks() {
+            const ticker = document.getElementById('ticker').value;
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="loading">🕵️ Scanning for whispers...</div>';
+            
+            // Simulate API call to your backend
+            setTimeout(() => {
+                // In production: fetch('/api/whisper/scan', {method: 'POST', body: JSON.stringify({ticker})})
+                
+                // Demo response
+                const hasLeak = Math.random() > 0.5;
+                
+                if (hasLeak) {
+                    const leakType = Math.random();
+                    let html = '<div class="leak-card">';
+                    
+                    if (leakType < 0.33) {
+                        html += `
+                            <strong>🐋 DARK POOL LEAK DETECTED!</strong>
+                            <p>Large institutional accumulation detected in dark pools.</p>
+                            <div class="evidence">Evidence: 67% of volume executed off-exchange</div>
+                            <div class="buy">🚨 WHISPER VOTE: STRONG BUY (92% confidence)</div>
+                            <div class="evidence">Reasoning: Whales accumulating silently. Price suppression ending soon.</div>
+                        `;
+                    } else if (leakType < 0.66) {
+                        html += `
+                            <strong>🔥 UNUSUAL OPTIONS FLOW!</strong>
+                            <p>Massive OTM Call buying detected - 10,000 contracts.</p>
+                            <div class="evidence">Evidence: Volume 800% above average, expires Friday</div>
+                            <div class="buy">🚨 WHISPER VOTE: BUY (88% confidence)</div>
+                            <div class="evidence">Reasoning: Someone with knowledge expects big move UP.</div>
+                        `;
+                    } else {
+                        html += `
+                            <strong>🎭 SPOOFING DETECTED!</strong>
+                            <p>$50M sell wall placed then instantly cancelled.</p>
+                            <div class="evidence">Evidence: Wall lasted 2 seconds, price dipped 0.3%</div>
+                            <div class="buy">🚨 WHISPER VOTE: BUY (85% confidence)</div>
+                            <div class="evidence">Reasoning: Market makers trapping shorts. Reversal incoming.</div>
+                        `;
+                    }
+                    
+                    html += '</div>';
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="leak-card">
+                            <strong>📻 No whispers detected</strong>
+                            <p>Market is quiet. No unusual institutional footprints.</p>
+                            <div class="hold">VOTE: HOLD (30% confidence)</div>
+                        </div>
+                    `;
+                }
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

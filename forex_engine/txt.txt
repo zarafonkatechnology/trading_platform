@@ -1,0 +1,999 @@
+# trading_controller.py
+
+import logging
+import time
+from datetime import datetime
+from typing import Dict, List, Optional
+
+from core.dollar_engine import DollarEngine
+from core.gear_broker import GearBroker
+from core.gear_anomaly_detector import GearAnomalyDetector
+from core.monte_carlo_simulator import MonteCarloSimulator
+from core.order_execution import OrderExecutionEngine
+
+# Import agents
+try:
+    from agents2.forex_agent_u import ForexLiquidityAgentEnhanced
+    from agents2.forex_agent_x import ForexAgentX
+    from agents2.forex_agent_d import AgentDVolatility
+    from agents2.agent_c_momentum import AgentCMomentum
+    from agents2.agent_e_microstructure import AgentEMicrostructure
+    from agents2.agent_p_whisper import WhisperAnalyst
+    print("✅ All agents imported successfully")
+except ImportError as e:
+    print(f"⚠️ Agent import error: {e}")
+    # Fallback classes
+    class ForexLiquidityAgent:
+        def __init__(self): self.name = "Forex_Agent_U"
+        def analyze(self, data): return {'vote': 'HOLD', 'confidence': 50}
+    class ForexAgentX:
+        def __init__(self): self.name = "Forex_X"
+        def analyze(self, data): return {'vote': 'HOLD', 'confidence': 50}
+    class ForexAgentD:
+        def __init__(self): self.name = "Forex_D"
+        def analyze(self, data): return {'vote': 'HOLD', 'confidence': 50}
+    class AgentCMomentum:
+        def __init__(self): self.name = "Agent_C"
+        def analyze(self, data): return {'vote': 'HOLD', 'confidence': 50}
+    class AgentEMicrostructure:
+        def __init__(self): self.name = "Agent_E"
+        def analyze(self, data): return {'vote': 'HOLD', 'confidence': 50}
+    class WhisperAnalyst:
+        def __init__(self): self.name = "Agent_P"
+        def analyze(self, data): return {'vote': 'HOLD', 'confidence': 50}
+try:
+    from price_bridge import PriceBridge, price_bridge
+except ImportError:
+    class PriceBridge:
+        def __init__(self):
+            self.prices = {}
+        def get_price(self, symbol):
+            return 0
+        def get_bid(self, symbol):
+            return 0
+        def get_ask(self, symbol):
+            return 0
+    price_bridge = PriceBridge()
+
+# MT4
+try:
+    from mt4_price_provider import get_mt4_prices
+except ImportError:
+    def get_mt4_prices():
+        return None
+
+# Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+SYMBOL_CONFIG = {
+    # ===== FOREX =====
+    'EURUSD': {
+        'pip': 0.0001, 'digits': 5, 'sl_pips': 15, 'tp_pips': 30,
+        'volume': 0.03, 'type': 'forex', 'enabled': True,
+        'beta': 1.10, 'gear_ratio': 1.2, 'entry_threshold': 2.0
+    },
+    'GBPUSD': {
+        'pip': 0.0001, 'digits': 5, 'sl_pips': 15, 'tp_pips': 30,
+        'volume': 0.03, 'type': 'forex', 'enabled': True,
+        'beta': 1.05, 'gear_ratio': 1.1, 'entry_threshold': 2.0
+    },
+    'USDJPY': {
+        'pip': 0.01, 'digits': 3, 'sl_pips': 15, 'tp_pips': 30,
+        'volume': 0.03, 'type': 'forex', 'enabled': True,
+        'beta': 0.85, 'gear_ratio': 0.8, 'entry_threshold': 1.8
+    },
+    'AUDUSD': {
+        'pip': 0.0001, 'digits': 5, 'sl_pips': 15, 'tp_pips': 30,
+        'volume': 0.03, 'type': 'forex', 'enabled': True,
+        'beta': 0.90, 'gear_ratio': 0.9, 'entry_threshold': 1.8
+    },
+    'USDCAD': {
+        'pip': 0.0001, 'digits': 5, 'sl_pips': 15, 'tp_pips': 30,
+        'volume': 0.03, 'type': 'forex', 'enabled': True,
+        'beta': 0.80, 'gear_ratio': 0.7, 'entry_threshold': 1.8
+    },
+    
+    # ===== METALS =====
+    'GOLD': {
+        'pip': 0.1, 'digits': 2, 'sl_pips': 20, 'tp_pips': 35,
+        'volume': 0.02, 'type': 'metal', 'enabled': True,
+        'beta': 1.0, 'gear_ratio': 0.5, 'entry_threshold': 1.8
+    },
+    'SILVER': {
+        'pip': 0.01, 'digits': 2, 'sl_pips': 20, 'tp_pips': 35,
+        'volume': 0.02, 'type': 'metal', 'enabled': True,
+        'beta': 1.0, 'gear_ratio': 0.5, 'entry_threshold': 1.8
+    },
+    
+    # ===== INDICES =====
+    '#NASDAQ100': {
+        'pip': 0.1, 'digits': 2, 'sl_pips': 500, 'tp_pips': 1000,
+        'volume': 0.02, 'type': 'index', 'enabled': True,
+        'beta': 1.05, 'gear_ratio': 0.3, 'entry_threshold': 2.5
+    },
+    '#S&P500': {
+        'pip': 0.1, 'digits': 2, 'sl_pips': 500, 'tp_pips': 1000,
+        'volume': 0.02, 'type': 'index', 'enabled': True,
+        'beta': 1.0, 'gear_ratio': 0.3, 'entry_threshold': 2.5
+    },
+    '#DJ30': {
+        'pip': 0.1, 'digits': 2, 'sl_pips': 500, 'tp_pips': 1000,
+        'volume': 0.01, 'type': 'index', 'enabled': True,
+        'beta': 1.0, 'gear_ratio': 0.3, 'entry_threshold': 2.5
+    },
+    
+    # ===== ENERGY =====
+    'BRENT_OIL': {
+        'pip': 0.01, 'digits': 2, 'sl_pips': 20, 'tp_pips': 35,
+        'volume': 0.02, 'type': 'energy', 'enabled': True,
+        'beta': 1.0, 'gear_ratio': 0.5, 'entry_threshold': 1.8
+    },
+    'CrudeOIL': {
+        'pip': 0.01, 'digits': 2, 'sl_pips': 20, 'tp_pips': 35,
+        'volume': 0.02, 'type': 'energy', 'enabled': True,
+        'beta': 1.0, 'gear_ratio': 0.5, 'entry_threshold': 1.8
+    },
+}
+FOREX_PAIRS = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD']
+ALL_SYMBOLS = list(SYMBOL_CONFIG.keys())
+
+
+
+class ForexTradingController:
+    """
+    Main trading controller for the forex gear system.
+    Coordinates all components and manages the trading loop.
+    """
+    
+    def __init__(self, config: Dict = None):
+        self.config = config or {}
+        self.name = "ForexGearController"
+        self.timeframe = self.config.get('timeframe', 'M15')
+        self.is_running = False
+        self.last_cycle_time = None
+        self.cycle_interval = self.config.get('cycle_interval', 10)
+        self.is_running = False
+        
+        # ============================================
+        # Initialize Core Components
+        # ============================================
+        logger.info("🏗️ Initializing Core Components...")
+        
+        # Dollar Engine
+        self.engine = DollarEngine(self.config.get('engine_config', {}))
+        logger.info("   ✅ Dollar Engine initialized")
+        
+        # Monte Carlo Simulator
+        self.monte_carlo = MonteCarloSimulator(self.config.get('monte_carlo_config', {}))
+        logger.info("   ✅ Monte Carlo Simulator initialized")
+        
+        # Anomaly Detector
+        self.anomaly_detector = GearAnomalyDetector(self.config.get('anomaly_detector_config', {}))
+        logger.info("   ✅ Anomaly Detector initialized")
+        
+        # Order Execution Engine
+        self.execution_engine = OrderExecutionEngine(self.engine, self.config.get('execution_config', {}))
+        logger.info("   ✅ Order Execution Engine initialized")
+        
+        # ============================================
+        # Initialize Agents
+        # ============================================
+        logger.info("🤖 Initializing Agents...")
+        
+        self.agent_x = ForexAgentX(name="Forex_X", timeframe=self.timeframe)
+        self.agent_u = ForexLiquidityAgentEnhanced(name="Forex_Agent_U")
+        self.agent_d = AgentDVolatility(name="Forex_D", timeframe=self.timeframe)
+        self.agent_c = AgentCMomentum()
+        self.agent_e = AgentEMicrostructure()
+        self.agent_p = WhisperAnalyst()
+        
+        self.agents = [
+            self.agent_x,
+            self.agent_u,
+            self.agent_d,
+            self.agent_c,
+            self.agent_e,
+            self.agent_p
+        ]
+        
+        logger.info(f"   ✅ {len(self.agents)} agents initialized")
+        for agent in self.agents:
+            logger.info(f"      - {agent.name}: {getattr(agent, 'agent_type', 'General')}")
+        
+        # ============================================
+        # Initialize Brokers
+        # ============================================
+        self.pairs = self.config.get('pairs', FOREX_PAIRS)
+        self.brokers = {}
+        
+        logger.info(f"📊 Initializing Brokers for {len(self.pairs)} pairs...")
+        
+        # pair_configs = self.config.get('pairs_config', {})
+        for pair in self.pairs:
+            pair_config = self.config.get('pairs_config', {}).get(pair, {})
+            if pair in SYMBOL_CONFIG:
+                pair_config = {**SYMBOL_CONFIG[pair], **pair_config}
+            broker = GearBroker(pair, pair_config, self.engine)
+            self.brokers[pair] = broker
+            self.execution_engine.register_broker(pair, broker)
+            logger.info(f"   ✅ Broker: {pair}")
+        
+        # Register brokers with anomaly detector
+        self.anomaly_detector.set_brokers(self.brokers)
+        # ============================================================
+        # 4. PRICE BRIDGE
+        # ============================================================
+        self.price_bridge = price_bridge
+        self.mt4 = None  # Keep this, but don't connect
+        logger.info("   ✅ Using Price Bridge for prices (MT4 via file)")
+        
+        # ============================================
+        # State Management
+        # ============================================
+        self.last_results = {}
+        self.cycle_count = 0
+        self.decision_log = []
+        self.max_log_entries = 1000
+        
+        logger.info("✅ ForexTradingController initialized successfully!")
+        logger.info(f"   📊 Pairs: {len(self.pairs)}")
+        logger.info(f"   🤖 Agents: {len(self.agents)}")
+        logger.info(f"   🔄 Cycle Interval: {self.config.get('cycle_interval', 10)}s")
+    # def _connect_mt4(self):
+    #     """Connect to MT4"""
+    #     try:
+    #             self.mt4 = get_mt4_prices()
+    #             if self.mt4:
+    #                     # Test connection by getting a price
+    #                     test_result = self.mt4._send({"command": "PRICE", "symbol": "EURUSD"})
+    #                     if test_result and isinstance(test_result, dict):
+    #                             bid = test_result.get('bid', 0)
+    #                             ask = test_result.get('ask', 0)
+    #                             if bid > 0 and ask > 0:
+    #                                     logger.info(f"   ✅ MT4 connected - EURUSD: {bid:.5f}/{ask:.5f}")
+    #                                     return
+    #                             else:
+    #                                     logger.warning(f"   ⚠️ MT4 connected but no price data: {test_result}")
+    #                     else:
+    #                             logger.warning(f"   ⚠️ MT4 connected but test failed: {test_result}")
+    #             else:
+    #                     logger.warning("   ⚠️ MT4 connection failed - using simulation mode")
+    #     except Exception as e:
+    #             logger.error(f"   ❌ MT4 connection error: {e}")
+    #             self.mt4 = None
+    def get_price(self, symbol: str) -> float:
+        """Get current price from bridge or MT4"""
+        try:
+            # Try price bridge first
+            price = self.price_bridge.get_price(symbol)
+            if price and price > 0:
+                return price
+            
+            # Try MT4
+            if self.mt4:
+                result = self.mt4._send({"command": "PRICE", "symbol": symbol})
+                if result and isinstance(result, dict):
+                    bid = result.get('bid', 0)
+                    ask = result.get('ask', 0)
+                    if bid > 0 and ask > 0:
+                        return (bid + ask) / 2
+            
+            # Fallback
+            return 0
+        except Exception as e:
+            logger.debug(f"Price error for {symbol}: {e}")
+            return 0
+    def get_all_mt4_prices(self) -> Dict:
+        """
+        Get ALL prices from MT4 in ONE request (like dashboard does).
+        This ensures prices are consistent across the system.
+        """
+        try:
+                if not self.mt4:
+                        return {}
+                
+                # Send ACCOUNT command (same as dashboard)
+                result = self.mt4._send({"command": "ACCOUNT"})
+                
+                if not result or not isinstance(result, dict):
+                        return {}
+                
+                # Map MT4 keys to symbol names
+                price_map = {
+                        'EURUSD': result.get('EURUSD', 0),
+                        'GBPUSD': result.get('GBPUSD', 0),
+                        'USDJPY': result.get('USDJPY', 0),
+                        'GOLD': result.get('GOLD', 0),
+                        'SILVER': result.get('SILVER', 0),
+                        '#NASDAQ100': result.get('NAS100', 0),
+                        '#DJ30': result.get('DJ30', 0),
+                        '#S&P500': result.get('SP500', 0),
+                        'BRENT_OIL': result.get('BRENT', 0),
+                        'CrudeOIL': result.get('CRUDE', 0),
+                }
+                
+                # Also check for direct keys
+                for symbol in ['EURUSD', 'GBPUSD', 'USDJPY', 'GOLD', 'SILVER', 
+                                          '#NASDAQ100', '#DJ30', '#S&P500', 'BRENT_OIL', 'CrudeOIL']:
+                        if symbol in result and symbol not in price_map:
+                                price_map[symbol] = result.get(symbol, 0)
+                
+                return price_map
+                
+        except Exception as e:
+                logger.warning(f"Error getting all MT4 prices: {e}")
+                return {}
+
+    def _get_price_data(self, symbol: str) -> Dict:
+        """Get price data using price_bridge (same as dashboard)."""
+        
+        # Use price_bridge
+        from price_bridge import price_bridge
+        
+        price = price_bridge.get_price(symbol)
+        bid = price_bridge.get_bid(symbol)
+        ask = price_bridge.get_ask(symbol)
+        
+        if price > 0:
+                return {
+                        'price': price,
+                        'bid': bid if bid > 0 else price,
+                        'ask': ask if ask > 0 else price,
+                        'spread': (ask - bid) if bid > 0 and ask > 0 else 0.0002,
+                        'source': 'BRIDGE'
+                }
+        
+        return {
+                'price': 0,
+                'bid': 0,
+                'ask': 0,
+                'spread': 0,
+                'source': 'NONE'
+        }
+
+    def _get_current_price_with_spread(self, symbol: str) -> Dict:
+        """
+        Get current price with spread information.
+        """
+        try:
+                # Try MT4
+                if self.mt4:
+                        result = self.mt4._send({"command": "PRICE", "symbol": symbol})
+                        if result and isinstance(result, dict):
+                                bid = result.get('bid', 0)
+                                ask = result.get('ask', 0)
+                                if bid > 0 and ask > 0:
+                                        return {
+                                                'bid': bid,
+                                                'ask': ask,
+                                                'price': (bid + ask) / 2,
+                                                'spread': ask - bid,
+                                                'source': 'MT4'
+                                        }
+        except:
+                pass
+        
+        # Try price_bridge
+        try:
+                from price_bridge import price_bridge
+                bid = price_bridge.get_bid(symbol)
+                ask = price_bridge.get_ask(symbol)
+                price = price_bridge.get_price(symbol)
+                if price > 0:
+                        return {
+                                'bid': bid if bid > 0 else price,
+                                'ask': ask if ask > 0 else price,
+                                'price': price,
+                                'spread': (ask - bid) if bid > 0 and ask > 0 else 0.0002,
+                                'source': 'BRIDGE'
+                        }
+        except:
+                pass
+        
+        # Fallback
+        return {
+                'bid': 0,
+                'ask': 0,
+                'price': 0,
+                'spread': 0,
+                'source': 'NONE'
+        }
+    # Replace the entire get_all_prices() method with this:
+    def get_all_prices(self) -> Dict:
+        """Get all prices from price_bridge (uses same method as dashboard)"""
+        try:
+                # Use price_bridge's get_all_prices() method
+                prices = self.price_bridge.get_all_prices()
+                
+                # Filter to only our pairs
+                filtered_prices = {}
+                for pair in self.pairs:
+                        if pair in prices and prices[pair] > 0:
+                                filtered_prices[pair] = prices[pair]
+                
+                if filtered_prices:
+                        logger.info(f"✅ Got {len(filtered_prices)} prices from price_bridge")
+                        for symbol, price in filtered_prices.items():
+                                logger.debug(f"   {symbol}: {price:.5f}")
+                else:
+                        logger.warning("⚠️ No prices from price_bridge")
+                
+                return filtered_prices
+                
+        except Exception as e:
+                logger.warning(f"Error getting prices from bridge: {e}")
+                return {}
+    def build_market_data(self) -> Dict:
+        """Build complete market data for analysis"""
+        market_data = {}
+        
+        # Get prices from price_bridge
+        prices = self.get_all_prices()
+        
+        # Add prices to market_data
+        for pair in self.pairs:
+                if pair in prices and prices[pair] > 0:
+                        market_data[pair] = prices[pair]
+                        market_data[f'{pair}_price'] = prices[pair]
+        
+        # Add current price
+        if 'EURUSD' in market_data and market_data['EURUSD'] > 0:
+                market_data['current_price'] = market_data['EURUSD']
+                market_data['price'] = market_data['EURUSD']
+                market_data['pair'] = 'EURUSD'
+        
+        # Add engine state
+        engine_state = self.engine.get_status() if self.engine else {}
+        market_data['engine_state'] = engine_state
+        
+        # Add engine predictions for each pair
+        for pair in self.pairs:
+                if pair in self.brokers:
+                        gear_pred = self.engine.get_gear_prediction(
+                                pair, 
+                                self.brokers[pair].gear_ratio
+                        )
+                        market_data[f'{pair}_gear_prediction'] = gear_pred
+        
+        # Add timestamp
+        market_data['timestamp'] = datetime.now().isoformat()
+        
+        if prices:
+                logger.info(f"📊 Built market data with {len(prices)} prices")
+        
+        return market_data
+    def process_market_data(self, market_data: Dict) -> Dict:
+        """
+        Process market data through all components
+        """
+        self.cycle_count += 1
+        if market_data is None:
+            market_data = self.build_market_data()
+        results = {
+            'cycle': self.cycle_count,
+            'timestamp': datetime.now().isoformat(),
+            'engine': {},
+            'anomalies': {},
+            'agents': {},
+            'signals': {},
+            'consensus': {},
+            'trade': {},
+            'positions': {}
+        }
+        
+        try:
+            # 1. Update engine
+            if self.engine:
+                results['engine'] = self.engine.update_engine_state(market_data)
+                logger.debug(f"Engine: {results['engine'].get('engine_direction')} @ {results['engine'].get('engine_speed', 0):.3f}")
+                
+            
+            # 2. Check for anomalies
+            if self.anomaly_detector:
+                results['anomalies'] = self.anomaly_detector.update(market_data)
+                # If protection active, skip trading
+                if results['anomalies'].get('protection_active', False):
+                    results['consensus'] = {'signal': 'HOLD', 'reason': 'Protection active'}
+                    results['trade'] = {'status': 'SKIPPED', 'reason': 'Protection active'}
+                    self.last_results = results
+                    return results
+            
+            # 3. Process agents
+            agent_results = {}
+            
+            for agent in self.agents:
+                try:
+                    signal_data = {
+                        'pair': market_data.get('pair', 'EURUSD'),
+                        'price': market_data.get('EURUSD', 0),
+                        'current_price': market_data.get('EURUSD', 0),
+                        'symbol': market_data.get('symbol', 'EURUSD'),
+                    }
+                    for pair in self.pairs:
+                        if pair in market_data:
+                            signal_data[pair] = market_data[pair]
+                    
+                    # Add candles if available
+                    if 'candles' in market_data:
+                        signal_data['candles'] = market_data['candles']
+                    
+                    result = agent.analyze(signal_data)
+                    agent_results[agent.name] = result
+                    
+                    logger.debug(f"{agent.name}: {result.get('vote', 'HOLD')} ({result.get('confidence', 50)}%)")
+                    
+                except Exception as e:
+                    logger.error(f"Agent {agent.name} error: {e}")
+                    agent_results[agent.name] = {
+                        'vote': 'HOLD', 
+                        'confidence': 50, 
+                        'reasoning': f'Error: {e}'
+                    }
+            results['agents'] = agent_results
+            
+            # 4. Generate signals
+            signals = self._generate_signals(agent_results, market_data)
+            results['signals'] = signals
+            
+            # 5. Generate consensus
+            results['consensus'] = self._generate_consensus(signals)
+            
+            # 6. Execute trade if consensus is strong
+            consensus = results['consensus']
+            min_confidence = self.config.get('min_confidence', 60)
+            if consensus['signal'] != 'HOLD' and consensus['confidence'] >= min_confidence:
+                pair = market_data.get('pair', 'EURUSD')
+                price = market_data.get(pair, 0)
+                if price > 0:
+                    # Run Monte Carlo simulation
+                    mc_results = self.monte_carlo.simulate_entry(
+                        current_price=price,
+                        direction=consensus['signal']
+                    )
+                    
+                    if mc_results and mc_results.get('entry_confidence', 0) > 50:
+                        # Execute trade
+                        results['trade'] = self.execution_engine.execute_signal(
+                            consensus,
+                            market_data,
+                            position_size=1.0
+                        )
+                        logger.info(f"💼 Trade executed: {pair} {consensus['signal']} @ {price:.4f}")
+                    else:
+                        results['trade'] = {
+                            'status': 'SKIPPED', 
+                            'reason': f'Monte Carlo confidence: {mc_results.get("entry_confidence", 0):.1f}%'
+                        }
+                else:
+                    results['trade'] = {'status': 'SKIPPED', 'reason': 'No price available'}
+            else:
+                results['trade'] = {
+                    'status': 'SKIPPED', 
+                    'reason': f'Low confidence: {consensus["confidence"]:.1f}% < {min_confidence}%' if consensus['signal'] != 'HOLD' else 'HOLD signal'
+                }
+            
+            # 7. Update P&L
+            if self.execution_engine:
+                results['pnl'] = self.execution_engine.update_pnl(market_data)
+            
+            # self.last_cycle_time = datetime.now()
+            self._log_decision(results)
+            
+        except Exception as e:
+            logger.error(f"Error processing cycle: {e}")
+            import traceback
+            traceback.print_exc()
+            results['error'] = str(e)
+        
+        self.last_results = results
+        return results
+    
+    def _generate_signals(self, agent_results: Dict, market_data: Dict) -> Dict:
+        """
+        Generate signals from agent results
+        """
+        signals = {}
+        
+        for agent_name, result in agent_results.items():
+            pair = result.get('pair', market_data.get('pair', 'EURUSD'))
+            
+            signals[agent_name] = {
+                'pair': pair,
+                'signal': result.get('vote', 'HOLD'),
+                'confidence': result.get('confidence', 50),
+                'reasoning': result.get('reasoning', ''),
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        return signals
+    
+    def _generate_consensus(self, signals: Dict) -> Dict:
+        """
+        Generate consensus from all signals
+        """
+        buy_votes = 0
+        sell_votes = 0
+        hold_votes = 0
+        total_confidence = 0
+        active_votes = 0
+        reasoning = []
+        confidence_by_signal = {'BUY': [], 'SELL': []}
+        
+        for agent_name, signal in signals.items():
+            vote = signal.get('signal', 'HOLD')
+            confidence = signal.get('confidence', 50)
+            reason = signal.get('reasoning', '')
+            
+            if vote == 'BUY':
+                buy_votes += 1
+                total_confidence += confidence
+                active_votes += 1
+                confidence_by_signal['BUY'].append(confidence)
+                if reason:
+                    reasoning.append(f"{agent_name}: {reason[:50]}")
+            elif vote == 'SELL':
+                sell_votes += 1
+                total_confidence += confidence
+                active_votes += 1
+                confidence_by_signal['SELL'].append(confidence)
+                # if reason:
+                #     reasoning.append(f"{agent_name}: {reason[:50]}")
+            else:
+                hold_votes += 1
+        
+        # Determine consensus with confidence weighting
+        avg_buy_confidence = sum(confidence_by_signal['BUY']) / len(confidence_by_signal['BUY']) if confidence_by_signal['BUY'] else 0
+        avg_sell_confidence = sum(confidence_by_signal['SELL']) / len(confidence_by_signal['SELL']) if confidence_by_signal['SELL'] else 0
+        
+        # Weighted score
+        buy_score = buy_votes * (avg_buy_confidence / 100) if avg_buy_confidence > 0 else 0
+        sell_score = sell_votes * (avg_sell_confidence / 100) if avg_sell_confidence > 0 else 0
+        
+        if buy_score > sell_score and buy_score > 0:
+            signal = 'BUY'
+            confidence = min(95, (buy_score / (buy_score + sell_score + 0.01)) * 100)
+            reason = f"Consensus BUY ({buy_votes} votes, avg conf: {avg_buy_confidence:.0f}%)"
+        elif sell_score > buy_score and sell_score > 0:
+            signal = 'SELL'
+            confidence = min(95, (sell_score / (buy_score + sell_score + 0.01)) * 100)
+            reason = f"Consensus SELL ({sell_votes} votes, avg conf: {avg_sell_confidence:.0f}%)"
+        else:
+            signal = 'HOLD'
+            confidence = 50
+            reason = f"Consensus HOLD (BUY:{buy_votes} SELL:{sell_votes} HOLD:{hold_votes})"
+        
+        if reasoning:
+            reason += f" - {'; '.join(reasoning[:2])}"
+        
+        return {
+            'signal': signal,
+            'confidence': round(confidence, 1),
+            'reason': reason,
+            'buy_votes': buy_votes,
+            'sell_votes': sell_votes,
+            'hold_votes': hold_votes,
+            'buy_confidence': round(avg_buy_confidence, 1),
+            'sell_confidence': round(avg_sell_confidence, 1),
+            'total_agents': len(signals)
+        }
+    def _log_decision(self, results: Dict):
+        """Log decision for analysis"""
+        log_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'cycle': results.get('cycle', 0),
+            'consensus': results.get('consensus', {}),
+            'trade': results.get('trade', {}),
+            'engine': results.get('engine', {}),
+            'agents': {
+                name: {
+                    'vote': r.get('vote', 'HOLD'),
+                    'confidence': r.get('confidence', 50)
+                }
+                for name, r in results.get('agents', {}).items()
+            }
+        }
+        
+        self.decision_log.append(log_entry)
+        
+        # Keep log manageable
+        if len(self.decision_log) > self.max_log_entries:
+            self.decision_log.pop(0)
+        
+        # Save to file periodically
+        if self.cycle_count % 10 == 0:
+            try:
+                with open('decision_log_v2.json', 'w') as f:
+                    json.dump(self.decision_log[-100:], f, default=str, indent=2)
+            except:
+                pass
+    def get_status(self) -> Dict:
+        """
+        Get current controller status
+        """
+        return {
+            'name': self.name,
+            'is_running': self.is_running,
+            'cycle_count': self.cycle_count,
+            'pairs': self.pairs,
+            'agents': len(self.agents),
+            # 'last_cycle': self.last_cycle_time.isoformat() if self.last_cycle_time else None,
+            'engine': self.engine.get_status() if hasattr(self.engine, 'get_status') else {},
+            'anomaly_detector': self.anomaly_detector.get_protection_status() if hasattr(self.anomaly_detector, 'get_protection_status') else {},
+            'execution': self.execution_engine.get_status() if hasattr(self.execution_engine, 'get_status') else {},
+            'positions': self.execution_engine.positions if self.execution_engine else {},
+            'trades_today': self.execution_engine.trades_today if self.execution_engine else 0,
+            'daily_pnl': self.execution_engine.daily_pnl if self.execution_engine else 0,
+            'timestamp': datetime.now().isoformat()
+        }
+    def get_agent_status(self) -> Dict:
+        """Get status of all agents"""
+        status = {}
+        for agent in self.agents:
+            if hasattr(agent, 'get_status'):
+                try:
+                    status[agent.name] = agent.get_status()
+                except:
+                    status[agent.name] = {'error': 'Could not get status'}
+            else:
+                status[agent.name] = {
+                    'type': getattr(agent, 'agent_type', 'Unknown'),
+                    'signal': getattr(agent, 'signal', 'HOLD'),
+                    'confidence': getattr(agent, 'confidence', 50)
+                }
+        return status
+    def start(self):
+        """Start the controller"""
+        self.is_running = True
+        logger.info("🚀 ForexTradingController started")
+    
+    def stop(self):
+        """Stop the controller"""
+        self.is_running = False
+        logger.info("🛑 ForexTradingController stopped")
+    
+    def reset_daily_stats(self):
+        """Reset daily statistics"""
+        if self.execution_engine:
+            self.execution_engine.reset_daily_stats()
+        logger.info("🔄 Daily stats reset")
+
+# ============================================================
+    # BACKTESTING
+    # ============================================================
+    
+    def run_backtest(self, historical_data: List[Dict]) -> List[Dict]:
+        """Run backtest on historical data"""
+        if not historical_data:
+            logger.warning("No historical data provided")
+            return []
+        
+        logger.info(f"Running backtest on {len(historical_data)} data points...")
+        
+        results = []
+        for idx, data_point in enumerate(historical_data):
+            try:
+                result = self.process_cycle(data_point)
+                results.append(result)
+                
+                if idx % 100 == 0:
+                    logger.info(f"   Processed {idx}/{len(historical_data)}")
+                    
+            except Exception as e:
+                logger.error(f"Error at {idx}: {e}")
+        
+        # Analyze results
+        self._analyze_backtest(results)
+        return results
+    
+    def _analyze_backtest(self, results: List[Dict]):
+        """Analyze backtest results"""
+        total_trades = 0
+        wins = 0
+        losses = 0
+        
+        for result in results:
+            trade = result.get('trade', {})
+            if trade.get('status') == 'EXECUTED':
+                total_trades += 1
+                if trade.get('pnl', 0) > 0:
+                    wins += 1
+                else:
+                    losses += 1
+        
+        logger.info("=== BACKTEST RESULTS ===")
+        logger.info(f"   Total trades: {total_trades}")
+        logger.info(f"   Wins: {wins}")
+        logger.info(f"   Losses: {losses}")
+        if total_trades > 0:
+            logger.info(f"   Win rate: {wins/total_trades*100:.1f}%")
+        logger.info("==========================")
+
+
+# ============================================
+# MAIN EXECUTION
+# ============================================
+
+def main():
+    """Main entry point for testing"""
+    print("\n" + "="*60)
+    print("FOREX TRADING CONTROLLER - INITIALIZATION TEST")
+    print("="*60 + "\n")
+    
+    # Create config
+    config = {
+        'pairs': ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD'],
+        'min_confidence': 60,
+        'cycle_interval': 10,
+        'engine_config': {
+            'factor_weights': {
+                'interest_rate_diff': 0.35,
+                'yield_curve_slope': 0.25,
+                'carry_trade_flow': 0.15,
+                'positioning_sentiment': 0.15,
+                'central_bank_actions': 0.10,
+            }
+        },
+        'monte_carlo_config': {
+            'n_simulations': 1000,
+            'horizon': 20,
+            'confidence_level': 0.95
+        },
+        'execution_config': {
+            'max_position_size': 5,
+            'risk_per_trade': 0.02,
+            'max_daily_trades': 10
+        }
+        # 'pairs_config': {
+        #     'EURUSD': {'beta': 1.10, 'gear_ratio': 1.2, 'entry_threshold': 2.0},
+        #     'GBPUSD': {'beta': 1.05, 'gear_ratio': 1.1, 'entry_threshold': 2.0},
+        #     'USDJPY': {'beta': 0.85, 'gear_ratio': 0.8, 'entry_threshold': 1.8},
+        #     'AUDUSD': {'beta': 0.90, 'gear_ratio': 0.9, 'entry_threshold': 1.8},
+        #     'USDCAD': {'beta': 0.80, 'gear_ratio': 0.7, 'entry_threshold': 1.8},
+        # }
+    }
+    
+    # Initialize controller
+    # print("🏗️ Initializing ForexTradingController...\n")
+    controller = ForexTradingController(config)
+    
+    # Start controller
+    controller.start()
+    
+    # Test with sample market data
+    print("\n" + "="*60)
+    print("TESTING WITH SAMPLE MARKET DATA")
+    print("="*60 + "\n")
+    
+    # sample_data = {
+    #     'pair': 'EURUSD',
+    #     'price': 1.1050,
+    #     'current_price': 1.1050,
+    #     'EURUSD': 1.1050,
+    #     'GBPUSD': 1.3000,
+    #     'USDJPY': 150.00,
+    #     'AUDUSD': 0.7000,
+    #     'USDCAD': 1.3500,
+    #     'usd_interest_rate': 5.25,
+    #     'avg_other_rate': 3.50,
+    #     'short_term_yield': 4.50,
+    #     'long_term_yield': 4.75,
+    #     'dxy': 104.50,
+    #     'carry_flows': 10,
+    #     'cftc_positioning': 55,
+    #     'central_bank_action': 2,
+    #     'candles': [
+    #         {'high': 1.1070, 'low': 1.1030, 'close': 1.1050},
+    #         {'high': 1.1080, 'low': 1.1040, 'close': 1.1060},
+    #         {'high': 1.1090, 'low': 1.1050, 'close': 1.1070},
+    #         {'high': 1.1080, 'low': 1.1040, 'close': 1.1055},
+    #         {'high': 1.1060, 'low': 1.1020, 'close': 1.1040},
+    #     ] * 12,  # 60 candles
+    #     'timestamp': time.time()
+    # }
+    
+    # Process market data
+    # print("📊 Processing market data...\n")
+    market_data = controller.build_market_data()
+    
+    # Process one cycle
+    result = controller.process_market_data(market_data)
+    
+    # Display results
+    print("="*60)
+    print("RESULTS")
+    print("="*60)
+    
+    print(f"\n📈 Cycle: {result.get('cycle', 0)}")
+    print(f"⏰ Timestamp: {result.get('timestamp', 'N/A')}")
+    
+    # Engine
+    engine = result.get('engine', {})
+    print(f"\n🔧 Engine:")
+    print(f"   Direction: {engine.get('engine_direction', 'N/A')}")
+    print(f"   Speed: {engine.get('engine_speed', 0):.3f}")
+    print(f"   Health: {engine.get('engine_health', 0):.1f}%")
+    
+    # Agents
+    agents = result.get('agents', {})
+    print(f"\n🤖 Agents:")
+    for name, agent_result in agents.items():
+        vote = agent_result.get('vote', 'HOLD')
+        confidence = agent_result.get('confidence', 0)
+        print(f"   {name}: {vote} ({confidence:.0f}%)")
+    
+    # Consensus
+    consensus = result.get('consensus', {})
+    print(f"\n📊 Consensus:")
+    print(f"   Signal: {consensus.get('signal', 'HOLD')}")
+    print(f"   Confidence: {consensus.get('confidence', 0):.1f}%")
+    print(f"   Reason: {consensus.get('reason', 'N/A')}")
+    print(f"   Votes: BUY={consensus.get('buy_votes', 0)}, SELL={consensus.get('sell_votes', 0)}, HOLD={consensus.get('hold_votes', 0)}")
+    
+    # Trade
+    trade = result.get('trade', {})
+    print(f"\n💼 Trade:")
+    print(f"   Status: {trade.get('status', 'N/A')}")
+    if trade.get('status') == 'EXECUTED':
+        print(f"   Order ID: {trade.get('order_id', 'N/A')}")
+        print(f"   Price: {trade.get('execution_price', 0):.4f}")
+        print(f"   Size: {trade.get('size', 0)}")
+    # Test prices
+    test_prices = controller.get_all_prices()
+    print("📊 Test Prices from MT4:")
+    for symbol, price in test_prices.items():
+        print(f"   {symbol}: {price}")
+    
+    # PnL
+    pnl = result.get('pnl', {})
+    print(f"\n💰 P&L:")
+    print(f"   Daily P&L: {pnl.get('daily_pnl', 0):.2f}")
+    
+    # Anomalies
+    anomalies = result.get('anomalies', {})
+    if anomalies.get('count', 0) > 0:
+        print(f"\n⚠️ Anomalies Detected: {anomalies.get('count', 0)}")
+        for anomaly in anomalies.get('anomalies', []):
+            print(f"   - {anomaly.get('type', 'Unknown')}: {anomaly.get('message', '')}")
+    
+    # Get full status
+    print("\n" + "="*60)
+    print("FULL SYSTEM STATUS")
+    print("="*60)
+    status = controller.get_status()
+    print(f"\n🏛️ Controller Status:")
+    print(f"   Running: {status.get('is_running', False)}")
+    print(f"   Cycle Count: {status.get('cycle_count', 0)}")
+    print(f"   Trades Today: {status.get('trades_today', 0)}")
+    print(f"   Daily P&L: ${status.get('daily_pnl', 0):.2f}")
+    
+    positions = status.get('positions', {})
+    if positions:
+        print(f"\n📊 Positions:")
+        for pair, pos in positions.items():
+            if pos.get('size', 0) != 0:
+                print(f"   {pair}: {pos.get('direction', 'NONE')} {pos.get('size', 0)} @ {pos.get('entry_price', 0):.4f}")
+    
+    # Stop controller
+    controller.stop()
+    
+    print("\n" + "="*60)
+    print("✅ TEST COMPLETE")
+    print("="*60 + "\n")
+    try:
+        while controller.is_running:
+            time.sleep(10)
+            status = controller.get_status()
+            print(f"💓 [{datetime.now().strftime('%H:%M:%S')}] "
+                  f"Cycle: {status['cycle_count']} | "
+                  f"Trades: {status['trades_today']} | "
+                  f"PNL: ${status['daily_pnl']:.2f}")
+    except KeyboardInterrupt:
+        print("\n🛑 Shutting down...")
+        controller.stop()
+        print("✅ Done")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,18 @@
+============================================================
+BACKTEST RESULTS (REALISTIC DATA)
+============================================================
+
+total_trades: 13
+winning_trades: 3
+losing_trades: 10
+win_rate: 23.1
+bounce_rate: 6.8
+total_pnl: -200
+avg_hold_time_minutes: 0
+max_drawdown: 350
+signals_detected: 44
+reversions_successful: 3
+calibration_trades: 13
+passed: False
+
+============================================================

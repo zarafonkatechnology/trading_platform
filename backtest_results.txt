@@ -1,0 +1,16 @@
+============================================================
+BACKTEST RESULTS
+============================================================
+
+total_trades: 36
+winning_trades: 30
+losing_trades: 6
+win_rate: 83.3
+bounce_rate: 13.6
+total_pnl: 2500.0
+avg_hold_time_minutes: 200.3
+max_drawdown: 250
+signals_detected: 221
+passed: False
+
+============================================================

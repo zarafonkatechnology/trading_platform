@@ -1,0 +1,85 @@
+<!-- test_dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <style>
+        body { font-family: monospace; background: #0a0e17; color: #fff; padding: 20px; }
+        .status { color: #4caf50; }
+        .error { color: #ef4444; }
+        pre { background: #1a1f3a; padding: 15px; border-radius: 8px; overflow: auto; max-height: 400px; }
+        button { padding: 10px 20px; margin: 5px; background: #3b82f6; border: none; border-radius: 8px; color: white; cursor: pointer; }
+        button:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <h1>🔍 API Test Dashboard</h1>
+    <div>
+        <button onclick="testPrices()">📊 Test Prices</button>
+        <button onclick="testStatus()">📊 Test Status</button>
+        <button onclick="testSignals()">📊 Test Signals</button>
+        <button onclick="testAll()">🚀 Test All</button>
+    </div>
+    <div id="results">
+        <p>Click a button to test...</p>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api/v1';
+        
+        async function testPrices() {
+            const div = document.getElementById('results');
+            div.innerHTML = '<p>⏳ Loading prices...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/controllers/all/prices`);
+                const data = await response.json();
+                div.innerHTML = `
+                    <h3>✅ Prices Response</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                div.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testStatus() {
+            const div = document.getElementById('results');
+            div.innerHTML = '<p>⏳ Loading status...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/controllers/all/status`);
+                const data = await response.json();
+                div.innerHTML = `
+                    <h3>✅ Status Response</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                div.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testSignals() {
+            const div = document.getElementById('results');
+            div.innerHTML = '<p>⏳ Loading signals...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/signals`);
+                const data = await response.json();
+                div.innerHTML = `
+                    <h3>✅ Signals Response</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                div.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testAll() {
+            await testPrices();
+            await testStatus();
+            await testSignals();
+        }
+    </script>
+</body>
+</html>

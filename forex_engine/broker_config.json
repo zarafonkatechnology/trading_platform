@@ -1,0 +1,22 @@
+
+{
+    "EURUSD": {
+        "entry_threshold": 2.0,
+        "exit_threshold": 0.3,
+        "sl_pips": 10,
+        "tp_pips": 20,
+        "volume_multiplier": 1.2
+    },
+    "GBPUSD": {
+        "entry_threshold": 2.0,
+        "exit_threshold": 0.4,
+        "sl_pips": 12,
+        "tp_pips": 25
+    },
+    "USDJPY": {
+        "entry_threshold": 2.2,
+        "exit_threshold": 0.35,
+        "sl_pips": 15,
+        "tp_pips": 30
+    }
+}

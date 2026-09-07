@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-07-31T00:43:09.937962",
+  "symbols_loaded": 25,
+  "total_bars": 1250,
+  "signals_found": 0,
+  "extreme_zscores": 0,
+  "signals": [],
+  "extreme": [],
+  "near_threshold": [
+    "#S&P500: Z=+1.92 (near threshold)",
+    "#DJ30: Z=+1.97 (near threshold)",
+    "#RUSS2000: Z=+1.99 (near threshold)"
+  ]
+}

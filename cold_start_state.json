@@ -1,0 +1,29 @@
+{
+  "samples": [
+    {
+      "win": true,
+      "pnl": 0.5,
+      "symbol": "DEMO",
+      "action": "BUY",
+      "timestamp": "2026-09-02T13:55:40.240737"
+    },
+    {
+      "win": false,
+      "pnl": -0.3,
+      "symbol": "DEMO",
+      "action": "SELL",
+      "timestamp": "2026-09-02T13:55:40.240745"
+    },
+    {
+      "win": true,
+      "pnl": 0.75,
+      "symbol": "DEMO",
+      "action": "BUY",
+      "timestamp": "2026-09-02T13:55:40.240749"
+    }
+  ],
+  "wins": 2,
+  "losses": 1,
+  "active": false,
+  "timestamp": "2026-09-02T13:55:40.240761"
+}

@@ -1,0 +1,110 @@
+{
+  "2026-08-26": [
+    {
+      "time": "08:30",
+      "currency": "USD",
+      "event": "CPI",
+      "impact": "HIGH"
+    },
+    {
+      "time": "14:00",
+      "currency": "USD",
+      "event": "FOMC Meeting",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-08-27": [
+    {
+      "time": "08:30",
+      "currency": "USD",
+      "event": "GDP",
+      "impact": "HIGH"
+    },
+    {
+      "time": "04:00",
+      "currency": "EUR",
+      "event": "ECB Rate Decision",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-08-28": [
+    {
+      "time": "04:00",
+      "currency": "EUR",
+      "event": "ECB Press Conference",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-08-30": [
+    {
+      "time": "08:30",
+      "currency": "USD",
+      "event": "CPI",
+      "impact": "HIGH"
+    },
+    {
+      "time": "14:00",
+      "currency": "USD",
+      "event": "FOMC Meeting",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-08-31": [
+    {
+      "time": "08:30",
+      "currency": "USD",
+      "event": "GDP",
+      "impact": "HIGH"
+    },
+    {
+      "time": "04:00",
+      "currency": "EUR",
+      "event": "ECB Rate Decision",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-09-01": [
+    {
+      "time": "04:00",
+      "currency": "EUR",
+      "event": "ECB Press Conference",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-09-02": [
+    {
+      "time": "08:30",
+      "currency": "USD",
+      "event": "CPI",
+      "impact": "HIGH"
+    },
+    {
+      "time": "14:00",
+      "currency": "USD",
+      "event": "FOMC Meeting",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-09-03": [
+    {
+      "time": "08:30",
+      "currency": "USD",
+      "event": "GDP",
+      "impact": "HIGH"
+    },
+    {
+      "time": "04:00",
+      "currency": "EUR",
+      "event": "ECB Rate Decision",
+      "impact": "HIGH"
+    }
+  ],
+  "2026-09-04": [
+    {
+      "time": "04:00",
+      "currency": "EUR",
+      "event": "ECB Press Conference",
+      "impact": "HIGH"
+    }
+  ]
+}

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Login - NEXUS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f1f5f9;
+            padding: 20px;
+        }
+        .login-container {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 24px;
+            padding: 48px;
+            width: 420px;
+            max-width: 100%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+        }
+        .login-header { text-align: center; margin-bottom: 32px; }
+        .login-header .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .login-header .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-header p { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+        .login-header .badge {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.15);
+            color: #a78bfa;
+            font-size: 11px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+        .login-header .badge i { margin-right: 6px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .form-group .input-wrapper { position: relative; }
+        .form-group .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 16px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px 14px 46px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.05);
+            color: #f1f5f9;
+            font-size: 15px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .form-group input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+            background: rgba(255,255,255,0.08);
+        }
+        .form-group input::placeholder { color: #64748b; }
+        .form-group input.password-input { padding-right: 46px; }
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            transition: color 0.3s;
+        }
+        .toggle-password:hover { color: #f1f5f9; }
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            margin-top: 8px;
+            transition: all 0.3s;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(139,92,246,0.3);
+        }
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-login .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin: 0 auto;
+        }
+        .btn-login.loading .spinner { display: block; }
+        .btn-login.loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: #ef4444;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            display: none;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 10px;
+        }
+        .error.show { display: flex; }
+        .error i { font-size: 18px; flex-shrink: 0; }
+        .success {
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.25);
+            color: #22c55e;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            display: none;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 10px;
+        }
+        .success.show { display: flex; }
+        .success i { font-size: 18px; flex-shrink: 0; }
+        .status {
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 16px;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+        }
+        .status .connected { color: #22c55e; }
+        .status .disconnected { color: #ef4444; }
+        .status .loading-text { color: #f59e0b; }
+        .status i { margin-right: 6px; }
+        .back-link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 13px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 16px;
+        }
+        .back-link a {
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .back-link a:hover { color: #a78bfa; }
+        .demo-section {
+            margin-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 16px;
+        }
+        .demo-section .demo-label {
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .demo-btn {
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+        }
+        .demo-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+        .demo-btn .role-badge {
+            display: inline-block;
+            font-size: 9px;
+            background: rgba(139,92,246,0.2);
+            color: #a78bfa;
+            padding: 1px 10px;
+            border-radius: 10px;
+            margin-top: 3px;
+        }
+        @media (max-width: 600px) {
+            .login-container { padding: 24px; }
+            .demo-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-crown"></i></div>
+                <h1>NEXUS</h1>
+            </div>
+            <p>Master Administrator Login</p>
+            <span class="badge"><i class="fas fa-shield-alt"></i> Admin Access</span>
+        </div>
+        
+        <div id="error" class="error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorMessage">Error message</span>
+        </div>
+        <div id="success" class="success">
+            <i class="fas fa-check-circle"></i>
+            <span id="successMessage">Success message</span>
+        </div>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        placeholder="Enter admin email" 
+                        value="admin@example.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="password-input"
+                        placeholder="Enter admin password" 
+                        value="admin123"
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+                        <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Sign In</span>
+                <span class="spinner"></span>
+            </button>
+        </form>
+        
+        <!-- Demo Buttons -->
+        <div class="demo-section">
+            <div class="demo-label">Quick Login</div>
+            <div class="demo-grid">
+                <button class="demo-btn" onclick="fillDemo('admin@example.com', 'admin123')">
+                    👑 <span style="color:#f1f5f9;">admin@example.com</span>
+                    <span class="role-badge">Admin</span>
+                </button>
+                <button class="demo-btn" onclick="fillDemo('master@example.com', 'master123')">
+                    🏛️ <span style="color:#f1f5f9;">master@example.com</span>
+                    <span class="role-badge">Master</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="status" id="statusBar">
+            <span id="statusText">
+                <i class="fas fa-spinner fa-spin"></i> Connecting to server...
+            </span>
+        </div>
+        
+        <div class="back-link">
+            <a href="/client_login.html"><i class="fas fa-arrow-left"></i> Back to Client Login</a>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/api/v1';
+        
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginForm = document.getElementById('loginForm');
+        const errorEl = document.getElementById('error');
+        const errorMessage = document.getElementById('errorMessage');
+        const successEl = document.getElementById('success');
+        const successMessage = document.getElementById('successMessage');
+        const statusText = document.getElementById('statusText');
+        
+        function fillDemo(email, password) {
+            emailInput.value = email;
+            passwordInput.value = password;
+            hideMessages();
+            setStatus(`✅ Loaded ${email}`, 'connected');
+            setTimeout(() => {
+                loginForm.dispatchEvent(new Event('submit'));
+            }, 300);
+        }
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorEl.className = 'error show';
+            successEl.className = 'success';
+        }
+        
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successEl.className = 'success show';
+            errorEl.className = 'error';
+        }
+        
+        function hideMessages() {
+            errorEl.className = 'error';
+            successEl.className = 'success';
+        }
+        
+        function setStatus(message, type = 'info') {
+            statusText.innerHTML = message;
+        }
+        
+        function setLoading(loading) {
+            if (loading) {
+                loginBtn.classList.add('loading');
+                loginBtn.disabled = true;
+            } else {
+                loginBtn.classList.remove('loading');
+                loginBtn.disabled = false;
+            }
+        }
+        
+        function togglePasswordVisibility() {
+            const icon = document.getElementById('togglePasswordIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+        
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            hideMessages();
+            
+            if (!email || !password) {
+                showError('Please enter email and password');
+                return;
+            }
+            
+            setLoading(true);
+            setStatus('⏳ Authenticating...', 'loading');
+            
+            try {
+                console.log('📡 Sending master login request for:', email);
+                console.log('📡 Data:', JSON.stringify({ email, password }));
+                
+                const response = await fetch(`${API_URL}/master/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        email: email, 
+                        password: password 
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('📥 Login response:', data);
+                
+                if (response.ok && data.success && data.access_token) {
+                    localStorage.setItem('master_token', data.access_token);
+                    localStorage.setItem('master_user', JSON.stringify(data.user || { email: email }));
+                    
+                    showSuccess(`✅ Welcome, ${data.user?.full_name || data.user?.email || email}!`);
+                    setStatus(`✅ Welcome, Master!`, 'connected');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/master_dashboard.html';
+                    }, 1500);
+                    
+                } else {
+                    const errorMsg = data.detail || data.error || data.message || 'Invalid credentials';
+                    console.error('❌ Login failed:', errorMsg);
+                    showError(errorMsg);
+                    setStatus('❌ Login failed', 'disconnected');
+                    setLoading(false);
+                }
+                
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                showError(`Connection error: ${error.message}`);
+                setStatus('❌ Connection error', 'disconnected');
+                setLoading(false);
+            }
+        }
+        
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_URL}/master/health`);
+                if (response.ok) {
+                    setStatus('✅ Connected to server', 'connected');
+                    return true;
+                }
+                throw new Error('Server not responding');
+            } catch (error) {
+                setStatus('⚠️ Server offline - check if API is running', 'disconnected');
+                return false;
+            }
+        }
+        
+        async function checkSession() {
+            const token = localStorage.getItem('master_token');
+            if (token) {
+                try {
+                    const response = await fetch(`${API_URL}/master/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (response.ok) {
+                        setStatus('🔄 Session valid, redirecting...', 'connected');
+                        setTimeout(() => {
+                            window.location.href = '/master_dashboard.html';
+                        }, 1000);
+                        return true;
+                    } else {
+                        localStorage.removeItem('master_token');
+                        localStorage.removeItem('master_user');
+                    }
+                } catch (e) {
+                    console.log('Session check failed:', e);
+                }
+            }
+            return false;
+        }
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 NEXUS Master Login Page');
+            console.log('📡 API URL:', API_URL);
+            
+            const hasSession = await checkSession();
+            if (!hasSession) {
+                await checkConnection();
+            }
+            emailInput.focus();
+        });
+        
+        console.log('✅ Master Login page loaded');
+    </script>
+</body>
+</html>

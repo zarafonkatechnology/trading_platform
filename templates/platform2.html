@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Platform 2 - Full Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0e27; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #1a1f3a, #0a0e27); padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; }
+        .header h1 { color: #ffd700; margin-bottom: 10px; }
+        .tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tab-btn { background: rgba(255,255,255,0.1); border: none; padding: 10px 20px; border-radius: 10px; color: white; cursor: pointer; transition: all 0.3s; }
+        .tab-btn:hover { background: rgba(255,215,0,0.3); }
+        .tab-btn.active { background: #ffd700; color: #0a0e27; font-weight: bold; }
+        .tab-content { display: none; background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; }
+        .tab-content.active { display: block; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #ffd700; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .data-table th { background: rgba(255,215,0,0.15); color: #ffd700; }
+        button { background: #ffd700; color: #0a0e27; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 10px 0; }
+        button:hover { opacity: 0.9; }
+        .badge-success { background: #2e7d32; padding: 2px 8px; border-radius: 20px; font-size: 11px; display: inline-block; }
+        .badge-danger { background: #c62828; padding: 2px 8px; border-radius: 20px; font-size: 11px; display: inline-block; }
+        .badge-warning { background: #ed6c02; padding: 2px 8px; border-radius: 20px; font-size: 11px; display: inline-block; }
+        .progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 6px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { background: #4caf50; height: 100%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📊 Platform 2 – Full Instructor Dashboard</h1>
+        <p>Complete transparency | All data accessible | Expandable database</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('agents')">🤖 Agents & Expandability</button>
+        <button class="tab-btn" onclick="showTab('telegram')">📨 Telegram Signals</button>
+        <button class="tab-btn" onclick="showTab('supervisor')">⚖️ Supervisor Votes</button>
+        <button class="tab-btn" onclick="showTab('errors')">❌ Error Correction & ML</button>
+        <button class="tab-btn" onclick="showTab('gatekeeper')">🚪 Gatekeeper Audit</button>
+        <button class="tab-btn" onclick="showTab('sentinel')">🔷 Sentinel Status</button>
+        <button class="tab-btn" onclick="showTab('collaboration')">🤝 Collaboration</button>
+        <button class="tab-btn" onclick="showTab('knowledge')">📚 Knowledge Exchange</button>
+    </div>
+
+    <!-- Agents Tab -->
+    <div id="tab-agents" class="tab-content active">
+        <h3>🤖 Agents (Expandable – New agents auto-appear)</h3>
+        <button onclick="addDemoAgent()">➕ Add Demo Agent (Test Expandability)</button>
+        <div class="stats-grid" id="agentStats"></div>
+        <table class="data-table" id="agentsTable">
+            <thead><tr><th>Agent</th><th>Type</th><th>XP</th><th>Tokens</th><th>Trust Weight</th><th>Accuracy</th><th>Status</th></tr></thead>
+            <tbody id="agentsBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Telegram Tab -->
+    <div id="tab-telegram" class="tab-content">
+        <h3>📨 Telegram Signals</h3>
+        <div class="stats-grid" id="telegramStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Asset</th><th>Price</th><th>Confidence</th><th>Strength</th></tr></thead>
+            <tbody id="telegramBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Supervisor Tab -->
+    <div id="tab-supervisor" class="tab-content">
+        <h3>⚖️ Supervisor Vote Records</h3>
+        <div class="stats-grid" id="voteStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Agent</th><th>Vote</th><th>Confidence</th><th>Correct?</th><th>Error Type</th></tr></thead>
+            <tbody id="votesBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Error Correction & ML Tab -->
+    <div id="tab-errors" class="tab-content">
+        <h3>❌ Error Correction & ML Training</h3>
+        <button onclick="startTraining()">🔄 Start ML Training Cycle</button>
+        <div class="stats-grid" id="trainingStats"></div>
+        <h4>Training Cycles History</h4>
+        <table class="data-table" id="trainingTable">
+            <thead><tr><th>Cycle</th><th>Started</th><th>Pre-Accuracy</th><th>Post-Accuracy</th><th>Status</th></tr></thead>
+            <tbody id="trainingBody"></tbody>
+        </table>
+        <h4>Agent Errors</h4>
+        <table class="data-table" id="errorsTable">
+            <thead><tr><th>Agent</th><th>Category</th><th>Root Cause</th><th>Severity</th><th>Fixed?</th><th>Action</th></tr></thead>
+            <tbody id="errorsBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Gatekeeper Tab -->
+    <div id="tab-gatekeeper" class="tab-content">
+        <h3>🚪 Gatekeeper Audit – Three Pillars</h3>
+        <div class="stats-grid" id="gatekeeperStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Agent</th><th>Identity</th><th>Logic</th><th>Resource</th><th>Gate Status</th><th>Block Reason</th></tr></thead>
+            <tbody id="gatekeeperBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Sentinel Tab -->
+    <div id="tab-sentinel" class="tab-content">
+        <h3>🔷 Sentinel Status – Zero Error Enforcer</h3>
+        <div class="stats-grid" id="sentinelStats"></div>
+        <h4>Sentinel Mastery (Progress to Legendary)</h4>
+        <div id="masteryGrid" class="stats-grid"></div>
+        <h4>Veto Log</h4>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Target Agent</th><th>Veto Type</th><th>Reason</th></tr></thead>
+            <tbody id="vetoBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Collaboration Tab -->
+    <div id="tab-collaboration" class="tab-content">
+        <h3>🤝 Collaboration & Zero Error Metrics</h3>
+        <div class="stats-grid" id="collabStats"></div>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>Consensus %</th><th>Teamwork Score</th><th>Zero Error</th></tr></thead>
+            <tbody id="collabBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Knowledge Tab -->
+    <div id="tab-knowledge" class="tab-content">
+        <h3>📚 Knowledge Exchange</h3>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>From</th><th>To</th><th>Topic</th><th>XP Reward</th></tr></thead>
+            <tbody id="knowledgeBody"></tbody>
+        </table>
+        <h4>Agent Conversations</h4>
+        <table class="data-table">
+            <thead><tr><th>Time</th><th>From</th><th>To</th><th>Message</th></tr></thead>
+            <tbody id="conversationBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    async function fetchJSON(url) {
+        const res = await fetch(url);
+        return res.json();
+    }
+
+    // ========== AGENTS ==========
+    async function loadAgents() {
+        const data = await fetchJSON('/api/platform2/agents');
+        if (data.success && data.agents) {
+            let html = '', totalXP = 0, totalTokens = 0;
+            data.agents.forEach(a => {
+                totalXP += a.xp_points || 0;
+                totalTokens += a.token_balance || 0;
+                html += `<tr>
+                    <td><strong>${a.agent_name}</strong></td>
+                    <td>${a.agent_type || '-'}</td>
+                    <td>${a.xp_points || 0}</td>
+                    <td>${a.token_balance || 0}</td>
+                    <td>${((a.trust_weight || 0.2) * 100).toFixed(1)}%<div class="progress-bar"><div class="progress-fill" style="width:${((a.trust_weight || 0.2) * 100)}%"></div></div></td>
+                    <td>${a.vote_accuracy || 0}%</td>
+                    <td><span class="badge-success">Active</span></td>
+                </tr>`;
+            });
+            document.getElementById('agentsBody').innerHTML = html;
+            document.getElementById('agentStats').innerHTML = `
+                <div class="stat-card"><div class="stat-value">${data.agents.length}</div><div>Total Agents</div></div>
+                <div class="stat-card"><div class="stat-value">${totalXP}</div><div>Total XP</div></div>
+                <div class="stat-card"><div class="stat-value">${totalTokens}</div><div>Total Tokens</div></div>
+            `;
+        }
+    }
+
+    // ========== TELEGRAM ==========
+    async function loadTelegram() {
+        const data = await fetchJSON('/api/platform2/telegram_signals');
+        if (data.success && data.signals) {
+            let html = '';
+            data.signals.forEach(s => {
+                html += `<tr>
+                    <td>${new Date(s.received_at).toLocaleString()}</td>
+                    <td>${s.asset_type}</td>
+                    <td>$${s.current_price}</td>
+                    <td>${s.confidence_percent}%</td>
+                    <td><span class="${s.signal_strength === 'STRONG_SIGNAL' ? 'badge-success' : 'badge-warning'}">${s.signal_strength}</span></td>
+                </tr>`;
+            });
+            document.getElementById('telegramBody').innerHTML = html || '<tr><td colspan="5">No signals yet</td></tr>';
+        }
+    }
+
+    // ========== SUPERVISOR ==========
+    async function loadSupervisor() {
+        const votes = await fetchJSON('/api/platform2/supervisor_votes');
+        const accuracy = await fetchJSON('/api/platform2/vote_accuracy');
+        if (votes.success && votes.votes) {
+            let html = '';
+            votes.votes.forEach(v => {
+                html += `<tr>
+                    <td>${new Date(v.timestamp).toLocaleString()}</td>
+                    <td>${v.agent_name}</td>
+                    <td>${v.vote_cast}</td>
+                    <td>${v.confidence}%</td>
+                    <td>${v.was_correct ? '✅ Yes' : '❌ No'}</td>
+                    <td>${v.error_type || '-'}</td>
+                </tr>`;
+            });
+            document.getElementById('votesBody').innerHTML = html || '<tr><td colspan="6">No votes yet</td></tr>';
+        }
+        if (accuracy.success && accuracy.accuracy) {
+            let html = '';
+            accuracy.accuracy.forEach(a => {
+                html += `<div class="stat-card"><div class="stat-value">${a.accuracy}%</div><div>${a.agent_name}</div></div>`;
+            });
+            document.getElementById('voteStats').innerHTML = html;
+        }
+    }
+
+    // ========== ERRORS & TRAINING ==========
+    async function loadErrors() {
+        const errors = await fetchJSON('/api/platform2/agent_errors');
+        const training = await fetchJSON('/api/platform2/training_cycles');
+        
+        if (errors.success && errors.errors) {
+            let html = '';
+            errors.errors.forEach(e => {
+                html += `<tr>
+                    <td>${e.agent_name}</td>
+                    <td>${e.error_category}</td>
+                    <td>${e.root_cause || e.error_description}</td>
+                    <td>${e.severity}/10</td>
+                    <td>${e.is_fixed ? '✅ Fixed' : '❌ Pending'}</td>
+                    <td>${!e.is_fixed ? `<button onclick="fixError(${e.id})">Fix</button>` : '-'}</td>
+                </tr>`;
+            });
+            document.getElementById('errorsBody').innerHTML = html || '<tr><td colspan="6">No errors</td></tr>';
+        }
+        
+        if (training.success && training.cycles) {
+            let html = '';
+            training.cycles.forEach(c => {
+                html += `<tr>
+                    <td>#${c.cycle_number}</td>
+                    <td>${new Date(c.started_at).toLocaleString()}</td>
+                    <td>${c.pre_training_accuracy || '-'}%</td>
+                    <td>${c.post_training_accuracy || '-'}%</td>
+                    <td><span class="${c.status === 'COMPLETED' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+                </tr>`;
+            });
+            document.getElementById('trainingBody').innerHTML = html || '<tr><td colspan="5">No training cycles</td></tr>';
+        }
+    }
+
+    // ========== GATEKEEPER ==========
+    async function loadGatekeeper() {
+        const audits = await fetchJSON('/api/platform2/gatekeeper_audit');
+        const stats = await fetchJSON('/api/platform2/gatekeeper_stats');
+        
+        if (audits.success && audits.audits) {
+            let html = '';
+            audits.audits.forEach(a => {
+                html += `<tr>
+                    <td>${new Date(a.timestamp).toLocaleString()}</td>
+                    <td>${a.agent_name}</td>
+                    <td>${a.pillar1_identity_passed ? '✅' : '❌'}</td>
+                    <td>${a.pillar2_logic_passed ? '✅' : '❌'}</td>
+                    <td>${a.pillar3_resource_passed ? '✅' : '❌'}</td>
+                    <td><span class="${a.gate_status === 'OPEN' ? 'badge-success' : 'badge-danger'}">${a.gate_status}</span></td>
+                    <td>${a.block_reason || '-'}</td>
+                </tr>`;
+            });
+            document.getElementById('gatekeeperBody').innerHTML = html || '<tr><td colspan="7">No gatekeeper records</td></tr>';
+        }
+        if (stats.success && stats.stats) {
+            document.getElementById('gatekeeperStats').innerHTML = `
+                <div class="stat-card"><div class="stat-value">${stats.stats.gates_opened || 0}</div><div>Gates Opened</div></div>
+                <div class="stat-card"><div class="stat-value">${stats.stats.gates_blocked || 0}</div><div>Gates Blocked</div></div>
+            `;
+        }
+    }
+
+    // ========== SENTINEL ==========
+    async function loadSentinel() {
+        const status = await fetchJSON('/api/platform2/sentinel_status');
+        const vetos = await fetchJSON('/api/platform2/sentinel_veto_log');
+        
+        if (status.success) {
+            document.getElementById('sentinelStats').innerHTML = `
+                <div class="stat-card"><div class="stat-value">${status.veto_count || 0}</div><div>Total Vetos</div></div>
+            `;
+            if (status.mastery) {
+                let masteryHtml = '';
+                status.mastery.forEach(m => {
+                    masteryHtml += `<div class="stat-card"><div class="stat-value">${m.current_value}/${m.target_value}</div><div>${m.metric_name}</div></div>`;
+                });
+                document.getElementById('masteryGrid').innerHTML = masteryHtml || '<div class="stat-card">No mastery data</div>';
+            }
+        }
+        if (vetos.success && vetos.vetos) {
+            let html = '';
+            vetos.vetos.forEach(v => {
+                html += `<tr>
+                    <td>${new Date(v.timestamp).toLocaleString()}</td>
+                    <td>${v.target_agent || '-'}</td>
+                    <td>${v.veto_type}</td>
+                    <td>${v.veto_reason}</td>
+                </tr>`;
+            });
+            document.getElementById('vetoBody').innerHTML = html || '<tr><td colspan="4">No veto records</td></tr>';
+        }
+    }
+
+    // ========== COLLABORATION ==========
+    async function loadCollaboration() {
+        const data = await fetchJSON('/api/platform2/collaboration_metrics');
+        if (data.success && data.metrics) {
+            let html = '';
+            data.metrics.forEach(m => {
+                html += `<tr>
+                    <td>${new Date(m.timestamp).toLocaleString()}</td>
+                    <td>${m.consensus_percentage || 0}%</td>
+                    <td>${m.teamwork_score || 0}</td>
+                    <td>${m.zero_error_contribution ? '🏆 Yes' : '-'}</td>
+                </tr>`;
+            });
+            document.getElementById('collabBody').innerHTML = html || '<tr><td colspan="4">No collaboration metrics</td></tr>';
+        }
+    }
+
+    // ========== KNOWLEDGE ==========
+    async function loadKnowledge() {
+        const knowledge = await fetchJSON('/api/platform2/knowledge');
+        const conversations = await fetchJSON('/api/platform2/conversations');
+        
+        if (knowledge.success && knowledge.knowledge) {
+            let html = '';
+            knowledge.knowledge.forEach(k => {
+                html += `<tr>
+                    <td>${new Date(k.timestamp).toLocaleString()}</td>
+                    <td>${k.from_agent}</td>
+                    <td>${k.to_agent}</td>
+                    <td>${k.topic}</td>
+                    <td>+${k.xp_reward || 0}</td>
+                </tr>`;
+            });
+            document.getElementById('knowledgeBody').innerHTML = html || '<tr><td colspan="5">No knowledge exchanges</td></tr>';
+        }
+        if (conversations.success && conversations.conversations) {
+            let html = '';
+            conversations.conversations.forEach(c => {
+                html += `<tr>
+                    <td>${new Date(c.timestamp).toLocaleString()}</td>
+                    <td>${c.from_agent}</td>
+                    <td>${c.to_agent}</td>
+                    <td>${c.message}</td>
+                </tr>`;
+            });
+            document.getElementById('conversationBody').innerHTML = html || '<tr><td colspan="4">No conversations</td></tr>';
+        }
+    }
+
+    async function addDemoAgent() {
+        await fetch('/api/platform2/add_demo_agent', {method: 'POST'});
+        loadAgents();
+        alert('Demo agent added!');
+    }
+
+    async function fixError(id) {
+        await fetch('/api/platform2/correct_agent_error', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({error_id: id})
+        });
+        loadErrors();
+    }
+
+    async function startTraining() {
+        await fetch('/api/platform2/start_training', {method: 'POST'});
+        alert('Training cycle started!');
+        loadErrors();
+    }
+
+    // Load all data
+    loadAgents();
+    loadTelegram();
+    loadSupervisor();
+    loadErrors();
+    loadGatekeeper();
+    loadSentinel();
+    loadCollaboration();
+    loadKnowledge();
+    
+    // Auto-refresh every 15 seconds
+    setInterval(() => {
+        loadAgents();
+        loadTelegram();
+        loadSupervisor();
+        loadErrors();
+        loadGatekeeper();
+        loadSentinel();
+        loadCollaboration();
+        loadKnowledge();
+    }, 15000);
+</script>
+</body>
+</html>

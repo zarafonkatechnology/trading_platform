@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DeepSeek AI Teaching Center</title>
+    <style>
+        body { background: #0a0e27; color: white; font-family: monospace; padding: 20px; }
+        h1 { color: #ffd700; }
+        .panel { background: #16213e; padding: 20px; margin: 10px 0; border-radius: 10px; }
+        button { background: #ffd700; color: #0a0e27; padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .lesson-card { background: #0f3460; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4caf50; }
+        .agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 10px 0; }
+        .agent-card { background: #0f3460; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; }
+        .agent-card:hover { background: #1a1f3a; transform: scale(1.02); }
+        select, input { padding: 8px; margin: 5px; border-radius: 5px; background: #0f3460; color: white; border: 1px solid #ffd700; }
+    </style>
+</head>
+<body>
+    <h1>🧠 DeepSeek AI Teaching Center</h1>
+    <p>AI-powered personalized lessons for all 22 agents</p>
+
+    <div class="panel">
+        <h2>📚 Mass Teaching</h2>
+        <button onclick="teachAllAgents()" style="background: #9c27b0;">🎓 TEACH ALL 22 AGENTS (DeepSeek AI)</button>
+        <div id="massResult"></div>
+    </div>
+
+    <div class="panel">
+        <h2>🤝 Team Cooperation Training</h2>
+        <select id="teamSelect">
+            <option value="whale_team">🐋 Whale Team (G, P, Q)</option>
+            <option value="technical_team">📊 Technical Team (A, B, C, D)</option>
+            <option value="macro_team">🌍 Macro Team (I, L, N, O)</option>
+            <option value="volume_team">📈 Volume Team (J, K, T)</option>
+        </select>
+        <button onclick="teachCooperation()">🤝 Teach Cooperation Protocol</button>
+        <div id="coopResult"></div>
+    </div>
+
+    <div class="panel">
+        <h2>🎭 Deception Detection Training</h2>
+        <select id="deceptionAgent">
+            <option value="Agent_B">Agent_B (Mean Reversion)</option>
+            <option value="Agent_G">Agent_G (Whale Tracker)</option>
+            <option value="Agent_P">Agent_P (Whisper Analyst)</option>
+            <option value="Agent_Q">Agent_Q (Dark Pool Whale)</option>
+        </select>
+        <button onclick="teachDeception()">🎭 Teach Deception Detection</button>
+        <div id="deceptionResult"></div>
+    </div>
+
+    <div class="panel">
+        <h2>🎯 Individual Agent Training</h2>
+        <div class="agent-grid" id="agentGrid"></div>
+        <div id="individualResult"></div>
+    </div>
+
+    <div class="panel">
+        <h2>📊 Agent Learning Status</h2>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Load agent grid
+        async function loadAgents() {
+            const res = await fetch('/api/deepseek/agent_status');
+            const data = await res.json();
+            
+            if (data.success) {
+                let html = '';
+                for (const agent of data.agents) {
+                    html += `<div class="agent-card" onclick="teachIndividual('${agent.name}')">
+                        <strong>${agent.name}</strong><br>
+                        XP: ${agent.xp}<br>
+                        📚 ${agent.lessons_received} lessons
+                    </div>`;
+                }
+                document.getElementById('agentGrid').innerHTML = html;
+                
+                // Status table
+                let statusHtml = '<table border="1" cellpadding="8"><tr><th>Agent</th><th>XP</th><th>Tokens</th><th>Win Rate</th><th>Lessons</th></tr>';
+                for (const agent of data.agents) {
+                    statusHtml += `<tr>
+                        <td>${agent.name}</td>
+                        <td>${agent.xp}</td>
+                        <td>${agent.tokens}</td>
+                        <td>${agent.win_rate}%</td>
+                        <td>${agent.lessons_received}</td>
+                    </tr>`;
+                }
+                statusHtml += '</table>';
+                document.getElementById('status').innerHTML = statusHtml;
+            }
+        }
+
+        async function teachAllAgents() {
+            const resultDiv = document.getElementById('massResult');
+            resultDiv.innerHTML = '<div class="lesson-card">🧠 DeepSeek AI teaching all 22 agents...</div>';
+            
+            const res = await fetch('/api/deepseek/teach_all_agents', {method: 'POST'});
+            const data = await res.json();
+            
+            if (data.success) {
+                let html = `<div class="lesson-card">✅ TAUGHT ${data.agents_taught} agents! (${data.total_lessons} total lessons)</div>`;
+                for (const [agent, lessons] of Object.entries(data.lessons)) {
+                    html += `<div class="lesson-card">
+                        <strong>🎓 ${agent}</strong><br>
+                        ${lessons.map(l => `<div><em>${l.type}:</em> ${l.lesson.substring(0, 150)}...</div>`).join('')}
+                    </div>`;
+                }
+                resultDiv.innerHTML = html;
+                loadAgents();
+            } else {
+                resultDiv.innerHTML = `<div class="lesson-card">❌ Error: ${data.error}</div>`;
+            }
+        }
+
+        async function teachCooperation() {
+            const team = document.getElementById('teamSelect').value;
+            const resultDiv = document.getElementById('coopResult');
+            resultDiv.innerHTML = '<div class="lesson-card">🤝 DeepSeek creating cooperation protocol...</div>';
+            
+            const res = await fetch('/api/deepseek/teach_cooperation', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({group: team})
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                resultDiv.innerHTML = `<div class="lesson-card">
+                    <strong>🤝 ${data.group} Cooperation Protocol</strong><br>
+                    Agents: ${data.agents.join(', ')}<br>
+                    📖 ${data.protocol}<br>
+                    ✨ +${data.xp_awarded} XP each!
+                </div>`;
+                loadAgents();
+            }
+        }
+
+        async function teachDeception() {
+            const agent = document.getElementById('deceptionAgent').value;
+            const resultDiv = document.getElementById('deceptionResult');
+            resultDiv.innerHTML = '<div class="lesson-card">🎭 DeepSeek teaching deception detection...</div>';
+            
+            const res = await fetch('/api/deepseek/teach_deception', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({agent_name: agent})
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                resultDiv.innerHTML = `<div class="lesson-card">
+                    <strong>🎭 Deception Detection for ${data.agent}</strong><br>
+                    📖 ${data.lesson}<br>
+                    ✨ +${data.xp_awarded} XP!
+                </div>`;
+                loadAgents();
+            }
+        }
+
+        async function teachIndividual(agentName) {
+            const resultDiv = document.getElementById('individualResult');
+            resultDiv.innerHTML = `<div class="lesson-card">🧠 DeepSeek teaching ${agentName}...</div>`;
+            
+            const res = await fetch('/api/deepseek/teach_agent_strategy', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({agent_name: agentName})
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                resultDiv.innerHTML = `<div class="lesson-card">
+                    <strong>🎓 Lesson for ${data.agent}</strong><br>
+                    📖 ${data.lesson}<br>
+                    ✨ +${data.xp_awarded} XP!
+                </div>`;
+                loadAgents();
+            }
+        }
+
+        loadAgents();
+    </script>
+</body>
+</html>

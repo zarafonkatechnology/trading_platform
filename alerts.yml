@@ -1,0 +1,90 @@
+# Alert rules for Trading System
+groups:
+  - name: trading_alerts
+    interval: 30s
+    rules:
+      # Drawdown alerts
+      - alert: HighDrawdown
+        expr: max_drawdown_percent > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High drawdown detected"
+          description: "Maximum drawdown has exceeded 10%"
+      
+      - alert: CriticalDrawdown
+        expr: max_drawdown_percent > 15
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical drawdown!"
+          description: "Maximum
+ drawdown has exceeded 15%"
+            - alert: AgentDegradation
+        labels:
+          severity: warning
+        annotations: has dropped below 40%"
+      
+      # Agent performance alerts
+      - alert: AgentDegradation
+        expr: agent_win_rate < 45
+        for: 2h
+        labels:
+          summary: "Low win ratMaximume"
+          description: "Win rate has dropped below 40%"
+      
+      # Win rate alerts
+      - alert: LowWinRate
+        expr: trading_win_rate Maximum< 40
+        for: 1h
+      # Win rate alerts
+      - alert: LowWinRate
+        expr: trading_win_rate Maximum< 40
+        for: 1h
+        labels:
+          severity: warning
+        annotations: has dropped below 40%"
+      # Agent performance alerts
+
+        labels:
+          severity: warning
+        annotations: has dropped below 40%"
+      # Agent performance alerts
+
+      # Agent performance alerts
+      - alert: AgentDegradation
+        expr: agent_win_rate < 45
+        for: 2h
+        labels: has dropped below 40%"
+      
+      # Agent performance alerts
+      - alert: AgentDegradation
+        expr: agent_win_rate < 45
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent performance degradation"
+          description: "Agent {{ $labels.agent }} win rate dropped to {{ $value }}%"
+      
+      # System health alerts
+      - alert: SystemDown
+        expr: up{job="trading_system"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Trading system is down"
+          description: "The trading system has been unreachable for 1 minute"
+      
+      # Daily loss alert
+      - alert: DailyLossLimit
+        expr: trading_daily_pnl < -2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Daily loss limit reached"
+          description: "Daily PnL is {{ $value }}%"

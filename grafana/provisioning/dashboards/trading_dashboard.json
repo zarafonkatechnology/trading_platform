@@ -1,0 +1,62 @@
+{
+  "title": "Trading System Dashboard",
+  "uid": "trading-dashboard",
+  "panels": [
+    {
+      "title": "PnL Overview",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+      "targets": [
+        {"expr": "trading_pnl", "legendFormat": "Current PnL"}
+      ]
+    },
+    {
+      "title": "Win Rate",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+      "targets": [
+        {"expr": "trading_win_rate", "legendFormat": "Win Rate"}
+      ]
+    },
+    {
+      "title": "Drawdown",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+      "targets": [
+        {"expr": "max_drawdown_percent", "legendFormat": "Max Drawdown"}
+      ]
+    },
+    {
+      "title": "Agent Performance",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 4},
+      "targets": [
+        {"expr": "agent_win_rate", "format": "table"}
+      ]
+    },
+    {
+      "title": "Trading Activity",
+      "type": "graph",
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 4},
+      "targets": [
+        {"expr": "rate(trading_trades_total[1h])", "legendFormat": "{{action}}"}
+      ]
+    },
+    {
+      "title": "Market Conditions",
+      "type": "graph",
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 12},
+      "targets": [
+        {"expr": "market_price", "legendFormat": "{{asset}}"}
+      ]
+    },
+    {
+      "title": "System Health",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 12},
+      "targets": [
+        {"expr": "up{job=\"trading_system\"}", "legendFormat": "System Up"}
+      ]
+    }
+  ]
+}

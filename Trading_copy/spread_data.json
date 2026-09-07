@@ -1,0 +1,443 @@
+{
+  "spreads": {
+    "EURUSD": {
+      "symbol": "EURUSD",
+      "bid": 1.13668,
+      "ask": 1.13678,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.848146"
+    },
+    "GBPUSD": {
+      "symbol": "GBPUSD",
+      "bid": 1.3321,
+      "ask": 1.3322,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.848574"
+    },
+    "USDJPY": {
+      "symbol": "USDJPY",
+      "bid": 163.836,
+      "ask": 163.846,
+      "spread_points": 0.01,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.849014"
+    },
+    "USDCHF": {
+      "symbol": "USDCHF",
+      "bid": 0.81825,
+      "ask": 0.81835,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.849393"
+    },
+    "AUDUSD": {
+      "symbol": "AUDUSD",
+      "bid": 0.69774,
+      "ask": 0.69784,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.849756"
+    },
+    "USDCAD": {
+      "symbol": "USDCAD",
+      "bid": 1.40961,
+      "ask": 1.40971,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.850117"
+    },
+    "NZDUSD": {
+      "symbol": "NZDUSD",
+      "bid": 0.57851,
+      "ask": 0.57861,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.850473"
+    },
+    "EURGBP": {
+      "symbol": "EURGBP",
+      "bid": 0.85308,
+      "ask": 0.85318,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.850827"
+    },
+    "EURJPY": {
+      "symbol": "EURJPY",
+      "bid": 186.247,
+      "ask": 186.257,
+      "spread_points": 0.01,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.851191"
+    },
+    "EURCAD": {
+      "symbol": "EURCAD",
+      "bid": 1.60233,
+      "ask": 1.60243,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.851550"
+    },
+    "EURNZD": {
+      "symbol": "EURNZD",
+      "bid": 1.96368,
+      "ask": 1.96378,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.851909"
+    },
+    "EURCHF": {
+      "symbol": "EURCHF",
+      "bid": 0.93019,
+      "ask": 0.93029,
+      "spread_points": 0.0001,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.852271"
+    },
+    "GOLD": {
+      "symbol": "GOLD",
+      "bid": 4049.74,
+      "ask": 4049.84,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.852651"
+    },
+    "SILVER": {
+      "symbol": "SILVER",
+      "bid": 58.065,
+      "ask": 58.075,
+      "spread_points": 0.01,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.853018"
+    },
+    "#NASDAQ100": {
+      "symbol": "#NASDAQ100",
+      "bid": 28227.19,
+      "ask": 28227.29,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.853375"
+    },
+    "#DJ30": {
+      "symbol": "#DJ30",
+      "bid": 52047.95,
+      "ask": 52048.05,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.853734"
+    },
+    "#S&P500": {
+      "symbol": "#S&P500",
+      "bid": 7433.19,
+      "ask": 7433.29,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.854182"
+    },
+    "#RUSS2000": {
+      "symbol": "#RUSS2000",
+      "bid": 2939.57,
+      "ask": 2939.67,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.854646"
+    },
+    "#CAC40": {
+      "symbol": "#CAC40",
+      "bid": 8363.95,
+      "ask": 8364.05,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.855071"
+    },
+    "#DAX40": {
+      "symbol": "#DAX40",
+      "bid": 25120.45,
+      "ask": 25120.55,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.855584"
+    },
+    "#FTSE100": {
+      "symbol": "#FTSE100",
+      "bid": 10713.45,
+      "ask": 10713.55,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.855958"
+    },
+    "#NIKKEI225": {
+      "symbol": "#NIKKEI225",
+      "bid": 64756.95,
+      "ask": 64757.05,
+      "spread_points": 0.1,
+      "spread_pips": 1.0,
+      "timestamp": "2026-07-24T22:25:42.856327"
+    }
+  },
+  "history": {
+    "EURUSD": [
+      {
+        "symbol": "EURUSD",
+        "bid": 1.13668,
+        "ask": 1.13678,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.848146"
+      },
+      {
+        "symbol": "EURUSD",
+        "bid": 1.13668,
+        "ask": 1.13678,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.859051"
+      }
+    ],
+    "GBPUSD": [
+      {
+        "symbol": "GBPUSD",
+        "bid": 1.3321,
+        "ask": 1.3322,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.848574"
+      },
+      {
+        "symbol": "GBPUSD",
+        "bid": 1.3321,
+        "ask": 1.3322,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.859615"
+      }
+    ],
+    "USDJPY": [
+      {
+        "symbol": "USDJPY",
+        "bid": 163.836,
+        "ask": 163.846,
+        "spread_points": 0.01,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.849014"
+      },
+      {
+        "symbol": "USDJPY",
+        "bid": 163.836,
+        "ask": 163.846,
+        "spread_points": 0.01,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.860108"
+      }
+    ],
+    "USDCHF": [
+      {
+        "symbol": "USDCHF",
+        "bid": 0.81825,
+        "ask": 0.81835,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.849393"
+      },
+      {
+        "symbol": "USDCHF",
+        "bid": 0.81825,
+        "ask": 0.81835,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.860596"
+      }
+    ],
+    "AUDUSD": [
+      {
+        "symbol": "AUDUSD",
+        "bid": 0.69774,
+        "ask": 0.69784,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.849756"
+      },
+      {
+        "symbol": "AUDUSD",
+        "bid": 0.69774,
+        "ask": 0.69784,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.861201"
+      }
+    ],
+    "USDCAD": [
+      {
+        "symbol": "USDCAD",
+        "bid": 1.40961,
+        "ask": 1.40971,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.850117"
+      }
+    ],
+    "NZDUSD": [
+      {
+        "symbol": "NZDUSD",
+        "bid": 0.57851,
+        "ask": 0.57861,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.850473"
+      }
+    ],
+    "EURGBP": [
+      {
+        "symbol": "EURGBP",
+        "bid": 0.85308,
+        "ask": 0.85318,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.850827"
+      }
+    ],
+    "EURJPY": [
+      {
+        "symbol": "EURJPY",
+        "bid": 186.247,
+        "ask": 186.257,
+        "spread_points": 0.01,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.851191"
+      }
+    ],
+    "EURCAD": [
+      {
+        "symbol": "EURCAD",
+        "bid": 1.60233,
+        "ask": 1.60243,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.851550"
+      }
+    ],
+    "EURNZD": [
+      {
+        "symbol": "EURNZD",
+        "bid": 1.96368,
+        "ask": 1.96378,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.851909"
+      }
+    ],
+    "EURCHF": [
+      {
+        "symbol": "EURCHF",
+        "bid": 0.93019,
+        "ask": 0.93029,
+        "spread_points": 0.0001,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.852271"
+      }
+    ],
+    "GOLD": [
+      {
+        "symbol": "GOLD",
+        "bid": 4049.74,
+        "ask": 4049.84,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.852651"
+      }
+    ],
+    "SILVER": [
+      {
+        "symbol": "SILVER",
+        "bid": 58.065,
+        "ask": 58.075,
+        "spread_points": 0.01,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.853018"
+      }
+    ],
+    "#NASDAQ100": [
+      {
+        "symbol": "#NASDAQ100",
+        "bid": 28227.19,
+        "ask": 28227.29,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.853375"
+      }
+    ],
+    "#DJ30": [
+      {
+        "symbol": "#DJ30",
+        "bid": 52047.95,
+        "ask": 52048.05,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.853734"
+      }
+    ],
+    "#S&P500": [
+      {
+        "symbol": "#S&P500",
+        "bid": 7433.19,
+        "ask": 7433.29,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.854182"
+      }
+    ],
+    "#RUSS2000": [
+      {
+        "symbol": "#RUSS2000",
+        "bid": 2939.57,
+        "ask": 2939.67,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.854646"
+      }
+    ],
+    "#CAC40": [
+      {
+        "symbol": "#CAC40",
+        "bid": 8363.95,
+        "ask": 8364.05,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.855071"
+      }
+    ],
+    "#DAX40": [
+      {
+        "symbol": "#DAX40",
+        "bid": 25120.45,
+        "ask": 25120.55,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.855584"
+      }
+    ],
+    "#FTSE100": [
+      {
+        "symbol": "#FTSE100",
+        "bid": 10713.45,
+        "ask": 10713.55,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.855958"
+      }
+    ],
+    "#NIKKEI225": [
+      {
+        "symbol": "#NIKKEI225",
+        "bid": 64756.95,
+        "ask": 64757.05,
+        "spread_points": 0.1,
+        "spread_pips": 1.0,
+        "timestamp": "2026-07-24T22:25:42.856327"
+      }
+    ]
+  },
+  "timestamp": "2026-07-24T22:25:42.862551"
+}

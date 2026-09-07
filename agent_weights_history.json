@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-05-27T21:42:03.296673",
+  "agents": {
+    "Agent_A": {
+      "weight": 1.147366955142541,
+      "total_votes": 20,
+      "correct_votes": 15,
+      "recent_win_rate": 0.75
+    },
+    "Agent_B": {
+      "weight": 1.0540145284751272,
+      "total_votes": 20,
+      "correct_votes": 11,
+      "recent_win_rate": 0.55
+    },
+    "Agent_C": {
+      "weight": 0.8495848139949246,
+      "total_votes": 20,
+      "correct_votes": 7,
+      "recent_win_rate": 0.35
+    },
+    "Agent_D": {
+      "weight": 0.8495848139949246,
+      "total_votes": 20,
+      "correct_votes": 7,
+      "recent_win_rate": 0.35
+    },
+    "Agent_E": {
+      "weight": 0.8495848139949246,
+      "total_votes": 20,
+      "correct_votes": 7,
+      "recent_win_rate": 0.35
+    }
+  }
+}

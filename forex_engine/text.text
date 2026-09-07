@@ -1,0 +1,408 @@
+{
+  "samples": [
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.14,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "SELL",
+      "confidence": 65,
+      "price": 1.34,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 75,
+      "price": 1.145,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.14,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "SELL",
+      "confidence": 65,
+      "price": 1.34,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 75,
+      "price": 1.145,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.14,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "SELL",
+      "confidence": 65,
+      "price": 1.34,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 75,
+      "price": 1.145,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.14,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "SELL",
+      "confidence": 65,
+      "price": 1.34,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 75,
+      "price": 1.145,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.14,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "SELL",
+      "confidence": 65,
+      "price": 1.34,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 75,
+      "price": 1.145,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.14,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "SELL",
+      "confidence": 65,
+      "price": 1.34,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 75,
+      "price": 1.145,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.14,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "SELL",
+      "confidence": 65,
+      "price": 1.34,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "USDJPY",
+      "signal": "BUY",
+      "confidence": 72,
+      "price": 162.0,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "EURUSD",
+      "signal": "SELL",
+      "confidence": 68,
+      "price": 1.138,
+      "win": true,
+      "timestamp": "2026-07-15T18:40:00"
+    },
+    {
+      "pair": "GBPUSD",
+      "signal": "BUY",
+      "confidence": 70,
+      "price": 1.342,
+      "win": false,
+      "timestamp": "2026-07-15T18:40:00"
+    }
+  ],
+  "wins": 30,
+  "losses": 1,
+  "active": false,
+  "timestamp": "2026-07-21T17:02:35.386349"
+}

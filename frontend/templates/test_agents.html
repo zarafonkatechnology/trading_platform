@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Test</h1>
+    <pre id="output"></pre>
+    <script>
+        fetch('/api/platform2/agents')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('output').innerHTML = JSON.stringify(data, null, 2);
+            });
+    </script>
+</body>
+</html>

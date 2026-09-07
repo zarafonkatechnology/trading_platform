@@ -1,0 +1,65 @@
+{
+  "trades": [
+    {
+      "symbol": "EURUSD",
+      "action": "BUY",
+      "entry_price": 1.13825,
+      "exit_price": 1.1385,
+      "pnl": 2.5,
+      "status": "CLOSED",
+      "volume": 0.01,
+      "confidence": 85,
+      "timestamp": "2026-06-24T17:57:31.621741",
+      "close_reason": "TAKE_PROFIT"
+    },
+    {
+      "symbol": "EURUSD",
+      "action": "BUY",
+      "entry_price": 1.0,
+      "stop_loss": 0.999,
+      "take_profit": 1.002,
+      "volume": 0.01,
+      "confidence": 85,
+      "status": "EXECUTED",
+      "timestamp": "2026-06-24T18:00:07.850093",
+      "order_id": null
+    },
+    {
+      "symbol": "EURUSD",
+      "action": "BUY",
+      "entry_price": 1.13413,
+      "stop_loss": 1.1331300000000002,
+      "take_profit": 1.13613,
+      "volume": 0.01,
+      "confidence": 85,
+      "status": "EXECUTED",
+      "timestamp": "2026-06-24T18:00:37.466295",
+      "order_id": null
+    },
+    {
+      "symbol": "EURUSD",
+      "action": "BUY",
+      "entry_price": 1.13477,
+      "stop_loss": 1.1339700000000001,
+      "take_profit": 1.13637,
+      "volume": 0.01,
+      "confidence": 85,
+      "status": "EXECUTED",
+      "timestamp": "2026-06-24T18:05:45.709824",
+      "order_id": null
+    },
+    {
+      "symbol": "EURUSD",
+      "action": "BUY",
+      "entry_price": 1.0,
+      "stop_loss": 0.9992,
+      "take_profit": 1.0016,
+      "volume": 0.01,
+      "confidence": 85,
+      "status": "EXECUTED",
+      "timestamp": "2026-06-24T18:27:32.603434",
+      "order_id": null
+    }
+  ],
+  "last_updated": "2026-06-24T18:27:40.523773"
+}

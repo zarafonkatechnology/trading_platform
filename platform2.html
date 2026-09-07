@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Platform 2 - Agents</title>
+    <style>
+        body { font-family: Arial; background: #0a0e27; color: white; padding: 20px; }
+        h1 { color: #ffd700; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
+        th { background: #ffd700; color: black; }
+        button { background: #ffd700; color: black; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; margin: 20px 0; }
+        .stat { background: #1a1f3a; padding: 15px; margin: 10px 0; border-radius: 10px; }
+        .stat-value { font-size: 24px; color: #ffd700; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>📊 Platform 2 - Instructor Dashboard</h1>
+    <p>Database Expandability | Agent Management</p>
+
+    <button onclick="addAgent()">➕ Add Demo Agent</button>
+
+    <div class="stat" id="stats"></div>
+
+    <table id="agentTable">
+        <thead><tr><th>Agent</th><th>Type</th><th>XP</th><th>Tokens</th><th>Trust Weight</th><th>Accuracy</th></tr></thead>
+        <tbody id="agentBody"></tbody>
+    </table>
+
+    <script>
+        async function loadSupervisor() {
+    try {
+        const response = await fetch('/api/platform2/vote_records');
+        const data = await response.json();
+        console.log('Vote records:', data);
+        
+        if (data.success && data.votes && data.votes.length > 0) {
+            let html = '';
+            for (const v of data.votes) {
+                html += `<tr>
+                    <td>${new Date(v.timestamp).toLocaleString()}</td>
+                    <td>${v.agent_name}</td>
+                    <td>${v.vote_cast}</td>
+                    <td>${v.confidence}%</td>
+                    <td>${v.was_correct ? '✅ Yes' : '❌ No'}</td>
+                    <td>${v.error_type || '-'}</td>
+                    <td>${v.xp_gained ? '+' + v.xp_gained : v.xp_lost ? '-' + v.xp_lost : 0}</td>
+                </tr>`;
+            }
+            document.getElementById('voteTable').innerHTML = html;
+        } else {
+            document.getElementById('voteTable').innerHTML = '<tr><td colspan="7">No votes yet</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('voteTable').innerHTML = '<tr><td colspan="7">Error loading</td></tr>';
+    }
+}
+async function loadErrors() {
+    try {
+        const errors = await fetchJSON('/api/platform2/agent_errors');
+        const training = await fetchJSON('/api/platform2/training_cycles');
+        
+        if (errors.success && errors.errors) {
+            let html = '';
+            for (const e of errors.errors) {
+                let agentIcon = '';
+                if (e.agent_name === 'Agent_G') agentIcon = '🐋 ';
+                if (e.agent_name === 'Agent_H') agentIcon = '📐 ';
+                
+                html += `<tr>
+                    <td>${agentIcon}${e.agent_name}</td>
+                    <td>${e.error_category}</td>
+                    <td>${e.root_cause || e.error_description}</td>
+                    <td>${e.severity}/10</td>
+                    <td>${e.is_fixed ? '✅ Fixed' : '❌ Pending'}</td>
+                    <td>${!e.is_fixed ? `<button onclick="fixError(${e.id})">Fix</button>` : '-'}</td>
+                </tr>`;
+            }
+            document.getElementById('errorsTable').innerHTML = html;
+        }
+    } catch (error) {
+        console.error('Errors error:', error);
+    }
+}
+        async function loadAgents() {
+            try {
+                const res = await fetch('/api/platform2/agents');
+                const data = await res.json();
+                console.log('Data:', data);
+                
+                if (data.success && data.agents) {
+                    const agents = data.agents;
+                    let html = '';
+                    let totalXP = 0;
+                    let totalTokens = 0;
+                    
+                    agents.forEach(a => {
+                        totalXP += a.xp_points || 0;
+                        totalTokens += a.token_balance || 0;
+                        html += `<tr>
+                            <td><strong>${a.agent_name}</strong></td>
+                            <td>${a.agent_type || '-'}</td>
+                            <td>${a.xp_points || 0}</td>
+                            <td>${a.token_balance || 0}</td>
+                            <td>${((a.trust_weight || 0.2) * 100).toFixed(1)}%</td>
+                            <td>${a.vote_accuracy || 0}%</td>
+                        </tr>`;
+                    });
+                    
+                    document.getElementById('agentBody').innerHTML = html;
+                    document.getElementById('stats').innerHTML = `
+                        <div class="stat-value">${agents.length}</div>
+                        <div>Total Agents</div>
+                        <div class="stat-value">${totalXP}</div>
+                        <div>Total XP</div>
+                        <div class="stat-value">${totalTokens}</div>
+                        <div>Total Tokens</div>
+                    `;
+                } else {
+                    document.getElementById('agentBody').innerHTML = '<tr><td colspan="6">No agents found</td></tr>';
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('agentBody').innerHTML = '<tr><td colspan="6">Error loading agents</td></tr>';
+            }
+        }
+
+        async function addAgent() {
+            try {
+                const res = await fetch('/api/platform2/add_demo_agent', {method: 'POST'});
+                const data = await res.json();
+                if (data.success) {
+                    alert(`Added ${data.agent_name}!`);
+                    loadAgents();
+                }
+            } catch (err) {
+                alert('Error adding agent');
+            }
+        }
+
+        loadAgents();
+    </script>
+</body>
+</html>

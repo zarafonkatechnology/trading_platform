@@ -1,0 +1,60 @@
+import requests
+from datetime import datetime
+from .base_agent import BaseAgent
+
+class SentimentMaster(BaseAgent):
+    """Agent I - Sentiment Analysis Master"""
+    
+    def __init__(self):
+        super().__init__(
+            name="Agent_I",
+            agent_type="Sentiment Master",
+            specialization="News & Social Media Sentiment Analysis"
+        )        
+        self.news_sources = ['forexfactory', 'dailyfx', 'bloomberg']
+        
+    def analyze(self, signal_data):
+        """Analyze market sentiment from news and social media"""
+        pair = signal_data.get('pair', 'EURUSD')
+        
+        # Simulate sentiment analysis
+        # In production, integrate with News API, Twitter API, etc.
+        
+        # Mock sentiment score (-100 to +100)
+        sentiment_score = self._get_mock_sentiment(pair)
+        
+        if sentiment_score > 30:
+            vote = 'BUY'
+            confidence = min(50 + sentiment_score * 0.5, 95)
+            reasoning = f"Bullish sentiment detected: {sentiment_score:.0f}/100"
+        elif sentiment_score < -30:
+            vote = 'SELL'
+            confidence = min(50 + abs(sentiment_score) * 0.5, 95)
+            reasoning = f"Bearish sentiment detected: {sentiment_score:.0f}/100"
+        else:
+            vote = 'HOLD'
+            confidence = 60
+            reasoning = f"Neutral sentiment: {sentiment_score:.0f}/100"
+        
+        return {
+            'agent': self.name,
+            'type': self.agent_type,
+            'vote': vote,
+            'confidence': confidence,
+            'reasoning': reasoning,
+            'sentiment_score': sentiment_score,
+            'timestamp': datetime.now().isoformat()
+        }    
+
+    def _get_mock_sentiment(self, pair):
+        """Mock sentiment - replace with real API"""
+        import random
+        # In production: fetch from News API, Reddit, Twitter
+        return random.randint(-100, 100)
+        
+    
+    def learn_from_deepseek(self, lesson):
+        """Receive lessons from DeepSeek"""
+        self.xp += 30
+        self.lessons_learned.append(lesson)
+        return f"{self.name} learned: {lesson[:100]}..."

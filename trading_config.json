@@ -1,0 +1,30 @@
+{
+    "daily_limits": {
+        "max_daily_trades": 10,
+        "max_daily_volume": 5.0,
+        "max_daily_loss": -500,
+        "max_daily_risk": -300
+    },
+    "position_limits": {
+        "max_position_size": 1.0,
+        "min_position_size": 0.01,
+        "risk_per_trade": 0.02,
+        "max_concurrent_positions": 5,
+        "max_symbol_exposure": 0.25
+    },
+    "risk_reward": {
+        "min_risk_reward_ratio": 1.5,
+        "default_tp_multiplier": 2.0,
+        "trailing_stop_activation": 0.5
+    },
+    "confidence_thresholds": {
+        "min_confidence_to_trade": 70,
+        "strong_signal_threshold": 85,
+        "position_size_multiplier": {
+            "70": 0.5,
+            "80": 0.75,
+            "85": 1.0,
+            "90": 1.25
+        }
+    }
+}

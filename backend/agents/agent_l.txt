@@ -1,0 +1,99 @@
+from datetime import datetime
+import random
+from typing import Dict
+from .base_agent import BaseAgent
+
+class FundamentalMaster(BaseAgent):
+    """Agent L - Fundamental Analysis"""
+    
+    def __init__(self):
+        super().__init__(
+            name="Agent_L",
+            agent_type="Economic Calendar",
+            specialization="Economic Calendar & Rate Decisions"
+        )        
+    def analyze(self, signal_data):
+        """Analyze economic data and central bank policies"""
+        pair = signal_data.get('pair', 'EURUSD')
+        
+        # Mock fundamental analysis
+        economic_score = self._get_economic_score(pair)
+        rate_hike_probability = self._get_rate_hike_probability(pair)
+        
+        total_score = economic_score + (rate_hike_probability * 0.5)
+        
+        if total_score > 60:
+            vote = 'BUY'
+            confidence = min(75, total_score)
+            reasoning = f"Strong fundamentals: Eco:{economic_score}, RateHike:{rate_hike_probability}%"
+        elif total_score < 40:
+            vote = 'SELL'
+            confidence = min(75, 100 - total_score)
+            reasoning = f"Weak fundamentals: Eco:{economic_score}, RateHike:{rate_hike_probability}%"
+        else:
+            vote = 'HOLD'
+            confidence = 60
+            reasoning = "Mixed fundamentals - Wait for clarity"
+        
+        return {
+            'agent': self.name,
+            'type': self.agent_type,
+            'vote': vote,
+            'confidence': confidence,
+            'reasoning': reasoning,
+            'economic_score': economic_score,
+            'rate_hike_probability': rate_hike_probability,
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _get_economic_score(self, pair):
+        """Get economic score from recent data"""
+        import random
+        # In production: fetch from economic calendar API
+        return random.randint(30, 80)
+    
+    def _get_rate_hike_probability(self, pair):
+        """Get central bank rate hike probability"""
+        import random
+        return random.randint(10, 70)
+def monte_carlo_forecast(self, current_price: float, volatility: float = 0.005, 
+                         n_sims: int = 1000, horizon: int = 20) -> Dict:
+    """
+    Simulate future price paths and predict cloud position probability.
+    """
+    outcomes = {'above_cloud': 0, 'inside_cloud': 0, 'below_cloud': 0}
+    
+    for _ in range(n_sims):
+        price = current_price
+        path = [price]
+        for _ in range(horizon):
+            price *= (1 + random.gauss(0, volatility))
+            path.append(price)
+        
+        # Get Ichimoku cloud at end of simulation (simplified)
+        final_price = path[-1]
+        # Assume cloud top/bottom based on current price ± 2%
+        cloud_top = current_price * 1.01
+        cloud_bottom = current_price * 0.99
+        
+        if final_price > cloud_top:
+            outcomes['above_cloud'] += 1
+        elif final_price < cloud_bottom:
+            outcomes['below_cloud'] += 1
+        else:
+            outcomes['inside_cloud'] += 1
+    
+    probs = {k: round(v/n_sims*100, 1) for k, v in outcomes.items()}
+    
+    # Determine vote based on most probable outcome
+    if probs['above_cloud'] > 60:
+        vote = 'BUY'
+        conf = probs['above_cloud']
+    elif probs['below_cloud'] > 60:
+        vote = 'SELL'
+        conf = probs['below_cloud']
+    else:
+        vote = 'HOLD'
+        conf = probs['inside_cloud']
+    
+    return {'vote': vote, 'confidence': conf, 'probabilities': probs}

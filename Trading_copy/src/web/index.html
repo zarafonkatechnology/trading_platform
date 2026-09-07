@@ -1,0 +1,261 @@
+<!-- src/web/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Trading Platform 2026</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <div id="app">
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="url(#brandGradient)"/>
+                        <path d="M10 22L16 10L22 22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M14 18H18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="brandGradient" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#00d4ff"/>
+                                <stop offset="100%" stop-color="#7b2ffc"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="brand-text">NEXUS</span>
+                <span class="brand-badge">v3.0</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="trading">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Trading</span>
+                </a>
+                <a href="#" class="nav-item" data-page="positions">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Positions</span>
+                    <span class="nav-badge" id="positionCount">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="signals">
+                    <i class="fas fa-bell"></i>
+                    <span>Signals</span>
+                    <span class="nav-badge pulse" id="signalCount">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="history">
+                    <i class="fas fa-clock-rotate"></i>
+                    <span>History</span>
+                </a>
+                <a href="#" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="connection-status">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">Connected</span>
+                </div>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Trader&background=7b2ffc&color=fff&size=40" alt="Profile">
+                    <div class="user-info">
+                        <span class="user-name">Trader Pro</span>
+                        <span class="user-role">Premium</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
+            <!-- ===== HEADER ===== -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 class="page-title">Dashboard</h1>
+                    <span class="page-subtitle">Live Market Overview</span>
+                </div>
+                <div class="header-right">
+                    <div class="header-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search symbols..." id="searchInput">
+                    </div>
+                    <button class="header-btn" id="refreshBtn" title="Refresh">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="header-btn" id="notifBtn" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-dot"></span>
+                    </button>
+                    <div class="header-time" id="liveTime">
+                        <i class="far fa-clock"></i>
+                        <span id="timeDisplay">--:--:--</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ===== STATS ROW ===== -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Balance</span>
+                        <span class="stat-value" id="balance">$0.00</span>
+                    </div>
+                    <div class="stat-change positive">
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Equity</span>
+                        <span class="stat-value" id="equity">$0.00</span>
+                    </div>
+                    <div class="stat-change positive">
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-arrow-trend-up"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">P&L Today</span>
+                        <span class="stat-value" id="pnl">$0.00</span>
+                    </div>
+                    <div class="stat-change positive">
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon gold">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Win Rate</span>
+                        <span class="stat-value" id="winRate">0%</span>
+                    </div>
+                    <div class="stat-change positive">
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Open Positions</span>
+                        <span class="stat-value" id="openPositions">0</span>
+                    </div>
+                    <div class="stat-change neutral">
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon cyan">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">AI Signals</span>
+                        <span class="stat-value" id="aiSignals">0</span>
+                    </div>
+                    <div class="stat-change positive">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== CHART SECTION ===== -->
+            <section class="chart-section">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <h3>Market Overview</h3>
+                            <span class="chart-subtitle">Real-time price action</span>
+                        </div>
+                        <div class="chart-controls">
+                            <button class="time-btn active" data-period="1H">1H</button>
+                            <button class="time-btn" data-period="4H">4H</button>
+                            <button class="time-btn" data-period="1D">1D</button>
+                            <button class="time-btn" data-period="1W">1W</button>
+                            <button class="time-btn" data-period="1M">1M</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="marketChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== PRICE GRID ===== -->
+            <section class="prices-section">
+                <div class="section-header">
+                    <h3>Live Prices</h3>
+                    <div class="section-controls">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="forex">Forex</button>
+                        <button class="filter-btn" data-filter="indices">Indices</button>
+                        <button class="filter-btn" data-filter="metals">Metals</button>
+                        <button class="filter-btn" data-filter="energy">Energy</button>
+                    </div>
+                </div>
+                <div class="price-grid" id="priceGrid">
+                    <!-- Prices loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- ===== SIGNALS & ACTIVITY ===== -->
+            <section class="activity-section">
+                <div class="activity-card signals-card">
+                    <div class="card-header">
+                        <h3>AI Signals</h3>
+                        <span class="card-badge" id="signalBadge">Active</span>
+                    </div>
+                    <div class="signal-feed" id="signalFeed">
+                        <div class="signal-placeholder">
+                            <i class="fas fa-robot"></i>
+                            <p>Waiting for signals...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="activity-card positions-card">
+                    <div class="card-header">
+                        <h3>Open Positions</h3>
+                        <span class="card-badge" id="positionBadge">0</span>
+                    </div>
+                    <div class="positions-list" id="positionsList">
+                        <div class="position-placeholder">
+                            <i class="fas fa-briefcase"></i>
+                            <p>No open positions</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script src="js/api.js"></script>
+    <script src="js/websocket.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

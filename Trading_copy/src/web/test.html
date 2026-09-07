@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #0a0e1a; color: #e0e0e0; }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        pre { background: #1a1f3a; padding: 10px; border-radius: 8px; overflow: auto; max-height: 300px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 API Connection Test</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        async function testEndpoint(url, label) {
+            try {
+                log(`\n📡 Testing: ${label}`, 'info');
+                log(`   URL: ${url}`, 'info');
+                
+                const response = await fetch(url);
+                log(`   Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`   ✅ Success! Data keys: ${Object.keys(data).join(', ')}`, 'success');
+                    if (data.prices || data.data) {
+                        const prices = data.prices || data.data || {};
+                        const count = Object.keys(prices).length;
+                        log(`   📊 Found ${count} symbols`, 'success');
+                        if (count > 0) {
+                            const sample = Object.keys(prices).slice(0, 5);
+                            log(`   Sample: ${sample.join(', ')}`, 'info');
+                        }
+                    }
+                } else {
+                    const text = await response.text();
+                    log(`   ❌ Failed: ${text.substring(0, 100)}`, 'error');
+                }
+            } catch (error) {
+                log(`   ❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runTests() {
+            log('🚀 Starting API Tests...', 'info');
+            log(`📍 Current page: ${window.location.href}`, 'info');
+            log(`📍 Current origin: ${window.location.origin}`, 'info');
+
+            // Test different URLs
+            await testEndpoint('/api/v1/controllers/forex/prices', 'Forex Prices (relative)');
+            await testEndpoint('/api/v1/controllers/all/prices', 'All Prices (relative)');
+            await testEndpoint('/api/v1/health', 'Health Check (relative)');
+            
+            // Test with explicit port 8000
+            await testEndpoint('http://localhost:8000/api/v1/controllers/forex/prices', 'Forex Prices (localhost:8000)');
+            await testEndpoint('http://localhost:8000/api/v1/health', 'Health Check (localhost:8000)');
+
+            // Check what port the page is on
+            log(`\n📋 Current page is on port: ${window.location.port || '80'}`, 'info');
+            log(`📋 API should be on port: 8000`, 'info');
+            
+            if (window.location.port !== '8000' && window.location.port !== '') {
+                log(`⚠️ Page is on port ${window.location.port}, but API is on port 8000. You need to open the page from port 8000.`, 'error');
+                log(`💡 Open: http://localhost:8000/client_dashboard.html`, 'info');
+            }
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+"""
+Agent_M - Market Profile Master
+Analyzes TPO (Time Price Opportunity) and Value Area
+"""
+
+from typing import Dict
+from datetime import datetime, timedelta
+import random
+from .base_agent import BaseAgent
+
+class MarketProfileMaster(BaseAgent):
+    """Agent M - Market Profile Analysis"""
+    
+    def __init__(self):
+        super().__init__(
+            name="Agent_M",
+            agent_type="Market Profile Master",
+            specialization="Analyzes TPO (Time Price Opportunity) and Value Area"
+        )       
+        self.value_area_high = None
+        self.value_area_low = None
+        self.poc = None  # Point of Control
+        
+    def analyze(self, signal_data):
+        """Analyze market profile and value area"""
+        pair = signal_data.get('pair', 'EURUSD')
+        current_price = signal_data.get('price', 1.0950)
+        
+        # Calculate market profile metrics
+        profile = self._calculate_market_profile(pair, current_price)
+        
+        # Determine vote based on price relative to value area
+        if current_price > profile['value_area_high']:
+            vote = 'SELL'  # Overbought - price above value area
+            confidence = min(85, 60 + (current_price - profile['value_area_high']) * 100)
+            reasoning = f"Price above Value Area High ({profile['value_area_high']:.5f}) - Overextended"
+            
+        elif current_price < profile['value_area_low']:
+            vote = 'BUY'   # Oversold - price below value area
+            confidence = min(85, 60 + (profile['value_area_low'] - current_price) * 100)
+            reasoning = f"Price below Value Area Low ({profile['value_area_low']:.5f}) - Discount zone"
+            
+        elif abs(current_price - profile['poc']) < 0.0005:
+            vote = 'HOLD'  # At Point of Control - equilibrium
+            confidence = 50
+            reasoning = f"Price at Point of Control ({profile['poc']:.5f}) - Fair value"
+            
+        elif current_price > profile['poc']:
+            vote = 'SELL' if profile['volume_profile'] == 'decreasing' else 'HOLD'
+            confidence = 65
+            reasoning = f"Above POC with {profile['volume_profile']} volume"
+            
+        else:
+            vote = 'BUY' if profile['volume_profile'] == 'increasing' else 'HOLD'
+            confidence = 65
+            reasoning = f"Below POC with {profile['volume_profile']} volume"
+        
+        return {
+            'agent': self.name,
+            'type': self.agent_type,
+            'vote': vote,
+            'confidence': confidence,
+            'reasoning': reasoning,
+            'market_profile': profile,
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _calculate_market_profile(self, pair, current_price):
+        """Calculate market profile metrics"""
+        # In production: fetch from tick data or volume profile API
+        # For demo: generate realistic values
+        
+        # Value Area contains 70% of volume
+        value_area_width = random.uniform(0.001, 0.003)
+        
+        return {
+            'value_area_high': round(current_price + value_area_width, 5),
+            'value_area_low': round(current_price - value_area_width, 5),
+            'poc': round(current_price + random.uniform(-0.0005, 0.0005), 5),
+            'volume_profile': random.choice(['increasing', 'decreasing', 'flat']),
+            'value_area_volume_pct': random.randint(65, 75),
+            'total_tpo_count': random.randint(200, 500),
+            'initials': random.choice(['A', 'B', 'C', 'D'])
+        }
+    
+    def find_value_area(self, price_levels):
+        """Find value area from price levels"""
+        # Sort by volume
+        sorted_levels = sorted(price_levels, key=lambda x: x['volume'], reverse=True)
+        
+        total_volume = sum(l['volume'] for l in price_levels)
+        cum_volume = 0
+        value_levels = []
+        
+        for level in sorted_levels:
+            cum_volume += level['volume']
+            value_levels.append(level['price'])
+            if cum_volume >= total_volume * 0.7:
+                break
+        
+        return {
+            'high': max(value_levels),
+            'low': min(value_levels),
+            'poc': sorted_levels[0]['price']
+        }
+def monte_carlo_forecast(self, current_price: float, volatility: float = 0.005, 
+                         n_sims: int = 1000, horizon: int = 20) -> Dict:
+    """
+    Simulate future price paths and predict cloud position probability.
+    """
+    outcomes = {'above_cloud': 0, 'inside_cloud': 0, 'below_cloud': 0}
+    
+    for _ in range(n_sims):
+        price = current_price
+        path = [price]
+        for _ in range(horizon):
+            price *= (1 + random.gauss(0, volatility))
+            path.append(price)
+        
+        # Get Ichimoku cloud at end of simulation (simplified)
+        final_price = path[-1]
+        # Assume cloud top/bottom based on current price ± 2%
+        cloud_top = current_price * 1.01
+        cloud_bottom = current_price * 0.99
+        
+        if final_price > cloud_top:
+            outcomes['above_cloud'] += 1
+        elif final_price < cloud_bottom:
+            outcomes['below_cloud'] += 1
+        else:
+            outcomes['inside_cloud'] += 1
+    
+    probs = {k: round(v/n_sims*100, 1) for k, v in outcomes.items()}
+    
+    # Determine vote based on most probable outcome
+    if probs['above_cloud'] > 60:
+        vote = 'BUY'
+        conf = probs['above_cloud']
+    elif probs['below_cloud'] > 60:
+        vote = 'SELL'
+        conf = probs['below_cloud']
+    else:
+        vote = 'HOLD'
+        conf = probs['inside_cloud']
+    
+    return {'vote': vote, 'confidence': conf, 'probabilities': probs}

@@ -1,0 +1,8 @@
+/openapi.json ['GET', 'HEAD'] openapi
+/docs ['GET', 'HEAD'] swagger_ui_html
+/docs/oauth2-redirect ['GET', 'HEAD'] swagger_ui_redirect
+/redoc ['GET', 'HEAD'] redoc_html
+ [] web
+/ ['GET'] root
+/health ['GET'] health_check
+/ping ['GET'] ping

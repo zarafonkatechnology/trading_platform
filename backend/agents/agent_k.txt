@@ -1,0 +1,103 @@
+from datetime import datetime
+import random
+from typing import Dict
+from .base_agent import BaseAgent
+class IchimokuExpert(BaseAgent):
+    """Agent K - Ichimoku Cloud Analysis"""
+    
+    def __init__(self):
+        super().__init__(
+            name="Agent_K",
+            agent_type="Ichimoku Cloud",
+            specialization="Ichimoku Cloud & Kumo Breakouts"
+        )        
+    def analyze(self, signal_data):
+        """Analyze Ichimoku Cloud signals"""
+        pair = signal_data.get('pair', 'EURUSD')
+        current_price = signal_data.get('price', 1.0950)
+        
+        # Mock Ichimoku calculations
+        signals = self._calculate_ichimoku_signals(pair, current_price)
+        
+        # Tenkan/Kijun crossover
+        if signals['tk_cross'] == 'bullish':
+            vote = 'BUY'
+            confidence = 80
+            reasoning = "Bullish TK cross with price above cloud"
+        elif signals['tk_cross'] == 'bearish':
+            vote = 'SELL'
+            confidence = 80
+            reasoning = "Bearish TK cross with price below cloud"
+        elif signals['price_vs_cloud'] == 'above':
+            vote = 'BUY'
+            confidence = 70
+            reasoning = "Price above Ichimoku Cloud - Bullish trend"
+        elif signals['price_vs_cloud'] == 'below':
+            vote = 'SELL'
+            confidence = 70
+            reasoning = "Price below Ichimoku Cloud - Bearish trend"
+        else:
+            vote = 'HOLD'
+            confidence = 50
+            reasoning = "Inside cloud - Wait for breakout"
+        
+        return {
+            'agent': self.name,
+            'type': self.agent_type,
+            'vote': vote,
+            'confidence': confidence,
+            'reasoning': reasoning,
+            'ichimoku_signals': signals,
+            'timestamp': datetime.now().isoformat()
+        }
+    
+    def _calculate_ichimoku_signals(self, pair, price):
+        """Mock Ichimoku calculations"""
+        import random
+        return {
+            'tk_cross': random.choice(['bullish', 'bearish', 'none']),
+            'price_vs_cloud': random.choice(['above', 'below', 'inside']),
+            'cloud_color': random.choice(['green', 'red']),
+            'lagging_span': random.choice(['above', 'below'])
+        }
+def monte_carlo_forecast(self, current_price: float, volatility: float = 0.005, 
+                         n_sims: int = 1000, horizon: int = 20) -> Dict:
+    """
+    Simulate future price paths and predict cloud position probability.
+    """
+    outcomes = {'above_cloud': 0, 'inside_cloud': 0, 'below_cloud': 0}
+    
+    for _ in range(n_sims):
+        price = current_price
+        path = [price]
+        for _ in range(horizon):
+            price *= (1 + random.gauss(0, volatility))
+            path.append(price)
+        
+        # Get Ichimoku cloud at end of simulation (simplified)
+        final_price = path[-1]
+        # Assume cloud top/bottom based on current price ± 2%
+        cloud_top = current_price * 1.01
+        cloud_bottom = current_price * 0.99
+        
+        if final_price > cloud_top:
+            outcomes['above_cloud'] += 1
+        elif final_price < cloud_bottom:
+            outcomes['below_cloud'] += 1
+        else:
+            outcomes['inside_cloud'] += 1
+    
+    probs = {k: round(v/n_sims*100, 1) for k, v in outcomes.items()}
+    
+    # Determine vote based on most probable outcome
+    if probs['above_cloud'] > 60:
+        vote = 'BUY'
+        conf = probs['above_cloud']
+    elif probs['below_cloud'] > 60:
+        vote = 'SELL'
+        conf = probs['below_cloud']
+    else:
+        vote = 'HOLD'
+        conf = probs['inside_cloud']
+    
+    return {'vote': vote, 'confidence': conf, 'probabilities': probs}

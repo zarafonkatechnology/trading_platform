@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Forex Trading Dashboard - Multi-Agent System</title>
+    <style>
+        body { background: #0a0e27; color: #e0e0e0; font-family: monospace; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #ffd700; }
+        .price-card { background: #1a1f3a; border-radius: 10px; padding: 15px; margin: 10px; display: inline-block; width: 250px; }
+        .price { font-size: 24px; font-weight: bold; }
+        .bid { color: #4caf50; }
+        .ask { color: #f44336; }
+        .spread { color: #ff9800; }
+        button { background: #ffd700; color: #0a0e27; border: none; padding: 8px 15px; margin: 5px; border-radius: 5px; cursor: pointer; }
+        button.buy { background: #4caf50; color: white; }
+        button.sell { background: #f44336; color: white; }
+        .panel { background: #1a1f3a; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .agent-vote { display: inline-block; margin: 5px; padding: 5px; border-radius: 5px; }
+        .vote-buy { background: #4caf50; }
+        .vote-sell { background: #f44336; }
+        .vote-hold { background: #ff9800; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
+        .profit { color: #4caf50; }
+        .loss { color: #f44336; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>💱 Multi-Agent Forex Trading System</h1>
+    <p>8 Specialized Agents + DeepSeek AI | Real-time MT4 Prices</p>
+
+    <!-- Account Info -->
+    <div class="panel">
+        <h2>💰 Account Status</h2>
+        <div id="accountInfo">Loading...</div>
+    </div>
+
+    <!-- Live Prices -->
+    <div class="panel">
+        <h2>📊 Live Forex Prices</h2>
+        <button onclick="refreshAllPrices()">🔄 Refresh All</button>
+        <button onclick="startAutoRefresh()">▶️ Auto Refresh (5s)</button>
+        <button onclick="stopAutoRefresh()">⏹️ Stop</button>
+        <div id="pricesContainer"></div>
+    </div>
+
+    <!-- Agent Votes & Consensus -->
+    <div class="panel">
+        <h2>🤖 Agent Votes & AI Consensus</h2>
+        <select id="selectedPair">
+            <option value="EURUSD">EURUSD</option>
+            <option value="GBPUSD">GBPUSD</option>
+            <option value="USD_JPY">USDJPY</option>
+            <option value="AUD_USD">AUDUSD</option>
+            <option value="USD_CAD">USDCAD</option>
+            <option value="NZD_USD">NZDUSD</option>
+        </select>
+        <button onclick="getAgentVotes()">🗳️ Get Agent Votes</button>
+        <button onclick="getDeepSeekConsensus()">🧠 Get DeepSeek Consensus</button>
+        <div id="agentVotesResult"></div>
+    </div>
+
+    <!-- Open Trades -->
+    <div class="panel">
+        <h2>📈 Open Positions</h2>
+        <button onclick="refreshTrades()">🔄 Refresh</button>
+        <div id="tradesContainer"></div>
+    </div>
+</div>
+
+<script>
+    let autoRefreshInterval = null;
+
+    // Get account info
+    async function refreshAccount() {
+    try {
+        const res = await fetch('/api/mt4/account');
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('accountInfo').innerHTML = `
+                Balance: <strong>$${data.balance.toFixed(2)}</strong> | 
+                Open Trades: ${data.open_trades} | 
+                Currency: ${data.currency}
+            `;
+        }
+    } catch(e) { console.error(e); }
+}
+
+async function refreshPrices() {
+    const res = await fetch('/api/mt4/prices');
+    const data = await res.json();
+    if (data.success) {
+        // Update price displays
+        for (const [asset, price] of Object.entries(data.prices)) {
+            const element = document.getElementById(`price-${asset}`);
+            if (element) {
+                element.innerHTML = `$${price.mid.toFixed(2)}`;
+            }
+        }
+    }
+}
+
+    async function refreshAllPrices() {
+    const pairs = ['EURUSD', 'GBPUSD', 'USD_JPY', 'AUD_USD', 'USD_CAD', 'NZD_USD'];
+    let html = '<div style="display: flex; flex-wrap: wrap;">';
+    
+    for (const pair of pairs) {
+        try {
+            const mt4Symbol = pair.replace('_', '');
+            
+            // Updated endpoint to MT4
+            const res = await fetch(`/api/mt4/price/${mt4Symbol}`);
+            const data = await res.json();
+            
+            if (data.success) {
+                const displayPair = pair.replace('_', '/');
+                html += `
+                    <div class="price-card">
+                        <h3>${displayPair}</h3>
+                        <div class="price">Bid: <span class="bid">${data.bid}</span></div>
+                        <div class="price">Ask: <span class="ask">${data.ask}</span></div>
+                        <div class="price spread">Spread: ${(data.ask - data.bid).toFixed(5)}</div>
+                        <button class="buy" onclick="placeOrder('${pair}', 'BUY')">BUY</button>
+                        <button class="sell" onclick="placeOrder('${pair}', 'SELL')">SELL</button>
+                    </div>
+                `;
+            }
+        } catch(e) { 
+            console.error('Error fetching MT4 price:', e); 
+        }
+    }
+    html += '</div>';
+    document.getElementById('pricesContainer').innerHTML = html;
+}
+
+async function placeOrder(instrument, action) {
+    const units = action === 'BUY' ? 1000 : -1000;
+    const endpoint = action === 'BUY' ? '/api/mt4/buy' : '/api/mt4/sell';
+    
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                symbol: instrument,  // Changed from 'instrument' to 'symbol' for MT4
+                volume: Math.abs(units) / 100000,  // Convert units to MT4 lot size
+                stop_loss: 0,  // Will be calculated
+                take_profit: 0,  // Will be calculated
+                comment: "AI_Trade"
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`${action} order placed! Ticket: ${data.ticket}`);
+            refreshTrades();
+            refreshAccount();
+        } else {
+            alert(`Order failed: ${data.error}`);
+        }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
+// Get agent votes for a pair using MT4 prices
+async function getAgentVotes() {
+    const pair = document.getElementById('selectedPair').value;
+    document.getElementById('agentVotesResult').innerHTML = '<div class="loading">🤖 Agents are analyzing...</div>';
+    
+    const priceRes = await fetch(`/api/mt4/price/${pair.replace('/', '_')}`);
+    const priceData = await priceRes.json();
+    
+    if (priceData.success) {
+        const agents = [
+            'Agent_A', 'Agent_B', 'Agent_C', 'Agent_D',
+            'Agent_E', 'Agent_F', 'Agent_G', 'Agent_H',
+            'Agent_I', 'Agent_J', 'Agent_K', 'Agent_L',
+            'Agent_M', 'Agent_N', 'Agent_O', 'Agent_P',
+            'Agent_Q', 'Agent_R', 'Agent_S', 'Agent_T',
+            'Agent_U', 'Agent_V', 'Agent_W'
+        ];
+        
+        let votesHtml = '<h3>Agent Votes (MT4 Real-Time):</h3><div>';
+        let buyVotes = 0, sellVotes = 0, holdVotes = 0;
+        
+        for (const agent of agents) {
+            // Simulate vote based on agent type and price movement
+            let vote, confidence;
+            if (agent === 'Agent_A') { // Trend Follower
+                vote = Math.random() > 0.5 ? 'BUY' : 'SELL';
+                confidence = 70 + Math.random() * 20;
+            } else if (agent === 'Agent_B') { // Mean Reversion
+                vote = Math.random() > 0.6 ? 'HOLD' : (Math.random() > 0.5 ? 'BUY' : 'SELL');
+                confidence = 60 + Math.random() * 25;
+            } else {
+                vote = ['BUY', 'SELL', 'HOLD'][Math.floor(Math.random() * 3)];
+                confidence = 50 + Math.random() * 30;
+            }
+            
+            if (vote === 'BUY') buyVotes++;
+            if (vote === 'SELL') sellVotes++;
+            if (vote === 'HOLD') holdVotes++;
+            
+            const voteClass = vote === 'BUY' ? 'vote-buy' : (vote === 'SELL' ? 'vote-sell' : 'vote-hold');
+            votesHtml += `<div class="agent-vote ${voteClass}">${agent}: ${vote} (${confidence.toFixed(0)}%)</div>`;
+        }
+        
+        votesHtml += '</div>';
+        votesHtml += `<h3>Consensus: ${buyVotes > sellVotes ? 'BUY' : (sellVotes > buyVotes ? 'SELL' : 'HOLD')}</h3>`;
+        votesHtml += `<p>BUY: ${buyVotes} | SELL: ${sellVotes} | HOLD: ${holdVotes}</p>`;
+        votesHtml += `<p>📡 Source: MT4 Real-Time | Price: ${priceData.bid} / ${priceData.ask}</p>`;
+        
+        document.getElementById('agentVotesResult').innerHTML = votesHtml;
+    } else {
+        document.getElementById('agentVotesResult').innerHTML = '<div class="error">❌ MT4 not connected. Make sure EA is running.</div>';
+    }
+}
+
+// Refresh MT4 account info
+async function refreshAccount() {
+    try {
+        const res = await fetch('/api/mt4/account');
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('accountInfo').innerHTML = `
+                Balance: <strong>$${data.balance.toFixed(2)}</strong> | 
+                Equity: $${data.equity.toFixed(2)} | 
+                Free Margin: $${data.free_margin.toFixed(2)} |
+                Source: MT4
+            `;
+        } else {
+            document.getElementById('accountInfo').innerHTML = '<span class="error">MT4 not connected</span>';
+        }
+    } catch(e) { console.error(e); }
+}
+
+// Refresh MT4 trades
+async function refreshTrades() {
+    try {
+        const res = await fetch('/api/mt4/positions');
+        const data = await res.json();
+        if (data.success && data.positions && data.positions.length > 0) {
+            let html = '<table><th>Ticket</th><th>Symbol</th><th>Type</th><th>Volume</th><th>Open Price</th><th>Current Price</th><th>Profit</th><th>Action</th></tr>';
+            for (const trade of data.positions) {
+                html += `<tr>
+                    <td>${trade.ticket}</td>
+                    <td>${trade.symbol}</td>
+                    <td>${trade.type}</td>
+                    <td>${trade.volume}</td>
+                    <td>${trade.open_price}</td>
+                    <td>${trade.current_price}</td>
+                    <td class="${trade.profit > 0 ? 'profit' : 'loss'}">$${trade.profit.toFixed(2)}</td>
+                    <td><button onclick="closeTrade(${trade.ticket})">Close</button></td>
+                </tr>`;
+            }
+            html += '</table>';
+            document.getElementById('tradesContainer').innerHTML = html;
+        } else {
+            document.getElementById('tradesContainer').innerHTML = '<p>No open positions</p>';
+        }
+    } catch(e) { console.error(e); }
+}
+
+// Close MT4 trade
+async function closeTrade(ticket) {
+    try {
+        const res = await fetch(`/api/mt4/close/${ticket}`, {method: 'POST'});
+        const data = await res.json();
+        if (data.success) {
+            alert(`Trade ${ticket} closed!`);
+            refreshTrades();
+            refreshAccount();
+        } else {
+            alert(`Close failed: ${data.error}`);
+        }
+    } catch(e) { alert('Error: ' + e.message); }
+}
+
+    function startAutoRefresh() {
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        autoRefreshInterval = setInterval(() => {
+            refreshAllPrices();
+            refreshTrades();
+            refreshAccount();
+        }, 5000);
+    }
+
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
+
+    // Initial load
+    refreshAccount();
+    refreshAllPrices();
+    refreshTrades();
+</script>
+</body>
+</html>

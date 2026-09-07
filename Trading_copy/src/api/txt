@@ -1,0 +1,208 @@
+// Replace the entire DOMContentLoaded section with this:
+
+let isPageLoaded = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (isPageLoaded) return;
+    isPageLoaded = true;
+    
+    console.log('🚀 Page loaded, initializing...');
+    
+    // ✅ Load only what's visible first
+    loadClientData();
+    loadLivePrices();
+    
+    // ✅ Load other data after 1 second (non-blocking)
+    setTimeout(() => {
+        loadPositions();
+        loadSignals();
+        loadHistory();
+    }, 1000);
+    
+    // ✅ Initialize WebSocket after 2 seconds
+    setTimeout(() => {
+        if (typeof connectWebSocket === 'function') {
+            connectWebSocket();
+        }
+    }, 2000);
+    
+    // ✅ Initialize chart on demand (when trading page is clicked)
+    const tradingNav = document.querySelector('[data-page="trading"]');
+    if (tradingNav) {
+        tradingNav.addEventListener('click', function() {
+            setTimeout(() => {
+                if (!chartReady) {
+                    initMT4Chart();
+                }
+            }, 300);
+        });
+    }
+    
+    // ✅ Start refresh intervals
+    updateTimeDisplay();
+    setInterval(updateTimeDisplay, 1000);
+    
+    // ✅ Price updates every 500ms
+    setInterval(() => {
+        if (document.getElementById('priceTicker')) {
+            loadLivePrices();
+        }
+    }, 500);
+    
+    // ✅ Positions every 15 seconds
+    setInterval(() => {
+        if (document.getElementById('positionsList')) {
+            loadPositions();
+        }
+    }, 15000);
+    
+    // ✅ Signals every 60 seconds
+    setInterval(() => {
+        if (document.getElementById('signalsList')) {
+            loadSignals();
+        }
+    }, 60000);
+    
+    console.log('✅ Dashboard initialized');
+});
+// Initialize WebSocket on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('client_token');
+    const clientData = JSON.parse(localStorage.getItem('client_data') || '{}');
+    const clientId = clientData.id || clientData.account_id || 'client_' + Date.now();
+    
+    if (token) {
+        // Create WebSocket price feed
+        window.wsPriceFeed = new WebSocketPriceFeed(clientId);
+        
+        // Add WebSocket status indicator to header
+        const headerRight = document.querySelector('.header-right');
+        if (headerRight) {
+            // Check if status already exists
+            let statusEl = document.getElementById('wsStatus');
+            if (!statusEl) {
+                statusEl = document.createElement('span');
+                statusEl.id = 'wsStatus';
+                statusEl.textContent = '🔄 Connecting...';
+                statusEl.style.cssText = `
+                    font-size: 12px;
+                    color: #94a3b8;
+                    margin-left: 12px;
+                    padding: 4px 12px;
+                    border-radius: 12px;
+                    background: rgba(255,255,255,0.05);
+                    white-space: nowrap;
+                `;
+                headerRight.appendChild(statusEl);
+            }
+        }
+        
+        // Register price update callback
+        window.wsPriceFeed.onPriceUpdate((prices) => {
+            // Update any custom price displays
+            const symbol = document.getElementById('chartSymbol')?.value;
+            if (symbol && prices[symbol]) {
+                const price = prices[symbol];
+                const priceDisplay = document.getElementById('mt4Close');
+                if (priceDisplay) {
+                    const config = window.SYMBOL_CONFIG?.[symbol] || { precision: 5 };
+                    priceDisplay.textContent = price.toFixed(config.precision);
+                }
+            }
+        });
+        
+        console.log('✅ WebSocket price feed initialized');
+        // In the DOMContentLoaded or when chart is initialized
+if (typeof window.forexWS === 'undefined') {
+    // Create WebSocket connection
+    const clientData = JSON.parse(localStorage.getItem('client_data') || '{}');
+    const clientId = clientData.id || clientData.account_id || 'client_' + Date.now();
+    window.forexWS = new ForexDirectWebSocket(clientId);
+}
+    }
+});
+document.addEventListener('DOMContentLoaded', function() {
+    startDashboardRefresh();
+});
+// ============================================================
+// INIT ON LOAD
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Page loaded, initializing chart...');
+    const tradingPage = document.getElementById('page-trading');
+    if (tradingPage && tradingPage.classList.contains('active')) {
+        // Initialize lightweight-charts when on trading page
+        setTimeout(() => {
+            if (!chartReady) {
+                initMT4Chart();
+            }
+        }, 300);
+    }
+});
+
+// ===== INITIALIZE =====
+// Load cards when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 Initializing card management...');
+    loadCardsFromAPI();
+    
+    // Close modal when clicking outside
+    const modal = document.getElementById('addCardModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddCardForm();
+            }
+        });
+    }
+    
+    // Close with ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAddCardForm();
+        }
+    });
+    
+    // Preview card holder name in real-time
+    const holderInput = document.getElementById('cardHolderName');
+    if (holderInput) {
+        holderInput.addEventListener('input', function() {
+            const preview = document.getElementById('previewCardHolder');
+            if (preview) {
+                preview.textContent = this.value.toUpperCase() || 'CARD HOLDER';
+            }
+        });
+    }
+    
+    console.log('✅ Card management initialized');
+});
+// Initialize cards on page load - using cached cards then API
+document.addEventListener('DOMContentLoaded', function() {
+    // Render any cached cards immediately
+    loadCards();
+    // Then sync with server cards in the background
+    loadCardsFromAPI();
+});
+// ============================================================
+// INITIALIZE DASHBOARD
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('client_token');
+    const clientData = JSON.parse(localStorage.getItem('client_data') || '{}');
+    const accountId = clientData.id || clientData.account_id || 'client_' + Date.now();
+    
+    if (!token) {
+        window.location.href = '/client_login.html';
+        return;
+    }
+    
+    // Create dashboard instance
+    window.dashboard = new ClientDashboard(accountId, token);
+    
+    // Make it globally accessible
+    window.dashboardInstance = window.dashboard;
+    
+    console.log('✅ Dashboard initialized with WebSocket');
+});
