@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """
 UNIFIED TRADING SYSTEM - Render Deployment
-Uses forex_dashboard.py code for REAL MT4 prices
+Receives MT4 data via HTTP POST from Windows machine
 """
 
 import os
-import sys
 import json
 import logging
 import threading
 import time
-import socket
 from datetime import datetime
-from typing import Dict, List, Optional
 from flask import Flask, jsonify, render_template_string, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
@@ -37,16 +34,17 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # ============================================================
-# CONFIGURATION - FROM forex_dashboard.py
+# CONFIGURATION
 # ============================================================
 
-# For Render, the dashboard_data.json will be created by MT4
-# The file should be in the same directory as the app
+# On Render, the file will be saved in the app directory
 DASHBOARD_FILE = "dashboard_data.json"
 SIGNALS_FILE = "signals.json"
 
+logger.info(f"📂 MT4 data file: {DASHBOARD_FILE}")
+
 # ============================================================
-# SYMBOL CONFIGURATION - FROM forex_dashboard.py
+# SYMBOL CONFIGURATION
 # ============================================================
 
 FOREX_MAJORS = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD']
@@ -59,159 +57,86 @@ DOLLAR = ['#DOLLAR_IND']
 ALL_SYMBOLS = FOREX_MAJORS + FOREX_CROSSES + INDICES + METALS + ENERGY + DOLLAR
 
 # ============================================================
-# GLOBAL STATE - FROM forex_dashboard.py
+# GLOBAL STATE
 # ============================================================
-
-current_data = {
-    'prices': {},
-    'balance': 0,
-    'equity': 0,
-    'timestamp': datetime.now().isoformat(),
-    'success': True
-}
 
 connected_clients = set()
 last_file_mod_time = 0
+mt4_data_available = False
 
 # ============================================================
-# CORE FUNCTIONS - FROM forex_dashboard.py
+# HELPER FUNCTIONS
 # ============================================================
-
-def get_user_id():
-    """Get user_id from cookies"""
-    return request.cookies.get('user_id')
-
-def get_card_balance(user_id=None):
-    """Get balance from user_cards table"""
-    try:
-        # For Render, just return 0 if no Supabase
-        return 0
-    except Exception as e:
-        logger.warning(f"⚠️ Error getting card balance: {e}")
-        return 0
-
-def get_current_price(symbol: str) -> float:
-    """Get current price for a symbol - FROM forex_dashboard.py"""
-    try:
-        if current_data and 'prices' in current_data:
-            price_data = current_data['prices'].get(symbol)
-            if price_data:
-                if isinstance(price_data, dict):
-                    return float(price_data.get('price', 0))
-                return float(price_data)
-        
-        # Try to read from file directly (MT4 data)
-        if os.path.exists(DASHBOARD_FILE):
-            with open(DASHBOARD_FILE, 'r') as f:
-                data = json.load(f)
-                if 'prices' in data and symbol in data['prices']:
-                    price_data = data['prices'][symbol]
-                    if isinstance(price_data, dict):
-                        return float(price_data.get('price', 0))
-                    return float(price_data)
-        return 0
-    except Exception as e:
-        logger.debug(f"Error getting price for {symbol}: {e}")
-        return 0
-
-def get_all_current_prices() -> Dict:
-    """Get all current prices - FROM forex_dashboard.py"""
-    try:
-        if current_data and 'prices' in current_data:
-            return current_data['prices']
-        if os.path.exists(DASHBOARD_FILE):
-            with open(DASHBOARD_FILE, 'r') as f:
-                data = json.load(f)
-                if 'prices' in data:
-                    return data['prices']
-        return {}
-    except Exception as e:
-        logger.debug(f"Error getting all prices: {e}")
-        return {}
-
-def fetch_signals_from_file():
-    """Fetch signals from signals.json"""
-    try:
-        if os.path.exists(SIGNALS_FILE):
-            with open(SIGNALS_FILE, 'r') as f:
-                signals = json.load(f)
-                if isinstance(signals, list):
-                    valid_signals = [s for s in signals if s.get('signal_type') != 'HOLD']
-                    return valid_signals[-20:]
-                return []
-    except Exception as e:
-        logger.debug(f"Signals read error: {e}")
-    return []
 
 def get_all_data_dict():
-    """Get all data as dictionary - FROM forex_dashboard.py"""
+    """Get all data as dictionary"""
     try:
         data = None
-        source = "Fallback"
+        source = "Fallback (No MT4 Data) ❌"
+        mt4_connected = False
         
-        # ===== READ FROM MT4 DASHBOARD FILE =====
+        # Check if we have MT4 data
         if os.path.exists(DASHBOARD_FILE):
             try:
                 with open(DASHBOARD_FILE, 'r') as f:
                     data = json.load(f)
-                source = "MT4 Live Data"
-                logger.info(f"✅ Read MT4 data from {DASHBOARD_FILE}")
+                if data and data.get('prices'):
+                    source = "MT4 Live Data ✅"
+                    mt4_connected = True
+                    logger.info(f"✅ MT4 data loaded from {DASHBOARD_FILE}")
             except Exception as e:
                 logger.warning(f"⚠️ Error reading MT4 file: {e}")
         
+        # Fallback prices (used only if no MT4 data)
+        fallback = {
+            'EURUSD': 1.14317, 'GBPUSD': 1.34154, 'USDJPY': 162.441,
+            'USDCHF': 0.89510, 'AUDUSD': 0.67260, 'USDCAD': 1.36530,
+            'NZDUSD': 0.61240, 'EURGBP': 0.85210, 'EURJPY': 185.635,
+            'EURCAD': 1.56010, 'EURNZD': 1.86510, 'EURCHF': 0.95410,
+            'GOLD': 3987.70, 'SILVER': 31.28,
+            '#NASDAQ100': 21500.25, '#DJ30': 41500.25, '#S&P500': 5600.13,
+            '#RUSS2000': 2200.13, '#CAC40': 7650.25, '#DAX40': 18800.25,
+            '#FTSE100': 8350.25, '#NIKKEI225': 41200.25,
+            'BRENT_OIL': 85.55, 'CrudeOIL': 80.80,
+            '#DOLLAR_IND': 104.55
+        }
+        
         response = {
             'success': True,
-            'balance': get_card_balance() or 0,
-            'equity': get_card_balance() or 0,
+            'balance': 10000.00,
+            'equity': 10000.00,
             'prices': {},
             'stats': {},
             'leaderboard': [],
             'timestamp': datetime.now().strftime('%H:%M:%S'),
             'source': source,
-            'file_exists': os.path.exists(DASHBOARD_FILE)
+            'file_exists': os.path.exists(DASHBOARD_FILE),
+            'mt4_connected': mt4_connected
         }
         
-        # ===== FALLBACK PRICES (if no MT4 data) =====
-        fallback = {
-            'EURUSD': {'bid': 1.14307, 'ask': 1.14327, 'price': 1.14317},
-            'GBPUSD': {'bid': 1.34144, 'ask': 1.34164, 'price': 1.34154},
-            'USDJPY': {'bid': 162.426, 'ask': 162.456, 'price': 162.441},
-            'USDCHF': {'bid': 0.89500, 'ask': 0.89520, 'price': 0.89510},
-            'AUDUSD': {'bid': 0.67250, 'ask': 0.67270, 'price': 0.67260},
-            'USDCAD': {'bid': 1.36520, 'ask': 1.36540, 'price': 1.36530},
-            'NZDUSD': {'bid': 0.61230, 'ask': 0.61250, 'price': 0.61240},
-            'EURGBP': {'bid': 0.85200, 'ask': 0.85220, 'price': 0.85210},
-            'EURJPY': {'bid': 185.620, 'ask': 185.650, 'price': 185.635},
-            'EURCAD': {'bid': 1.56000, 'ask': 1.56020, 'price': 1.56010},
-            'EURNZD': {'bid': 1.86500, 'ask': 1.86520, 'price': 1.86510},
-            'EURCHF': {'bid': 0.95400, 'ask': 0.95420, 'price': 0.95410},
-            '#NASDAQ100': {'bid': 21500.00, 'ask': 21500.50, 'price': 21500.25},
-            '#DJ30': {'bid': 41500.00, 'ask': 41500.50, 'price': 41500.25},
-            '#S&P500': {'bid': 5600.00, 'ask': 5600.25, 'price': 5600.13},
-            '#RUSS2000': {'bid': 2200.00, 'ask': 2200.25, 'price': 2200.13},
-            '#CAC40': {'bid': 7650.00, 'ask': 7650.50, 'price': 7650.25},
-            '#DAX40': {'bid': 18800.00, 'ask': 18800.50, 'price': 18800.25},
-            '#FTSE100': {'bid': 8350.00, 'ask': 8350.50, 'price': 8350.25},
-            '#NIKKEI225': {'bid': 41200.00, 'ask': 41200.50, 'price': 41200.25},
-            'GOLD': {'bid': 3987.55, 'ask': 3987.85, 'price': 3987.70},
-            'SILVER': {'bid': 31.25, 'ask': 31.30, 'price': 31.28},
-            'BRENT_OIL': {'bid': 85.50, 'ask': 85.60, 'price': 85.55},
-            'CrudeOIL': {'bid': 80.75, 'ask': 80.85, 'price': 80.80},
-            '#DOLLAR_IND': {'bid': 104.50, 'ask': 104.60, 'price': 104.55}
-        }
-        
-        # ===== BUILD PRICES FROM MT4 DATA =====
-        if data and 'prices' in data:
+        # Build prices from MT4 data or fallback
+        if data and data.get('prices'):
+            # Use MT4 data
             for symbol in ALL_SYMBOLS:
-                price_data = None
                 if symbol in data['prices']:
-                    if isinstance(data['prices'][symbol], dict):
-                        price_data = data['prices'][symbol]
+                    price_data = data['prices'][symbol]
+                    if isinstance(price_data, dict):
+                        response['prices'][symbol] = {
+                            'bid': float(price_data.get('bid', 0)),
+                            'ask': float(price_data.get('ask', 0)),
+                            'price': float(price_data.get('price', 0)),
+                            'change': float(price_data.get('change', 0))
+                        }
                     else:
-                        price_val = float(data['prices'][symbol])
-                        price_data = {'bid': price_val, 'ask': price_val, 'price': price_val}
+                        p = float(price_data)
+                        response['prices'][symbol] = {
+                            'bid': p,
+                            'ask': p,
+                            'price': p,
+                            'change': 0
+                        }
                 else:
-                    # Try alternative names (from forex_dashboard.py)
+                    # Try alternative names
                     alt_map = {
                         'GOLD': ['XAUUSD'],
                         'SILVER': ['XAGUSD'],
@@ -227,121 +152,81 @@ def get_all_data_dict():
                         'BRENT_OIL': ['BRENT', 'UKOIL'],
                         'CrudeOIL': ['CRUDE', 'USOIL']
                     }
+                    found = False
                     if symbol in alt_map:
                         for alt in alt_map[symbol]:
                             if alt in data['prices']:
-                                if isinstance(data['prices'][alt], dict):
-                                    price_data = data['prices'][alt]
+                                price_data = data['prices'][alt]
+                                if isinstance(price_data, dict):
+                                    response['prices'][symbol] = {
+                                        'bid': float(price_data.get('bid', 0)),
+                                        'ask': float(price_data.get('ask', 0)),
+                                        'price': float(price_data.get('price', 0)),
+                                        'change': float(price_data.get('change', 0))
+                                    }
                                 else:
-                                    price_val = float(data['prices'][alt])
-                                    price_data = {'bid': price_val, 'ask': price_val, 'price': price_val}
+                                    p = float(price_data)
+                                    response['prices'][symbol] = {
+                                        'bid': p,
+                                        'ask': p,
+                                        'price': p,
+                                        'change': 0
+                                    }
+                                found = True
                                 break
-                
-                if price_data:
-                    if 'bid' in price_data and 'ask' in price_data:
+                    
+                    if not found:
+                        p = fallback.get(symbol, 0)
                         response['prices'][symbol] = {
-                            'bid': float(price_data['bid']),
-                            'ask': float(price_data['ask']),
-                            'price': (float(price_data['bid']) + float(price_data['ask'])) / 2,
+                            'bid': round(p * 0.9999, 5),
+                            'ask': round(p * 1.0001, 5),
+                            'price': round(p, 5),
                             'change': 0
                         }
-                    elif 'price' in price_data:
-                        p = float(price_data['price'])
-                        response['prices'][symbol] = {
-                            'bid': p - 0.0001,
-                            'ask': p + 0.0001,
-                            'price': p,
-                            'change': 0
-                        }
-                else:
-                    fb = fallback.get(symbol, {'bid': 0, 'ask': 0, 'price': 0})
-                    response['prices'][symbol] = {
-                        'bid': fb['bid'],
-                        'ask': fb['ask'],
-                        'price': fb['price'],
-                        'change': 0
-                    }
-            # Update balance/equity from MT4 data
-            response['balance'] = float(data.get('balance', response['balance']))
-            response['equity'] = float(data.get('equity', response['equity']))
-            response['source'] = "MT4 Live Data ✅"
+            
+            # Update balance from MT4 data
+            if 'balance' in data:
+                response['balance'] = float(data['balance'])
+            if 'equity' in data:
+                response['equity'] = float(data['equity'])
+            if 'timestamp' in data:
+                response['timestamp'] = data['timestamp']
         else:
-            # No MT4 data - use fallback
+            # Use fallback (no MT4 data)
             for symbol in ALL_SYMBOLS:
-                fb = fallback.get(symbol, {'bid': 0, 'ask': 0, 'price': 0})
+                p = fallback.get(symbol, 0)
                 response['prices'][symbol] = {
-                    'bid': fb['bid'],
-                    'ask': fb['ask'],
-                    'price': fb['price'],
+                    'bid': round(p * 0.9999, 5),
+                    'ask': round(p * 1.0001, 5),
+                    'price': round(p, 5),
                     'change': 0
                 }
-            response['balance'] = 10000.00
-            response['equity'] = 10000.00
-            response['source'] = "Fallback (No MT4 Data) ❌"
-        
-        # Add signals
-        response['signals'] = fetch_signals_from_file()
         
         return response
         
     except Exception as e:
         logger.error(f"❌ API Error: {e}")
-        import traceback
-        traceback.print_exc()
         return {
             'success': False,
             'error': str(e)
         }
 
 # ============================================================
-# FILE WATCHER THREAD - FROM forex_dashboard.py
-# ============================================================
-
-def file_watcher():
-    """Watch for file changes and broadcast updates - FROM forex_dashboard.py"""
-    global last_file_mod_time
-    
-    logger.info("👁️ Starting file watcher for MT4 data...")
-    
-    while True:
-        try:
-            if os.path.exists(DASHBOARD_FILE):
-                current_mtime = os.path.getmtime(DASHBOARD_FILE)
-                if current_mtime > last_file_mod_time:
-                    last_file_mod_time = current_mtime
-                    logger.info("📁 MT4 data file changed, broadcasting update...")
-                    
-                    data = get_all_data_dict()
-                    socketio.emit('full_update', data)
-                    
-                    if data.get('success') and data.get('prices'):
-                        price_update = {
-                            'prices': data['prices'],
-                            'timestamp': data.get('timestamp', datetime.now().strftime('%H:%M:%S'))
-                        }
-                        socketio.emit('price_update', price_update)
-        except Exception as e:
-            logger.error(f"⚠️ File watcher error: {e}")
-        
-        time.sleep(1)
-
-# ============================================================
-# WEBSOCKET EVENT HANDLERS - FROM forex_dashboard.py
+# WEBSOCKET EVENT HANDLERS
 # ============================================================
 
 @socketio.on('connect')
 def handle_connect():
     logger.info(f"🔌 Client connected: {request.sid}")
     connected_clients.add(request.sid)
-    
     data = get_all_data_dict()
     emit('full_update', data)
     emit('connected', {
         'status': 'connected',
         'message': 'Welcome to the dashboard!',
+        'mt4_connected': data.get('mt4_connected', False),
         'timestamp': datetime.now().isoformat()
     })
-    logger.info(f"📤 Sent initial data to {request.sid}")
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -355,7 +240,7 @@ def handle_request_update():
     emit('full_update', data)
 
 # ============================================================
-# HTML TEMPLATE - FROM forex_dashboard.py
+# HTML TEMPLATE
 # ============================================================
 
 HTML_TEMPLATE = """
@@ -363,7 +248,7 @@ HTML_TEMPLATE = """
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>📊 Trading Platform - MT4 Live Prices</title>
+    <title>📊 MT4 Trading Dashboard</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -454,32 +339,6 @@ HTML_TEMPLATE = """
         .card-bid-ask .bid { color: #4caf50; }
         .card-bid-ask .ask { color: #ff6b35; }
         .card-spread { font-size: 11px; color: #888; margin-top: 4px; }
-        .card-change { font-size: 13px; }
-        .card-change.up { color: #4caf50; }
-        .card-change.down { color: #f44336; }
-        
-        .signals-section {
-            margin: 20px 0;
-            padding: 15px;
-            background: #16213e;
-            border-radius: 10px;
-            border-left: 4px solid #ff9800;
-        }
-        .signals-section h3 { color: #ff9800; margin-bottom: 10px; }
-        .signal-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: #1a2a4a;
-            border-radius: 6px;
-            font-size: 13px;
-            align-items: center;
-        }
-        .signal-item .symbol { color: #ffd700; font-weight: bold; }
-        .signal-item .action.buy { color: #4caf50; font-weight: bold; }
-        .signal-item .action.sell { color: #f44336; font-weight: bold; }
-        .signal-item .confidence { color: #888; }
         
         .refresh-btn {
             background: #ffd700;
@@ -511,20 +370,15 @@ HTML_TEMPLATE = """
             border-top: 1px solid #2a2a4a;
             padding-top: 20px;
         }
-        
-        @media (max-width: 600px) {
-            .account-box { flex-direction: column; }
-            .grid { grid-template-columns: 1fr; }
-        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>📊 Trading Platform <span>MT4 Live Prices</span></h1>
+        <h1>📊 MT4 Trading Dashboard <span>Live Prices</span></h1>
         <div>
             <span id="wsStatus" class="status status-offline">🔌 Connecting...</span>
-            <span id="mt4Status" class="status status-offline">📡 MT4: Disconnected</span>
+            <span id="mt4Status" class="status status-offline">📡 MT4: Disconnected ❌</span>
             <span id="status" class="status status-online">✅ ONLINE</span>
         </div>
     </div>
@@ -546,17 +400,6 @@ HTML_TEMPLATE = """
             <div class="account-label">📡 Data Source</div>
             <div class="account-value" style="font-size:16px;color:#ffd700;" id="dataSource">--</div>
         </div>
-        <div class="account-item">
-            <div class="account-label">📊 Symbols</div>
-            <div class="account-value" style="font-size:18px;color:#00bcd4;" id="symbolCount">0</div>
-        </div>
-    </div>
-    
-    <div class="signals-section">
-        <h3>🎯 Trading Signals</h3>
-        <div id="signalsList">
-            <div style="color: #666; text-align: center; padding: 10px;">No active signals</div>
-        </div>
     </div>
     
     <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
@@ -571,9 +414,8 @@ HTML_TEMPLATE = """
         <a href="/health">/health</a>
         <a href="/api/status">/api/status</a>
         <a href="/api/prices">/api/prices</a>
-        <a href="/api/signals">/api/signals</a>
         <a href="/api/all_data">/api/all_data</a>
-        <a href="/api/mt4_status">/api/mt4_status</a>
+        <a href="/api/update_mt4_data">/api/update_mt4_data (POST)</a>
     </div>
     
     <div class="ip-info">
@@ -595,9 +437,9 @@ socket.on('disconnect', function() {
 });
 
 socket.on('connected', function(data) {
-    if (data) {
-        document.getElementById('wsStatus').className = 'status status-ws';
-        document.getElementById('wsStatus').textContent = '🔌 Connected';
+    if (data && data.mt4_connected) {
+        document.getElementById('mt4Status').className = 'status status-mt4';
+        document.getElementById('mt4Status').textContent = '📡 MT4: Connected ✅';
     }
 });
 
@@ -687,13 +529,12 @@ function updatePricesOnly(prices) {
     }
     
     grid.innerHTML = html || '<div style="text-align:center;padding:40px;color:#666;grid-column:1/-1;">No price data available</div>';
-    document.getElementById('symbolCount').textContent = count;
 }
 
 function updateDashboard(data) {
     // Update MT4 status
     const mt4Status = document.getElementById('mt4Status');
-    if (data.source && data.source.includes('MT4')) {
+    if (data.mt4_connected) {
         mt4Status.className = 'status status-mt4';
         mt4Status.textContent = '📡 MT4: Connected ✅';
     } else {
@@ -706,27 +547,6 @@ function updateDashboard(data) {
     document.getElementById('equity').textContent = '$' + (data.equity || 10000).toFixed(2);
     document.getElementById('updated').textContent = data.timestamp || '--:--:--';
     document.getElementById('dataSource').textContent = data.source || '--';
-    
-    // Update signals
-    const signalsList = document.getElementById('signalsList');
-    if (data.signals && data.signals.length > 0) {
-        let html = '';
-        for (const signal of data.signals.slice(-5).reverse()) {
-            const actionClass = signal.signal_type ? signal.signal_type.toLowerCase() : 'hold';
-            const actionDisplay = signal.signal_type || 'HOLD';
-            html += `
-                <div class="signal-item">
-                    <span class="symbol">${signal.symbol || 'Unknown'}</span>
-                    <span class="action ${actionClass}">${actionDisplay}</span>
-                    <span class="confidence">${signal.confidence || 0}%</span>
-                    <span style="color:#888;font-size:11px;">${(signal.reasoning || '').substring(0, 40)}</span>
-                </div>
-            `;
-        }
-        signalsList.innerHTML = html;
-    } else {
-        signalsList.innerHTML = '<div style="color: #666; text-align: center; padding: 10px;">No active signals</div>';
-    }
     
     // Update prices
     updatePricesOnly(data.prices);
@@ -752,7 +572,7 @@ setTimeout(() => socket.emit('request_update'), 500);
 """
 
 # ============================================================
-# ROUTES - FROM forex_dashboard.py
+# ROUTES
 # ============================================================
 
 @app.route('/')
@@ -764,7 +584,7 @@ def health():
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
-        'mt4_data_exists': os.path.exists(DASHBOARD_FILE)
+        'mt4_file_exists': os.path.exists(DASHBOARD_FILE)
     })
 
 @app.route('/api/status')
@@ -773,31 +593,63 @@ def api_status():
         'status': 'running',
         'timestamp': datetime.now().isoformat(),
         'connected_clients': len(connected_clients),
-        'mt4_data_exists': os.path.exists(DASHBOARD_FILE),
-        'prices_count': len(get_all_current_prices())
+        'mt4_file_exists': os.path.exists(DASHBOARD_FILE)
     })
 
 @app.route('/api/prices')
 def api_prices():
-    try:
-        prices = get_all_current_prices()
-        return jsonify({
-            'success': True,
-            'prices': prices,
-            'timestamp': datetime.now().isoformat(),
-            'count': len(prices)
-        })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/signals')
-def api_signals():
-    signals = fetch_signals_from_file()
-    return jsonify({'success': True, 'signals': signals})
+    data = get_all_data_dict()
+    return jsonify({
+        'success': True,
+        'prices': data['prices'],
+        'timestamp': datetime.now().isoformat(),
+        'count': len(data['prices'])
+    })
 
 @app.route('/api/all_data')
 def api_all_data():
     return jsonify(get_all_data_dict())
+
+@app.route('/api/update_mt4_data', methods=['POST'])
+def update_mt4_data():
+    """
+    Receive MT4 data from Windows machine via HTTP POST
+    This is the endpoint that your Windows script will call
+    """
+    try:
+        data = request.json
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data received'}), 400
+        
+        if data.get('prices'):
+            # Save to file
+            with open(DASHBOARD_FILE, 'w') as f:
+                json.dump(data, f)
+            
+            logger.info(f"✅ MT4 data updated via POST: {len(data.get('prices', {}))} symbols")
+            
+            # Broadcast update to all connected clients
+            full_data = get_all_data_dict()
+            socketio.emit('full_update', full_data)
+            
+            # Also send price update
+            socketio.emit('price_update', {
+                'prices': data['prices'],
+                'timestamp': datetime.now().strftime('%H:%M:%S')
+            })
+            
+            return jsonify({
+                'success': True,
+                'message': 'MT4 data updated successfully',
+                'symbols': len(data.get('prices', {}))
+            })
+        else:
+            return jsonify({'success': False, 'error': 'No prices in data'}), 400
+            
+    except Exception as e:
+        logger.error(f"❌ Error updating MT4 data: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/mt4_status')
 def mt4_status():
@@ -819,25 +671,37 @@ def mt4_status():
             return jsonify({'success': False, 'error': str(e)})
     return jsonify({'success': True, 'connected': False, 'file_exists': False})
 
-@app.route('/api/debug')
-def debug():
-    """Debug endpoint"""
-    try:
-        result = {
-            'file_path': DASHBOARD_FILE,
-            'file_exists': os.path.exists(DASHBOARD_FILE),
-            'prices_count': len(get_all_current_prices()),
-            'websocket_status': 'running',
-            'connected_clients': len(connected_clients)
-        }
-        if result['file_exists']:
-            with open(DASHBOARD_FILE, 'r') as f:
-                data = json.load(f)
-            result['has_prices'] = 'prices' in data
-            result['balance'] = data.get('balance', 0)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)})
+# ============================================================
+# FILE WATCHER THREAD
+# ============================================================
+
+def file_watcher():
+    """Watch for file changes and broadcast updates"""
+    global last_file_mod_time
+    
+    logger.info("👁️ Starting file watcher...")
+    
+    while True:
+        try:
+            if os.path.exists(DASHBOARD_FILE):
+                current_mtime = os.path.getmtime(DASHBOARD_FILE)
+                if current_mtime > last_file_mod_time:
+                    last_file_mod_time = current_mtime
+                    logger.info("📁 MT4 data file changed, broadcasting update...")
+                    
+                    data = get_all_data_dict()
+                    socketio.emit('full_update', data)
+                    
+                    if data.get('success') and data.get('prices'):
+                        price_update = {
+                            'prices': data['prices'],
+                            'timestamp': data.get('timestamp', datetime.now().strftime('%H:%M:%S'))
+                        }
+                        socketio.emit('price_update', price_update)
+        except Exception as e:
+            logger.error(f"⚠️ File watcher error: {e}")
+        
+        time.sleep(1)
 
 # ============================================================
 # MAIN
@@ -847,11 +711,12 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     
     print('\n' + '=' * 60)
-    print('🚀 TRADING PLATFORM - MT4 Live Prices')
+    print('📊 MT4 TRADING DASHBOARD')
     print('=' * 60)
     print(f'📂 Looking for: {DASHBOARD_FILE}')
     print(f'📡 MT4 Data: {"✅ EXISTS" if os.path.exists(DASHBOARD_FILE) else "❌ NOT FOUND"}')
     print(f'🌐 Server: http://0.0.0.0:{port}')
+    print(f'📤 POST endpoint: /api/update_mt4_data')
     print('=' * 60 + '\n')
     
     # Start file watcher
@@ -859,5 +724,4 @@ if __name__ == '__main__':
     watcher_thread.start()
     logger.info("✅ File watcher thread started")
     
-    # Run with SocketIO
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
