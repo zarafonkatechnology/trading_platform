@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-📊 MT4 TRADING DASHBOARD - INSTANT UPDATES
-Updates every 1 second - super fast!
+📊 MT4 TRADING DASHBOARD - INSTANT
+No delays - instant updates
 """
 
 import os
@@ -13,25 +13,13 @@ from flask import Flask, jsonify, render_template_string, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 
-# ============================================================
-# FLASK APP
-# ============================================================
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'trading-secret-key'
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # ============================================================
-# FILE PATHS
-# ============================================================
-
-COMMON_FILES = "C:/Users/sifer/AppData/Roaming/MetaQuotes/Terminal/Common/Files/"
-DASHBOARD_FILE = os.path.join(COMMON_FILES, "dashboard_data.json")
-LOCAL_FILE = "dashboard_data.json"
-
-# ============================================================
-# ALL 31 SYMBOLS
+# SYMBOLS
 # ============================================================
 
 FOREX_MAJORS = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD', 'NZDUSD']
@@ -44,35 +32,33 @@ DOLLAR = ['#DOLLAR_IND']
 ALL_SYMBOLS = FOREX_MAJORS + FOREX_CROSSES + INDICES + METALS + ENERGY + DOLLAR
 
 # ============================================================
+# FILE PATH - USE LOCAL FILE ON RENDER
+# ============================================================
+
+DASHBOARD_FILE = "dashboard_data.json"  # This is where POST saves data
+
+# ============================================================
 # GLOBALS
 # ============================================================
 
-current_data = {'prices': {}, 'balance': 0, 'equity': 0}
+current_data = {'prices': {}, 'balance': 0, 'equity': 0, 'timestamp': ''}
 connected_clients = set()
-last_file_mod_time = 0
 
 # ============================================================
 # FUNCTIONS
 # ============================================================
 
-def find_mt4_file():
-    if os.path.exists(DASHBOARD_FILE):
-        return DASHBOARD_FILE
-    if os.path.exists(LOCAL_FILE):
-        return LOCAL_FILE
-    return None
-
 def get_all_data_dict():
     """Get all data - INSTANT"""
     try:
-        file_path = find_mt4_file()
+        # Read from local file (updated by POST)
         data = None
         source = "Fallback ❌"
         mt4_connected = False
 
-        if file_path:
+        if os.path.exists(DASHBOARD_FILE):
             try:
-                with open(file_path, 'r') as f:
+                with open(DASHBOARD_FILE, 'r') as f:
                     data = json.load(f)
                 source = "MT4 Live ✅"
                 mt4_connected = True
@@ -81,14 +67,15 @@ def get_all_data_dict():
 
         response = {
             'success': True,
-            'balance': 10000,
-            'equity': 10000,
+            'balance': data.get('balance', 10000) if data else 10000,
+            'equity': data.get('equity', 10000) if data else 10000,
             'prices': {},
-            'timestamp': datetime.now().strftime('%H:%M:%S'),
+            'timestamp': data.get('timestamp', datetime.now().strftime('%H:%M:%S')) if data else datetime.now().strftime('%H:%M:%S'),
             'source': source,
             'mt4_connected': mt4_connected
         }
 
+        # Fallback prices
         fallback = {
             'EURUSD': 1.14317, 'GBPUSD': 1.34154, 'USDJPY': 162.441,
             'USDCHF': 0.89510, 'AUDUSD': 0.67260, 'USDCAD': 1.36530,
@@ -117,56 +104,14 @@ def get_all_data_dict():
                         }
                     else:
                         p = float(p)
-                        response['prices'][symbol] = {
-                            'bid': p, 'ask': p, 'price': p, 'change': 0
-                        }
+                        response['prices'][symbol] = {'bid': p, 'ask': p, 'price': p, 'change': 0}
                 else:
-                    alt_map = {
-                        'GOLD': ['XAUUSD'], 'SILVER': ['XAGUSD'],
-                        '#NASDAQ100': ['NAS100', 'US100'], '#DJ30': ['DJ30', 'US30'],
-                        '#S&P500': ['SP500', 'US500'], '#RUSS2000': ['RUS2000', 'RUS2K', 'US2000'],
-                        '#CAC40': ['CAC40', 'FR40'], '#DAX40': ['DAX40', 'GER40'],
-                        '#FTSE100': ['FTSE100', 'UK100'], '#NIKKEI225': ['NIKKEI225', 'N225', 'JP225'],
-                        '#DOLLAR_IND': ['#DOLLAR_IND', 'DXY', 'USDX'],
-                        'BRENT_OIL': ['BRENT', 'UKOIL'], 'CrudeOIL': ['CRUDE', 'USOIL']
-                    }
-                    found = False
-                    if symbol in alt_map:
-                        for alt in alt_map[symbol]:
-                            if alt in data['prices']:
-                                p = data['prices'][alt]
-                                if isinstance(p, dict):
-                                    response['prices'][symbol] = {
-                                        'bid': float(p.get('bid', 0)),
-                                        'ask': float(p.get('ask', 0)),
-                                        'price': float(p.get('price', 0)),
-                                        'change': float(p.get('change', 0))
-                                    }
-                                else:
-                                    p = float(p)
-                                    response['prices'][symbol] = {
-                                        'bid': p, 'ask': p, 'price': p, 'change': 0
-                                    }
-                                found = True
-                                break
-                    if not found:
-                        p = fallback.get(symbol, 0)
-                        response['prices'][symbol] = {
-                            'bid': p * 0.9999, 'ask': p * 1.0001, 'price': p, 'change': 0
-                        }
-
-            if 'balance' in data:
-                response['balance'] = float(data['balance'])
-            if 'equity' in data:
-                response['equity'] = float(data['equity'])
-            if 'timestamp' in data:
-                response['timestamp'] = data['timestamp']
+                    p = fallback.get(symbol, 0)
+                    response['prices'][symbol] = {'bid': p * 0.9999, 'ask': p * 1.0001, 'price': p, 'change': 0}
         else:
             for symbol in ALL_SYMBOLS:
                 p = fallback.get(symbol, 0)
-                response['prices'][symbol] = {
-                    'bid': p * 0.9999, 'ask': p * 1.0001, 'price': p, 'change': 0
-                }
+                response['prices'][symbol] = {'bid': p * 0.9999, 'ask': p * 1.0001, 'price': p, 'change': 0}
 
         return response
     except Exception as e:
@@ -179,9 +124,7 @@ def get_all_data_dict():
 @socketio.on('connect')
 def handle_connect():
     connected_clients.add(request.sid)
-    data = get_all_data_dict()
-    emit('full_update', data)
-    emit('price_update', {'prices': data.get('prices', {}), 'timestamp': data.get('timestamp', '')})
+    emit('full_update', get_all_data_dict())
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -192,31 +135,7 @@ def handle_request_update():
     emit('full_update', get_all_data_dict())
 
 # ============================================================
-# FILE WATCHER - SUPER FAST (1 SECOND)
-# ============================================================
-
-def file_watcher():
-    global last_file_mod_time
-    while True:
-        try:
-            file_path = find_mt4_file()
-            if file_path:
-                current_mtime = os.path.getmtime(file_path)
-                if current_mtime > last_file_mod_time:
-                    last_file_mod_time = current_mtime
-                    data = get_all_data_dict()
-                    socketio.emit('full_update', data)
-                    if data.get('prices'):
-                        socketio.emit('price_update', {
-                            'prices': data['prices'],
-                            'timestamp': data.get('timestamp', datetime.now().strftime('%H:%M:%S'))
-                        })
-        except:
-            pass
-        time.sleep(0.5)  # Check every 500ms - SUPER FAST!
-
-# ============================================================
-# HTML - INSTANT LOADING
+# HTML
 # ============================================================
 
 HTML = """
@@ -228,105 +147,39 @@ HTML = """
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
-            min-height: 100vh;
-        }
+        body { background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%); color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; min-height: 100vh; }
         .container { max-width: 1400px; margin: 0 auto; }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #ffd700;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #ffd700; flex-wrap: wrap; gap: 10px; }
         .header h1 { color: #ffd700; font-size: 28px; }
         .header h1 span { font-size: 14px; color: #888; font-weight: normal; }
-        
-        .status {
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-        }
+        .status { padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .status-online { background: #4caf50; color: white; animation: pulse 2s infinite; }
         .status-offline { background: #f44336; color: white; }
         .status-ws { background: #2196F3; color: white; animation: pulse 1s infinite; }
         .status-mt4 { background: #ff9800; color: white; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         
-        .account-box {
-            background: linear-gradient(135deg, #1a2a4a 0%, #0f3460 100%);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
+        .account-box { background: linear-gradient(135deg, #1a2a4a 0%, #0f3460 100%); border-radius: 15px; padding: 25px; margin-bottom: 30px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px; }
         .account-item { text-align: center; }
         .account-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
         .account-value { font-size: 28px; font-weight: bold; margin-top: 5px; }
         .account-value.gold { color: #ffd700; }
         .account-value.green { color: #4caf50; }
         
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 25px;
-            border-bottom: 1px solid #2a2a4a;
-            flex-wrap: wrap;
-        }
-        .tab {
-            padding: 12px 25px;
-            cursor: pointer;
-            background: #16213e;
-            border-radius: 8px 8px 0 0;
-            transition: all 0.2s;
-            font-weight: bold;
-            color: #888;
-        }
+        .tabs { display: flex; gap: 5px; margin-bottom: 25px; border-bottom: 1px solid #2a2a4a; flex-wrap: wrap; }
+        .tab { padding: 12px 25px; cursor: pointer; background: #16213e; border-radius: 8px 8px 0 0; transition: all 0.2s; font-weight: bold; color: #888; }
         .tab:hover { background: #1f3460; color: #fff; }
         .tab.active { background: #ffd700; color: #0a0e27; }
-        .tab-content { display: none; animation: fadeIn 0.1s; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        .section-title {
-            color: #ffd700;
-            font-size: 20px;
-            margin: 25px 0 15px 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #2a2a4a;
-        }
+        .section-title { color: #ffd700; font-size: 20px; margin: 25px 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #2a2a4a; }
         .section-title .emoji { margin-right: 10px; }
         .section-title .count { font-size: 12px; color: #888; font-weight: normal; }
         
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
-        
-        .card {
-            background: #16213e;
-            border-radius: 12px;
-            padding: 20px;
-            border-left: 4px solid #ffd700;
-            transition: transform 0.2s, background 0.3s;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
+        .card { background: #16213e; border-radius: 12px; padding: 20px; border-left: 4px solid #ffd700; transition: transform 0.2s, background 0.3s; }
         .card:hover { transform: translateY(-3px); }
-        .card.pulse { animation: cardPulse 0.2s ease; }
-        @keyframes cardPulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); background: #1f3460; } 100% { transform: scale(1); } }
-        
         .card-symbol { font-size: 16px; font-weight: bold; color: #ffd700; }
         .card-price { font-size: 28px; font-weight: bold; margin: 10px 0; }
         .card-change { font-size: 14px; }
@@ -334,15 +187,7 @@ HTML = """
         .card-change.down { color: #f44336; }
         .card-spread { font-size: 12px; color: #888; margin-top: 4px; }
         .card-time { font-size: 11px; color: #888; margin-top: 8px; }
-        .card-bid-ask {
-            font-size: 12px;
-            color: #aaa;
-            margin-top: 5px;
-            display: flex;
-            justify-content: space-between;
-            border-top: 1px solid #2a2a4a;
-            padding-top: 8px;
-        }
+        .card-bid-ask { font-size: 12px; color: #aaa; margin-top: 5px; display: flex; justify-content: space-between; border-top: 1px solid #2a2a4a; padding-top: 8px; }
         .card-bid-ask .bid { color: #4caf50; }
         .card-bid-ask .ask { color: #ff6b35; }
         
@@ -359,62 +204,24 @@ HTML = """
         .card-dollar { border-left-color: #9c27b0; background: linear-gradient(135deg, #1a0a2a 0%, #16213e 100%); }
         .card-dollar .card-price { color: #ce93d8; }
         
-        .refresh-btn {
-            background: #ffd700;
-            color: #0a0e27;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 20px;
-            transition: opacity 0.2s;
-        }
+        .refresh-btn { background: #ffd700; color: #0a0e27; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; margin-bottom: 20px; transition: opacity 0.2s; }
         .refresh-btn:hover { opacity: 0.8; }
-        
-        .ip-info {
-            color: #888;
-            font-size: 12px;
-            margin-top: 30px;
-            text-align: center;
-            border-top: 1px solid #2a2a4a;
-            padding-top: 20px;
-        }
-        
-        @media (max-width: 600px) {
-            .account-box { flex-direction: column; }
-            .grid { grid-template-columns: 1fr; }
-        }
+        .ip-info { color: #888; font-size: 12px; margin-top: 30px; text-align: center; border-top: 1px solid #2a2a4a; padding-top: 20px; }
+        @media (max-width: 600px) { .account-box { flex-direction: column; } .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>📊 MT4 Dashboard <span>Live Prices</span></h1>
-        <div>
-            <span id="wsStatus" class="status status-offline">🔌 Connecting...</span>
-            <span id="status" class="status status-online">✅ ONLINE</span>
-        </div>
+        <div><span id="wsStatus" class="status status-offline">🔌 Connecting...</span><span id="status" class="status status-online">✅ ONLINE</span></div>
     </div>
     
     <div class="account-box">
-        <div class="account-item">
-            <div class="account-label">💰 Balance</div>
-            <div class="account-value gold" id="balance">$---</div>
-        </div>
-        <div class="account-item">
-            <div class="account-label">📊 Equity</div>
-            <div class="account-value green" id="equity">$---</div>
-        </div>
-        <div class="account-item">
-            <div class="account-label">🕐 Updated</div>
-            <div class="account-value" style="font-size:18px;color:#aaa;" id="updated">--:--:--</div>
-        </div>
-        <div class="account-item">
-            <div class="account-label">📡 Data Source</div>
-            <div class="account-value" style="font-size:16px;color:#ffd700;" id="dataSource">--</div>
-        </div>
+        <div class="account-item"><div class="account-label">💰 Balance</div><div class="account-value gold" id="balance">$---</div></div>
+        <div class="account-item"><div class="account-label">📊 Equity</div><div class="account-value green" id="equity">$---</div></div>
+        <div class="account-item"><div class="account-label">🕐 Updated</div><div class="account-value" style="font-size:18px;color:#aaa;" id="updated">--:--:--</div></div>
+        <div class="account-item"><div class="account-label">📡 Data Source</div><div class="account-value" style="font-size:16px;color:#ffd700;" id="dataSource">--</div></div>
     </div>
     
     <div class="tabs">
@@ -429,46 +236,29 @@ HTML = """
     <div id="tab-markets" class="tab-content active">
         <div class="section-title"><span class="emoji">💱</span> FOREX MAJORS <span class="count" id="forexMajorsCount"></span></div>
         <div id="forexMajorsGrid" class="grid"><div class="loading">Loading...</div></div>
-        
         <div class="section-title"><span class="emoji">💱</span> FOREX CROSSES <span class="count" id="forexCrossesCount"></span></div>
         <div id="forexCrossesGrid" class="grid"><div class="loading">Loading...</div></div>
-        
         <div class="section-title"><span class="emoji">📈</span> INDICES <span class="count" id="indicesCount"></span></div>
         <div id="indicesGrid" class="grid"><div class="loading">Loading...</div></div>
-        
         <div class="section-title"><span class="emoji">🥇</span> METALS <span class="count" id="metalsCount"></span></div>
         <div id="metalsGrid" class="grid"><div class="loading">Loading...</div></div>
-        
         <div class="section-title"><span class="emoji">🛢️</span> ENERGY <span class="count" id="energyCount"></span></div>
         <div id="energyGrid" class="grid"><div class="loading">Loading...</div></div>
-        
         <div class="section-title"><span class="emoji">💵</span> DOLLAR INDEX <span class="count" id="dollarCount"></span></div>
         <div id="dollarGrid" class="grid"><div class="loading">Loading...</div></div>
     </div>
     
     <div id="tab-statistics" class="tab-content">
-        <div style="text-align:center;">
-            <h2 style="color:#ffd700;margin-bottom:20px;">📊 Trading Statistics</h2>
-            <table class="stats-table" id="statsTable">
-                <thead><tr><th>Metric</th><th>Value</th></tr></thead>
-                <tbody id="statsBody"><tr><td colspan="2" style="text-align:center;padding:30px;color:#888;">Loading...</td></tr></tbody>
-            </table>
-        </div>
+        <div style="text-align:center;"><h2 style="color:#ffd700;margin-bottom:20px;">📊 Trading Statistics</h2>
+        <table class="stats-table" id="statsTable"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody id="statsBody"><tr><td colspan="2" style="text-align:center;padding:30px;color:#888;">Loading...</td></tr></tbody></table></div>
     </div>
     
     <div id="tab-leaderboard" class="tab-content">
-        <div style="text-align:center;">
-            <h2 style="color:#ffd700;margin-bottom:20px;">🏆 Agent Leaderboard</h2>
-            <table class="leaderboard-table" id="leaderboardTable">
-                <thead><tr><th>Rank</th><th>Agent</th><th>Votes</th><th>Win Rate</th><th>XP</th><th>Tokens</th><th>Confidence</th></tr></thead>
-                <tbody id="leaderboardBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Loading...</td></tr></tbody>
-            </table>
-        </div>
+        <div style="text-align:center;"><h2 style="color:#ffd700;margin-bottom:20px;">🏆 Agent Leaderboard</h2>
+        <table class="leaderboard-table" id="leaderboardTable"><thead><tr><th>Rank</th><th>Agent</th><th>Votes</th><th>Win Rate</th><th>XP</th><th>Tokens</th><th>Confidence</th></tr></thead><tbody id="leaderboardBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Loading...</td></tr></tbody></table></div>
     </div>
     
-    <div class="ip-info">
-        🌐 Server: Render | Auto-refresh: <span id="countdown">5</span>s
-    </div>
+    <div class="ip-info">🌐 Server: Render | Auto-refresh: <span id="countdown">5</span>s</div>
 </div>
 
 <script>
@@ -525,15 +315,7 @@ function switchTab(tabName) {
 function getPriceData(data, symbol) {
     if (!data || !data.prices) return null;
     if (data.prices[symbol]) return data.prices[symbol];
-    const altMap = {
-        'GOLD': ['XAUUSD'], 'SILVER': ['XAGUSD'],
-        '#NASDAQ100': ['NAS100', 'US100'], '#DJ30': ['DJ30', 'US30'],
-        '#S&P500': ['SP500', 'US500'], '#RUSS2000': ['RUS2000', 'RUS2K', 'US2000'],
-        '#CAC40': ['CAC40', 'FR40'], '#DAX40': ['DAX40', 'GER40'],
-        '#FTSE100': ['FTSE100', 'UK100'], '#NIKKEI225': ['NIKKEI225', 'N225', 'JP225'],
-        '#DOLLAR_IND': ['#DOLLAR_IND', 'DXY', 'USDX'],
-        'BRENT_OIL': ['BRENT', 'UKOIL'], 'CrudeOIL': ['CRUDE', 'USOIL']
-    };
+    const altMap = {'GOLD': ['XAUUSD'], 'SILVER': ['XAGUSD'], '#NASDAQ100': ['NAS100', 'US100'], '#DJ30': ['DJ30', 'US30'], '#S&P500': ['SP500', 'US500'], '#RUSS2000': ['RUS2000', 'RUS2K', 'US2000'], '#CAC40': ['CAC40', 'FR40'], '#DAX40': ['DAX40', 'GER40'], '#FTSE100': ['FTSE100', 'UK100'], '#NIKKEI225': ['NIKKEI225', 'N225', 'JP225'], '#DOLLAR_IND': ['#DOLLAR_IND', 'DXY', 'USDX'], 'BRENT_OIL': ['BRENT', 'UKOIL'], 'CrudeOIL': ['CRUDE', 'USOIL']};
     if (altMap[symbol]) {
         for (let alt of altMap[symbol]) {
             if (data.prices[alt]) return data.prices[alt];
@@ -559,7 +341,6 @@ function renderCards(containerId, items, type, data) {
             else if (type === 'forex') cardClass += ' card-forex';
             else if (type === 'dollar') cardClass += ' card-dollar';
             card.className = cardClass;
-            card.id = 'card-' + symbol;
             const price = priceInfo.price;
             const bid = priceInfo.bid || price;
             const ask = priceInfo.ask || price;
@@ -575,10 +356,7 @@ function renderCards(containerId, items, type, data) {
                 <div class="card-symbol">${symbol}</div>
                 <div class="card-price">${price.toFixed(decimals)}</div>
                 <div class="card-change ${changeClass}">${changeSymbol} ${Math.abs(change).toFixed(2)}%</div>
-                <div class="card-bid-ask">
-                    <span class="bid">Bid: ${bid.toFixed(decimals)}</span>
-                    <span class="ask">Ask: ${ask.toFixed(decimals)}</span>
-                </div>
+                <div class="card-bid-ask"><span class="bid">Bid: ${bid.toFixed(decimals)}</span><span class="ask">Ask: ${ask.toFixed(decimals)}</span></div>
                 <div class="card-spread">Spread: ${spread}</div>
                 <div class="card-time">Updated: ${data.timestamp || '--:--:--'}</div>
             `;
@@ -640,7 +418,6 @@ function startCountdown() {
     }, 1000);
 }
 
-// INSTANT LOAD - No waiting!
 manualRefresh();
 startCountdown();
 </script>
@@ -671,12 +448,24 @@ def api_status():
 
 @app.route('/api/update_mt4_data', methods=['POST'])
 def update_mt4_data():
+    """INSTANT update - receives data from Windows"""
     try:
         data = request.json
         if data and data.get('prices'):
-            with open('dashboard_data.json', 'w') as f:
+            # Save to file
+            with open(DASHBOARD_FILE, 'w') as f:
                 json.dump(data, f)
-            socketio.emit('full_update', get_all_data_dict())
+            
+            # Get updated data
+            full_data = get_all_data_dict()
+            
+            # Broadcast to ALL connected clients immediately
+            socketio.emit('full_update', full_data)
+            socketio.emit('price_update', {
+                'prices': data['prices'],
+                'timestamp': datetime.now().strftime('%H:%M:%S')
+            })
+            
             return jsonify({'success': True, 'symbols': len(data.get('prices', {}))})
         return jsonify({'success': False, 'error': 'No prices'})
     except Exception as e:
@@ -690,12 +479,10 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     
     print("=" * 60)
-    print("📊 MT4 DASHBOARD - INSTANT LOADING")
+    print("📊 MT4 DASHBOARD - INSTANT UPDATES")
     print("=" * 60)
     print(f"📂 Symbols: {len(ALL_SYMBOLS)}")
     print(f"🌐 Server: http://0.0.0.0:{port}")
     print("=" * 60)
-    
-    threading.Thread(target=file_watcher, daemon=True).start()
     
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
