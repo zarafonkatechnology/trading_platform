@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-📊 MT4 TRADING DASHBOARD - INSTANT LOADING
-No loading delays - data shows immediately
+📊 MT4 TRADING DASHBOARD - INSTANT UPDATES
+Updates every 1 second - super fast!
 """
 
 import os
@@ -183,7 +183,7 @@ def handle_connect():
     emit('full_update', data)
     emit('price_update', {'prices': data.get('prices', {}), 'timestamp': data.get('timestamp', '')})
 
-@socketio.on('disconnect'):
+@socketio.on('disconnect')
 def handle_disconnect():
     connected_clients.discard(request.sid)
 
@@ -192,7 +192,7 @@ def handle_request_update():
     emit('full_update', get_all_data_dict())
 
 # ============================================================
-# FILE WATCHER - FAST
+# FILE WATCHER - SUPER FAST (1 SECOND)
 # ============================================================
 
 def file_watcher():
@@ -213,7 +213,7 @@ def file_watcher():
                         })
         except:
             pass
-        time.sleep(0.3)  # 300ms - SUPER FAST
+        time.sleep(0.5)  # Check every 500ms - SUPER FAST!
 
 # ============================================================
 # HTML - INSTANT LOADING
